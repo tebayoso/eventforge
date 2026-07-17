@@ -25,11 +25,19 @@ import { PostgresAuditSink } from "./postgres-audit.js";
 
 const DEFAULT_WORKSPACE = "demo-workspace";
 const DEFAULT_PROJECT = "eventforge-demo-service";
+const LOCAL_CONSOLE_ORIGIN = "http://localhost:5173";
 
 type AppOptions = { store?: EventForgeStore; runner?: AgentRunner; persistAudit?: boolean };
 
 declare module "fastify" {
   interface FastifyRequest { rawBody?: string | Buffer; }
+}
+
+export function configuredBrowserOrigins(value = process.env.EVENTFORGE_ALLOWED_ORIGINS, environment = process.env.NODE_ENV): string[] {
+  const origins = value?.split(",").map((origin) => origin.trim()).filter(Boolean) ?? [];
+  if (origins.length > 0) return origins;
+  if (environment === "production") throw new Error("EVENTFORGE_ALLOWED_ORIGINS must list the production console origin.");
+  return [LOCAL_CONSOLE_ORIGIN];
 }
 
 export function createDefaultWorkflow(): WorkflowDefinition {
@@ -88,10 +96,17 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
   const store = options.store ?? new EventForgeStore();
   const runner = options.runner ?? createRunner();
   const auditSink = options.persistAudit !== false && process.env.DATABASE_URL ? new PostgresAuditSink(process.env.DATABASE_URL) : undefined;
+  const allowedOrigins = configuredBrowserOrigins();
   store.addWorkflow(createDefaultWorkflow());
   store.addWorkflow(createIssueReviewWorkflow());
 
-  await app.register(cors, { origin: true });
+  await app.register(cors, {
+    origin: (origin, callback) => callback(null, origin === undefined || allowedOrigins.includes(origin)),
+    credentials: true,
+    methods: ["GET", "POST", "PATCH", "OPTIONS"],
+    allowedHeaders: ["content-type"],
+    maxAge: 86_400
+  });
   await app.register(rawBody, { global: false, encoding: false, runFirst: true });
   app.addHook("onResponse", async () => {
     if (!auditSink) return;

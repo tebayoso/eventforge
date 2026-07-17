@@ -1,0 +1,45 @@
+{{- if .Values.cloudflareTunnel.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "eventforge.fullname" . }}-cloudflared
+  labels:
+    app.kubernetes.io/name: {{ include "eventforge.name" . }}-cloudflared
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.cloudflareTunnel.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "eventforge.name" . }}-cloudflared
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "eventforge.name" . }}-cloudflared
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: cloudflared
+          image: "{{ .Values.cloudflareTunnel.image.repository }}:{{ .Values.cloudflareTunnel.image.tag }}"
+          imagePullPolicy: {{ .Values.cloudflareTunnel.image.pullPolicy }}
+          command: ["cloudflared", "tunnel", "--no-autoupdate", "--loglevel", "info", "--metrics", "0.0.0.0:2000", "run"]
+          env:
+            - name: TUNNEL_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "cloudflareTunnel.existingSecret is required when the tunnel is enabled" .Values.cloudflareTunnel.existingSecret }}
+                  key: {{ required "cloudflareTunnel.tokenKey is required when the tunnel is enabled" .Values.cloudflareTunnel.tokenKey }}
+          ports:
+            - name: metrics
+              containerPort: 2000
+          readinessProbe:
+            httpGet: { path: /ready, port: metrics }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /ready, port: metrics }
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources: {{- toYaml .Values.cloudflareTunnel.resources | nindent 12 }}
+{{- end }}

@@ -22,12 +22,66 @@ spec:
               value: {{ .Values.env.EVENTFORGE_RUNNER | quote }}
             - name: EVENTFORGE_DEMO_MODE
               value: {{ .Values.env.EVENTFORGE_DEMO_MODE | quote }}
+            - name: EVENTFORGE_ALLOWED_ORIGINS
+              value: {{ .Values.env.EVENTFORGE_ALLOWED_ORIGINS | quote }}
             - name: DATABASE_URL
               valueFrom: { secretKeyRef: { name: {{ .Values.postgres.existingSecret }}, key: {{ .Values.postgres.databaseUrlKey }} } }
             - name: OPENAI_API_KEY
               valueFrom: { secretKeyRef: { name: {{ .Values.secrets.existingSecret }}, key: {{ .Values.secrets.openaiApiKeyKey }} } }
             - name: EVENTFORGE_MASTER_KEY
               valueFrom: { secretKeyRef: { name: {{ .Values.secrets.existingSecret }}, key: {{ .Values.secrets.masterKeyKey }} } }
+{{- if .Values.providerSecrets.github.webhookEnabled }}
+            - name: GITHUB_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.existingSecret }}
+                  key: {{ .Values.providerSecrets.github.webhookSecretKey }}
+{{- end }}
+{{- if .Values.providerSecrets.github.appCredentialsEnabled }}
+            - name: GITHUB_APP_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.existingSecret }}
+                  key: {{ .Values.providerSecrets.github.appIdKey }}
+            - name: GITHUB_APP_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.existingSecret }}
+                  key: {{ .Values.providerSecrets.github.appPrivateKeyKey }}
+{{- end }}
+{{- if .Values.providerSecrets.linear.webhookEnabled }}
+            - name: LINEAR_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.existingSecret }}
+                  key: {{ .Values.providerSecrets.linear.webhookSecretKey }}
+{{- end }}
+{{- if .Values.providerSecrets.linear.oauthEnabled }}
+            - name: LINEAR_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.existingSecret }}
+                  key: {{ .Values.providerSecrets.linear.clientIdKey }}
+            - name: LINEAR_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.existingSecret }}
+                  key: {{ .Values.providerSecrets.linear.clientSecretKey }}
+{{- end }}
+{{- if .Values.providerSecrets.sentry.webhookEnabled }}
+            - name: SENTRY_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.existingSecret }}
+                  key: {{ .Values.providerSecrets.sentry.webhookSecretKey }}
+{{- end }}
+{{- if .Values.providerSecrets.sentry.authTokenEnabled }}
+            - name: SENTRY_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.existingSecret }}
+                  key: {{ .Values.providerSecrets.sentry.authTokenKey }}
+{{- end }}
           readinessProbe: { httpGet: { path: /health, port: http }, initialDelaySeconds: 5 }
           livenessProbe: { httpGet: { path: /health, port: http }, initialDelaySeconds: 15 }
           resources: {{- toYaml .Values.resources | nindent 12 }}

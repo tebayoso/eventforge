@@ -1,7 +1,7 @@
 import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { EventForgeStore } from "@eventforge/core";
-import { createApp } from "../src/app.js";
+import { configuredBrowserOrigins, createApp } from "../src/app.js";
 import type { AgentRunner } from "../src/runner.js";
 
 const runner: AgentRunner = {
@@ -9,6 +9,31 @@ const runner: AgentRunner = {
 };
 
 describe("control plane", () => {
+  it("permits credentialed browser requests only from configured console origins", async () => {
+    const previousOrigins = process.env.EVENTFORGE_ALLOWED_ORIGINS;
+    process.env.EVENTFORGE_ALLOWED_ORIGINS = "https://eventforge.dev";
+    try {
+      const app = await createApp({ persistAudit: false });
+      const allowed = await app.inject({
+        method: "OPTIONS",
+        url: "/events/demo",
+        headers: { origin: "https://eventforge.dev", "access-control-request-method": "POST" }
+      });
+      const denied = await app.inject({ method: "GET", url: "/events", headers: { origin: "https://untrusted.example" } });
+      expect(allowed.headers["access-control-allow-origin"]).toBe("https://eventforge.dev");
+      expect(allowed.headers["access-control-allow-credentials"]).toBe("true");
+      expect(denied.headers["access-control-allow-origin"]).toBeUndefined();
+      await app.close();
+    } finally {
+      if (previousOrigins === undefined) delete process.env.EVENTFORGE_ALLOWED_ORIGINS;
+      else process.env.EVENTFORGE_ALLOWED_ORIGINS = previousOrigins;
+    }
+  });
+
+  it("refuses an implicit browser origin allowlist in production", () => {
+    expect(() => configuredBrowserOrigins(undefined, "production")).toThrow("EVENTFORGE_ALLOWED_ORIGINS");
+  });
+
   it("runs a GitHub demo event through a policy-gated proposal", async () => {
     const app = await createApp({ store: new EventForgeStore(), runner, persistAudit: false });
     const response = await app.inject({ method: "POST", url: "/events/demo", payload: { provider: "github" } });

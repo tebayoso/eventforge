@@ -8,7 +8,9 @@
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit",
     "test": "vitest run",
-    "dev": "vite"
+    "dev": "vite",
+    "preview:cloudflare": "pnpm run build && wrangler dev",
+    "deploy:cloudflare": "pnpm run build && wrangler deploy"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^5.0.2",
@@ -24,6 +26,7 @@
     "jsdom": "^26.1.0",
     "tailwindcss": "^4.1.12",
     "typescript": "^5.8.3",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "wrangler": "^4.112.0"
   }
 }
