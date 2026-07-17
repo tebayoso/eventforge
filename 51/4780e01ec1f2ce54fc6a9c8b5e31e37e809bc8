@@ -1,0 +1,49 @@
+apps/control-plane/src/local-github.ts
+  s_cb07b89c712fa5::t_c14af845abfd17 13-14,126,167-177
+  s_cb07b89c712fa5::t_91f81d846347c3 16,37
+  s_cb07b89c712fa5::t_b3a1049c3e4e98 46
+  s_cb07b89c712fa5::t_a6f4ef6e6e95b6 178-179
+apps/control-plane/package.json
+  s_cb07b89c712fa5::t_91f81d846347c3 13
+.env.example
+  s_cb07b89c712fa5::t_91f81d846347c3 12-14
+apps/console/src/App.tsx
+  s_cb07b89c712fa5::t_91f81d846347c3 62
+apps/control-plane/test/app.test.ts
+  s_cb07b89c712fa5::t_91f81d846347c3 61,63-81
+  s_cb07b89c712fa5::t_ac3f2f81385938 1,30-60
+  s_cb07b89c712fa5::t_601e410ae8adb9 62
+apps/control-plane/src/app.ts
+  s_cb07b89c712fa5::t_ac3f2f81385938 135,140-145,189-194
+  s_cb07b89c712fa5::t_91f81d846347c3 13,50-64,92,111-115
+README.md
+  s_cb07b89c712fa5::t_91f81d846347c3 40-49,51
+  s_cb07b89c712fa5::t_5866ba26ec2769 21,50
+apps/control-plane/src/index.ts
+  s_cb07b89c712fa5::t_91f81d846347c3 10
+packages/core/src/events.ts
+  s_cb07b89c712fa5::t_91f81d846347c3 91-94
+apps/control-plane/src/runner.ts
+  s_cb07b89c712fa5::t_91f81d846347c3 14,18-20,33-38,41-42
+apps/control-plane/src/local-github.test.ts
+  s_cb07b89c712fa5::t_b3a1049c3e4e98 18
+  s_cb07b89c712fa5::t_91f81d846347c3 12
+workfiles/agent-browser/README.md
+  s_cb07b89c712fa5::t_5866ba26ec2769 31-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "514780e01ec1f2ce54fc6a9c8b5e31e37e809bc8",
+  "prompts": {},
+  "sessions": {
+    "s_cb07b89c712fa5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7187-4c4d-7273-9636-b2e90c713af2",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
