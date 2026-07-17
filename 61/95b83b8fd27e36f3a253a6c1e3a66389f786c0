@@ -1,0 +1,42 @@
+workfiles/agent-browser/README.md
+  s_cb07b89c712fa5::t_1fd2c4f1ee5c44 23-30
+apps/control-plane/src/local-github.ts
+  s_cb07b89c712fa5::t_ea444bb2b71f8b 2-3,12,15,20,42-45,81,85-86,92,96,114-122,125,128,130-132,134-141,144-148,150-151,153-160,182-184,192,218
+  s_cb07b89c712fa5::t_b140081929b77f 10-11,46-49,126-127,129,133,142-143,149,152,188,190-191,199,203,212-213,215-217,219
+  s_cb07b89c712fa5::t_5d5000a3c5a7ac 13,162,164-180,206-207
+  s_cb07b89c712fa5::t_304d4e579496eb 5,50-53,123-124,193,204
+  s_cb07b89c712fa5::t_a239df3cab6e47 161,205,208-211,214,220-223
+  s_cb07b89c712fa5::t_d33d29af48ed85 163
+apps/control-plane/src/index.ts
+  s_cb07b89c712fa5::t_ea444bb2b71f8b 13-15,17-18,22-27
+  s_cb07b89c712fa5::t_b140081929b77f 1-3,7-10,19-21
+apps/control-plane/src/local-github.test.ts
+  s_cb07b89c712fa5::t_ea444bb2b71f8b 11,16-18
+  s_cb07b89c712fa5::t_304d4e579496eb 2,23-27
+  s_cb07b89c712fa5::t_b140081929b77f 19-22
+  s_cb07b89c712fa5::t_5d8ef6cf7d76ef 28
+.env.example
+  s_cb07b89c712fa5::t_ea444bb2b71f8b 18,21
+  s_cb07b89c712fa5::t_304d4e579496eb 22-23
+  s_cb07b89c712fa5::t_b140081929b77f 24
+README.md
+  s_cb07b89c712fa5::t_304d4e579496eb 30
+  s_cb07b89c712fa5::t_ea444bb2b71f8b 19,21,31
+  s_cb07b89c712fa5::t_b140081929b77f 38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "6195b83b8fd27e36f3a253a6c1e3a66389f786c0",
+  "prompts": {},
+  "sessions": {
+    "s_cb07b89c712fa5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7187-4c4d-7273-9636-b2e90c713af2",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
