@@ -1,0 +1,8 @@
+{
+  "name": "eventforge",
+  "version": "0.1.0",
+  "description": "Event-driven, policy-gated engineering workflows for Codex.",
+  "mcpServers": "./.mcp.json",
+  "skills": ["./skills/eventforge"],
+  "hooks": "./hooks/hooks.json"
+}

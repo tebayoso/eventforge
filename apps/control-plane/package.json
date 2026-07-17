@@ -1,0 +1,31 @@
+{
+  "name": "@eventforge/control-plane",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "test": "vitest run",
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "start:github": "EVENTFORGE_GITHUB_LOCAL_WEBHOOK=true tsx src/index.ts"
+  },
+  "dependencies": {
+    "@eventforge/core": "workspace:*",
+    "@fastify/cors": "^11.0.1",
+    "fastify-raw-body": "^5.0.0",
+    "@openai/codex-sdk": "^0.144.5",
+    "dotenv": "^17.2.1",
+    "fastify": "^5.5.0",
+    "pg": "^8.16.3",
+    "smee-client": "^4.4.3",
+    "tsx": "^4.20.3",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.15.4",
+    "vitest": "^3.2.4"
+  }
+}

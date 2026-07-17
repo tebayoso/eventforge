@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+@theme { --font-sans: "Inter", "SF Pro Display", ui-sans-serif, system-ui, sans-serif; }
+
+@layer components {
+  .action-button { @apply inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-300 px-3.5 py-2.5 text-sm font-medium text-slate-950 shadow-lg shadow-cyan-500/10 transition hover:bg-cyan-200 focus:outline-none focus:ring-2 focus:ring-cyan-300/60; }
+  .quiet-button { @apply inline-flex items-center justify-center gap-2 rounded-lg border border-white/10 px-3.5 py-2.5 text-sm text-slate-300 transition hover:border-white/20 hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-cyan-300/60; }
+  .status-pill { @apply inline-flex rounded-full px-2 py-1 text-[11px] font-medium capitalize; }
+  .status-ready { @apply bg-emerald-400/10 text-emerald-300; }
+  .status-demo { @apply bg-violet-400/10 text-violet-200; }
+}

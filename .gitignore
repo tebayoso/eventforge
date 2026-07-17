@@ -1,0 +1,17 @@
+node_modules
+dist
+.env
+.env.local
+coverage
+.DS_Store
+*.db
+*.db-*
+artifacts
+data
+.eventforge
+release
+
+# Keep the repository's required browser QA playbooks despite the user's global workfiles ignore rule.
+!workfiles/
+!workfiles/agent-browser/
+!workfiles/agent-browser/README.md

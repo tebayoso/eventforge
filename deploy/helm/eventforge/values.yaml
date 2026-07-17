@@ -1,0 +1,25 @@
+image:
+  repository: ghcr.io/eventforge/control-plane
+  tag: latest
+  pullPolicy: IfNotPresent
+replicaCount: 2
+service:
+  type: ClusterIP
+  port: 4310
+ingress:
+  enabled: false
+  className: ""
+  host: eventforge.example.com
+postgres:
+  existingSecret: eventforge-postgres
+  databaseUrlKey: database-url
+secrets:
+  existingSecret: eventforge-runtime
+  openaiApiKeyKey: openai-api-key
+  masterKeyKey: master-key
+env:
+  EVENTFORGE_RUNNER: codex
+  EVENTFORGE_DEMO_MODE: "false"
+resources:
+  requests: { cpu: 250m, memory: 512Mi }
+  limits: { cpu: "1", memory: 1Gi }

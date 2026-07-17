@@ -1,0 +1,14 @@
+name: EventForge CI failure demo
+
+on:
+  workflow_dispatch:
+
+jobs:
+  intentional-failure:
+    name: Intentional EventForge test failure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Emit a deliberate failed check run
+        run: |
+          echo "This workflow is intentionally failing to test the EventForge GitHub webhook."
+          exit 1
