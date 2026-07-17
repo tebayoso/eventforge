@@ -1,19 +1,23 @@
 import { randomBytes } from "node:crypto";
-import { execFile as execFileCallback } from "node:child_process";
+import { execFile as execFileCallback, spawn } from "node:child_process";
+import { once } from "node:events";
 import { chmod, mkdir, readFile, writeFile } from "node:fs/promises";
+import { devNull } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { promisify } from "node:util";
-import SmeeClient from "smee-client";
 
 const execFile = promisify(execFileCallback);
-const DEFAULT_TARGET = "http://127.0.0.1:4310/webhooks/github";
+const DEFAULT_ORIGIN = "http://127.0.0.1:4310";
+const DEFAULT_WEBHOOK_PATH = "/webhooks/github";
+const QUICK_TUNNEL_TIMEOUT_MS = 30_000;
+const TUNNEL_READY_TIMEOUT_MS = 30_000;
 
-type StoredRelay = { repository: string; relayUrl: string; hookId: number };
+type StoredWebhook = { repository: string; hookId: number; publicUrl?: string; tunnel?: "cloudflare_quick" };
 type GitHubHook = { id: number; config?: { url?: string } };
 
 export type LocalGitHubWebhook = {
   repository: string;
-  relayUrl: string;
+  publicUrl: string;
   hookId: number;
   close: () => Promise<void>;
 };
@@ -33,6 +37,18 @@ export function webhookFormArgs(relayUrl: string, secret: string): string[] {
     "-f", `config[secret]=${secret}`,
     "-f", "config[insecure_ssl]=0"
   ];
+}
+
+export function quickTunnelUrl(output: string): string | undefined {
+  return output.match(/https:\/\/[-a-z0-9]+\.trycloudflare\.com\b/i)?.[0];
+}
+
+export function publicWebhookUrl(tunnelUrl: string, webhookPath = DEFAULT_WEBHOOK_PATH): string {
+  return new URL(webhookPath, `${tunnelUrl}/`).toString();
+}
+
+export function quickTunnelArgs(originUrl: string, configPath = devNull): string[] {
+  return ["--config", configPath, "tunnel", "--url", originUrl];
 }
 
 async function command(args: string[]): Promise<string> {
@@ -62,31 +78,22 @@ async function ensureSecret(envPath: string): Promise<string> {
   return secret;
 }
 
-async function provisionRelay(existing?: string): Promise<string> {
-  if (existing) return existing;
-  try {
-    return await SmeeClient.createChannel();
-  } catch {
-    throw new Error("Could not provision a Smee relay. Set EVENTFORGE_GITHUB_RELAY_URL to an https://smee.io/<channel> URL and try again.");
-  }
-}
-
-async function loadStoredRelay(statePath: string): Promise<StoredRelay | undefined> {
+async function loadStoredWebhook(statePath: string): Promise<StoredWebhook | undefined> {
   const contents = await readOptional(statePath);
   if (!contents) return undefined;
   try {
-    const parsed = JSON.parse(contents) as StoredRelay;
-    return typeof parsed.repository === "string" && typeof parsed.relayUrl === "string" && Number.isInteger(parsed.hookId) ? parsed : undefined;
+    const parsed = JSON.parse(contents) as StoredWebhook;
+    return typeof parsed.repository === "string" && Number.isInteger(parsed.hookId) ? parsed : undefined;
   } catch {
     return undefined;
   }
 }
 
-async function hookExists(repository: string, hookId: number, relayUrl: string): Promise<boolean> {
+async function hookExists(repository: string, hookId: number): Promise<boolean> {
   try {
     const response = await command(["api", `repos/${repository}/hooks/${hookId}`]);
     const hook = JSON.parse(response) as GitHubHook;
-    return hook.id === hookId && hook.config?.url === relayUrl;
+    return hook.id === hookId;
   } catch {
     return false;
   }
@@ -104,40 +111,116 @@ async function createHook(repository: string, relayUrl: string, secret: string):
   }
 }
 
+async function patchHook(repository: string, hookId: number, publicUrl: string, secret: string): Promise<void> {
+  try {
+    await command(["api", "--method", "PATCH", `repos/${repository}/hooks/${hookId}`, ...webhookFormArgs(publicUrl, secret)]);
+  } catch (error: unknown) {
+    const stderr = (error as { stderr?: string }).stderr?.trim();
+    throw new Error(stderr ? `Could not update the GitHub webhook: ${stderr}` : "Could not update the GitHub webhook.");
+  }
+}
+
+async function waitForQuickTunnel(originUrl: string, cloudflaredBin: string, configPath?: string): Promise<{ tunnelUrl: string; close: () => Promise<void> }> {
+  const tunnel = spawn(cloudflaredBin, quickTunnelArgs(originUrl, configPath), { stdio: ["ignore", "pipe", "pipe"] });
+  const output: string[] = [];
+  let tunnelUrl: string | undefined;
+  let settle: ((value: { tunnelUrl: string; close: () => Promise<void> }) => void) | undefined;
+  let fail: ((reason: Error) => void) | undefined;
+  const ready = new Promise<{ tunnelUrl: string; close: () => Promise<void> }>((resolve, reject) => {
+    settle = resolve;
+    fail = reject;
+  });
+  const finish = () => settle?.({ tunnelUrl: tunnelUrl!, close: async () => {
+    if (tunnel.exitCode !== null || tunnel.killed) return;
+    tunnel.kill("SIGTERM");
+    await Promise.race([once(tunnel, "exit"), new Promise((resolve) => setTimeout(resolve, 5_000))]);
+    if (tunnel.exitCode === null) tunnel.kill("SIGKILL");
+  } });
+  const inspect = (chunk: Buffer) => {
+    const text = chunk.toString();
+    output.push(text);
+    tunnelUrl ??= quickTunnelUrl(text);
+    if (tunnelUrl) finish();
+  };
+  tunnel.stdout.on("data", inspect);
+  tunnel.stderr.on("data", inspect);
+  tunnel.once("error", (error) => fail?.(new Error(`Could not start ${cloudflaredBin}: ${error.message}. Install cloudflared and retry.`)));
+  tunnel.once("exit", (code, signal) => {
+    if (!tunnelUrl) fail?.(new Error(`Cloudflare Quick Tunnel exited before publishing a URL (code ${code ?? "unknown"}, signal ${signal ?? "none"}): ${output.join("").trim()}`));
+  });
+  const timeout = setTimeout(() => {
+    if (!tunnelUrl) {
+      tunnel.kill("SIGTERM");
+      fail?.(new Error(`Cloudflare Quick Tunnel did not publish a URL within ${QUICK_TUNNEL_TIMEOUT_MS / 1000} seconds.`));
+    }
+  }, QUICK_TUNNEL_TIMEOUT_MS);
+  try {
+    return await ready;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function waitForTunnelHealth(tunnelUrl: string): Promise<void> {
+  const healthUrl = new URL("/health", `${tunnelUrl}/`);
+  const deadline = Date.now() + TUNNEL_READY_TIMEOUT_MS;
+  let lastStatus = "no response";
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(healthUrl);
+      if (response.ok) return;
+      lastStatus = `HTTP ${response.status}`;
+    } catch (error) {
+      lastStatus = error instanceof Error ? error.message : "connection failed";
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  throw new Error(`Cloudflare Quick Tunnel did not reach ${healthUrl} within ${TUNNEL_READY_TIMEOUT_MS / 1000} seconds (${lastStatus}).`);
+}
+
 /**
- * Creates a private local development relay and registers GitHub's signed check_run
- * deliveries against it. The relay URL is intentionally stored outside Git so a
- * restart reuses one webhook instead of creating duplicates.
+ * Starts a Cloudflare Quick Tunnel for the local control plane and patches the
+ * saved GitHub check_run webhook on every launch. Quick Tunnel hostnames are
+ * intentionally short-lived, while the GitHub webhook and signing secret persist.
  */
 export async function startLocalGitHubWebhook(options: {
   rootDir?: string;
+  legacyRootDirs?: string[];
   repository?: string;
-  relayUrl?: string;
-  targetUrl?: string;
+  originUrl?: string;
+  webhookPath?: string;
+  cloudflaredBin?: string;
+  cloudflaredConfig?: string;
   log?: (message: string) => void;
 } = {}): Promise<LocalGitHubWebhook> {
   const rootDir = options.rootDir ?? process.cwd();
   const envPath = join(rootDir, ".env");
   const statePath = join(rootDir, ".eventforge", "github-local-webhook.json");
-  const stored = await loadStoredRelay(statePath);
+  const stored = (await loadStoredWebhook(statePath)) ?? (await Promise.all((options.legacyRootDirs ?? []).map((legacyRootDir) => loadStoredWebhook(join(legacyRootDir, ".eventforge", "github-local-webhook.json"))))).find(Boolean);
   const repository = options.repository ?? process.env.EVENTFORGE_GITHUB_REPOSITORY ?? (await command(["repo", "view", "--json", "nameWithOwner", "-q", ".nameWithOwner"]));
   if (!repository.includes("/")) throw new Error("Could not determine the GitHub repository. Set EVENTFORGE_GITHUB_REPOSITORY=owner/repository.");
 
-  const relayUrl = await provisionRelay(options.relayUrl ?? process.env.EVENTFORGE_GITHUB_RELAY_URL ?? (stored?.repository === repository ? stored.relayUrl : undefined));
-  const secret = await ensureSecret(envPath);
-  process.env.GITHUB_WEBHOOK_SECRET = secret;
+  const originUrl = options.originUrl ?? process.env.EVENTFORGE_LOCAL_TUNNEL_ORIGIN ?? DEFAULT_ORIGIN;
+  const tunnel = await waitForQuickTunnel(originUrl, options.cloudflaredBin ?? process.env.EVENTFORGE_CLOUDFLARED_BIN ?? "cloudflared", options.cloudflaredConfig ?? process.env.EVENTFORGE_CLOUDFLARED_CONFIG);
+  try {
+    await waitForTunnelHealth(tunnel.tunnelUrl);
+    const webhookUrl = publicWebhookUrl(tunnel.tunnelUrl, options.webhookPath);
+    const secret = await ensureSecret(envPath);
+    process.env.GITHUB_WEBHOOK_SECRET = secret;
 
-  const isReusable = stored?.repository === repository && stored.relayUrl === relayUrl && await hookExists(repository, stored.hookId, relayUrl);
-  const hookId = isReusable ? stored.hookId : await createHook(repository, relayUrl, secret);
-  await mkdir(dirname(statePath), { recursive: true });
-  await writeFile(statePath, `${JSON.stringify({ repository, relayUrl, hookId }, null, 2)}\n`, { mode: 0o600 });
+    const isReusable = stored?.repository === repository && await hookExists(repository, stored.hookId);
+    const hookId = isReusable ? stored.hookId : await createHook(repository, webhookUrl, secret);
+    if (isReusable) await patchHook(repository, hookId, webhookUrl, secret);
+    await mkdir(dirname(statePath), { recursive: true });
+    await writeFile(statePath, `${JSON.stringify({ repository, hookId, publicUrl: webhookUrl, tunnelUrl: tunnel.tunnelUrl, tunnel: "cloudflare_quick" }, null, 2)}\n`, { mode: 0o600 });
 
-  const targetUrl = options.targetUrl ?? process.env.EVENTFORGE_LOCAL_WEBHOOK_TARGET ?? DEFAULT_TARGET;
-  const smee = new SmeeClient({ source: relayUrl, target: targetUrl, logger: console });
-  const events = smee.start();
-  options.log?.(`GitHub webhook #${hookId} is registered for ${repository}; forwarding through ${relayUrl} to ${targetUrl}.`);
+    options.log?.(`GitHub webhook #${hookId} now targets ${webhookUrl} through Cloudflare Quick Tunnel ${tunnel.tunnelUrl}, forwarding to ${originUrl}.`);
 
-  return { repository, relayUrl, hookId, close: async () => { events.close(); } };
+    return { repository, publicUrl: webhookUrl, hookId, close: tunnel.close };
+  } catch (error) {
+    await tunnel.close();
+    throw error;
+  }
 }
 
 export const localWebhookStatePath = (rootDir = process.cwd()) => resolve(rootDir, ".eventforge", "github-local-webhook.json");

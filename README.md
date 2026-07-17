@@ -16,9 +16,9 @@ Open `http://localhost:5173`, then select **Run GitHub CI demo**. The control pl
 
 `docker compose up -d` starts PostgreSQL/pgvector, MinIO, and the control plane once its image is built. Provider OAuth credentials are never included in this repository; demo events exercise the same normalized event flow without them.
 
-## Test a real GitHub webhook locally
+## Test a real GitHub webhook through Cloudflare locally
 
-GitHub cannot deliver a webhook directly to `localhost`, so EventForge opens a disposable Smee relay for local development. Starting the GitHub mode creates a random local webhook secret in the ignored `.env`, creates (or reuses) exactly one `check_run` webhook on the configured repository through the authenticated `gh` CLI, and forwards the signed delivery to the control plane.
+GitHub cannot deliver a webhook directly to `localhost`, so EventForge starts a local Cloudflare Quick Tunnel. Starting GitHub mode creates a random local webhook secret in the ignored `.env`, creates (or reuses) exactly one `check_run` webhook through the authenticated `gh` CLI, and patches that webhook to the newly created `trycloudflare.com` URL on every launch. The tunnel forwards signed deliveries to the control plane.
 
 ```bash
 cp .env.example .env
@@ -27,13 +27,15 @@ pnpm dev:github
 pnpm dev:console
 ```
 
+`cloudflared` must be on your `PATH` (for macOS: `brew install cloudflared`). Set `EVENTFORGE_CLOUDFLARED_BIN` if it is installed elsewhere. EventForge intentionally starts Quick Tunnels with an empty Cloudflare configuration so unrelated named-tunnel files cannot alter the local webhook route; set `EVENTFORGE_CLOUDFLARED_CONFIG` only when you explicitly need a different config.
+
 Leave both processes running, then open `http://localhost:5173`. Use the **EventForge CI failure demo** GitHub Actions workflow's **Run workflow** button, or dispatch it from the terminal:
 
 ```bash
 gh workflow run "EventForge CI failure demo" --repo OWNER/REPOSITORY
 ```
 
-The workflow fails intentionally. Once GitHub finishes it, the console shows a verified GitHub event, a bounded agent investigation, and an approval-gated remediation proposal. You can inspect the raw local event stream with `curl http://127.0.0.1:4310/events`. The relay URL and webhook id are stored in ignored `.eventforge/github-local-webhook.json`; remove the corresponding repository webhook in GitHub when you are done. Smee is for local testing only, never production traffic.
+The workflow fails intentionally. Once GitHub finishes it, the console shows a verified GitHub event, a bounded agent investigation, and an approval-gated remediation proposal. You can inspect the raw local event stream with `curl http://127.0.0.1:4310/events`. The public webhook endpoint and webhook id are stored in ignored `.eventforge/github-local-webhook.json`; remove the corresponding repository webhook in GitHub when you are done. Quick Tunnels are for local testing only, never production traffic.
 
 ## Packages
 
