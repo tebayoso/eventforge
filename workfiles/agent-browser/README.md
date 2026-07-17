@@ -48,3 +48,35 @@ Reusable pattern: after opening a test issue, confirm the GitHub delivery is `20
 - Repeated the keyboard switch at a 375px viewport after the responsive-header adjustment. Outcome: **Use dark theme** remained discoverable by its accessible name, Space selected it, and the document width stayed equal to the 375px viewport (no horizontal overflow).
 
 Reusable pattern: snapshot before every theme action, verify the selected button's `aria-pressed` state plus local storage, then reload to confirm the early initializer applies the persisted theme without waiting for React.
+
+## 2026-07-17 — Cloudflare deployment CORS smoke flow
+
+- Started an isolated control plane at `http://localhost:4311` with `EVENTFORGE_ALLOWED_ORIGINS=http://localhost:5174`, then served the Vite console at `http://localhost:5174` with `VITE_EVENTFORGE_API_URL=http://localhost:4311`.
+- Opened the console in the `eventforge-cloudflare-smoke` agent-browser session. The command center, connector health, approval queue, and Forge Studio rendered; the browser console reported no application errors.
+- Selected **Run GitHub CI demo**. Network evidence showed credentialed cross-origin preflights returning `204`, followed by the `POST /events/demo` returning `202` and console refresh requests returning `200`. The pending remediation proposal appeared in the approval queue.
+- Screenshot captured at `/tmp/eventforge-cloudflare-cors-smoke.png`. A local `favicon.ico` request returned `404`; it did not affect the application flow.
+
+Reusable pattern: test cross-origin production-style console wiring on isolated local ports, set the exact console origin in `EVENTFORGE_ALLOWED_ORIGINS`, and assert both the browser's preflight/POST sequence and the resulting approval state. Do not use this local test as evidence of Cloudflare Access, DNS, Tunnel, or custom-domain configuration.
+
+## 2026-07-17 — EventForge landing-page validation
+
+- Started the Vite console at `http://127.0.0.1:5176` and opened `/` in the `eventforge-landing` agent-browser session.
+- Verified the landing page title, navigation, hero “Autonomy needs a witness,” the investigation trace, principles, decision ledger, and final console CTA rendered in the accessibility tree. Browser console showed only Vite/React development messages, with no application errors.
+- Captured the full-page desktop visual at `/tmp/eventforge-landing.png` and visually inspected its layout: the dark field-note system, visible investigation trace, warm proof section, and mint closeout all remained distinct and readable.
+- Followed the **Open console** navigation to `/console`. The existing operations console rendered with its dashboard headings and controls, confirming the landing page did not replace it.
+
+Reusable pattern: validate the marketing route and the preserved application route separately. For this Vite SPA, `/console` is selected client-side and is covered by the Worker static-assets SPA fallback in production.
+
+## 2026-07-17 — Landing page opened for review
+
+- Started Vite at `http://127.0.0.1:5176` and opened the landing page in the headed `eventforge-landing-live` browser session for live review.
+- Confirmed the loaded document title is `EventForge — Autonomy needs a witness`.
+
+## 2026-07-17 — Landing page value and readability refinement
+
+- Reopened `http://127.0.0.1:5176/` in the headed `eventforge-landing-live` browser session after the copy and typography update. Confirmed the document title is `EventForge — One place for every webhook` and the accessibility tree includes the new hierarchy: “One place for every webhook. Less noise.”, “More clarity around the work that matters.”, and “Turn webhook noise into useful work.”
+- Captured and visually inspected `/tmp/eventforge-landing-refined.png`. The reduced display scale and sans-serif headings keep the visual character while making the hero, value cards, and supporting copy legible at desktop size.
+- Selected **What it solves** and confirmed the in-page navigation resolves to `/#problem`. Reopened `/console` and confirmed the existing operations command center still renders with its dashboard, event feed, approval queue, and Forge Studio controls; returned the live browser to `/` for review.
+- Browser console contained only Vite/React development notices, with no application errors.
+
+Reusable pattern: after changing a marketing route, validate the page’s outcome-led headings in the accessibility tree, test at least one in-page anchor, then open the retained application route before returning the browser to the marketing page.

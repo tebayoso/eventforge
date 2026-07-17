@@ -42,6 +42,16 @@ services:
         condition: service_started
     ports:
       - "4310:4310"
+  cloudflared:
+    profiles: ["cloudflare-tunnel"]
+    image: cloudflare/cloudflared:2026.7.2
+    command: ["tunnel", "--no-autoupdate", "--loglevel", "info", "--metrics", "0.0.0.0:2000", "run"]
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?Set CLOUDFLARE_TUNNEL_TOKEN in the ignored .env file or your secret store.}
+    depends_on:
+      control-plane:
+        condition: service_started
+    restart: unless-stopped
 volumes:
   postgres-data:
   minio-data:

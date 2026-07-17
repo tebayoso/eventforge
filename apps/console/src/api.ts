@@ -1,7 +1,7 @@
 const baseUrl = import.meta.env.VITE_EVENTFORGE_API_URL ?? "http://localhost:4310";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(new URL(path, baseUrl), { headers: { "content-type": "application/json", ...(init?.headers ?? {}) }, ...init });
+  const response = await fetch(new URL(path, baseUrl), { credentials: "include", headers: { "content-type": "application/json", ...(init?.headers ?? {}) }, ...init });
   if (!response.ok) throw new Error(await response.text());
   return response.json() as Promise<T>;
 }
