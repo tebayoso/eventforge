@@ -1,0 +1,70 @@
+apps/console/public/_headers
+  s_a43aa3e7a4e890::t_deec04a32cfa1c 1-6
+apps/console/src/api.ts
+  s_a43aa3e7a4e890::t_deec04a32cfa1c 4
+docker-compose.yml
+  s_a43aa3e7a4e890::t_deec04a32cfa1c 45-54
+apps/console/index.html
+  s_a43aa3e7a4e890::t_b58e973c938b69 3
+apps/console/package.json
+  s_a43aa3e7a4e890::t_deec04a32cfa1c 11-13,29-30
+apps/control-plane/src/app.ts
+  s_a43aa3e7a4e890::t_deec04a32cfa1c 28,36-42,99,103-109
+apps/control-plane/test/app.test.ts
+  s_a43aa3e7a4e890::t_deec04a32cfa1c 12-36
+  s_a43aa3e7a4e890::t_6e0112e68c6fa5 4
+deploy/README.md
+  s_a43aa3e7a4e890::t_6cd01daac4daae 93,97
+  s_a43aa3e7a4e890::t_821fa66fc0c0eb 13
+  s_a43aa3e7a4e890::t_6e0112e68c6fa5 3,5-12,14-80,83-84,87-92,94,98-105
+apps/console/src/main.tsx
+  s_a43aa3e7a4e890::t_05e5316a7abade 4,7-9
+deploy/helm/eventforge/templates/cloudflared-deployment.yaml
+  s_a43aa3e7a4e890::t_deec04a32cfa1c 1-45
+workfiles/agent-browser/README.md
+  s_a43aa3e7a4e890::t_30deca32114f36 40-48
+  s_a43aa3e7a4e890::t_5f17cc312add26 58-62
+  s_a43aa3e7a4e890::t_0476d9f0359e57 63-71
+  s_a43aa3e7a4e890::t_70d15da7cb1e37 49-57
+deploy/helm/eventforge/templates/deployment.yaml
+  s_a43aa3e7a4e890::t_137668ddc069d7 35-38,42-45,47-50,54-57,61-64,66-69,73-76,80-83
+  s_a43aa3e7a4e890::t_deec04a32cfa1c 25-26
+  s_a43aa3e7a4e890::t_28f8056127551a 33,39-40,52,58-59,71,77-78
+  s_a43aa3e7a4e890::t_821fa66fc0c0eb 34,41,46,51,53,60,65,70,72,79,84
+deploy/helm/eventforge/values.yaml
+  s_a43aa3e7a4e890::t_deec04a32cfa1c 5-6,42-54
+  s_a43aa3e7a4e890::t_821fa66fc0c0eb 21-22,24,26-28,30,32-34,36,38
+  s_a43aa3e7a4e890::t_28f8056127551a 23,25,29,31,35,37
+.env.example
+  s_a43aa3e7a4e890::t_deec04a32cfa1c 9-10,30-31
+apps/console/src/styles.css
+  s_a43aa3e7a4e890::t_273e2a0faafe26 54-56,63
+  s_a43aa3e7a4e890::t_05e5316a7abade 12-53,57-62,64,66,68,71,73-83,85-89
+  s_a43aa3e7a4e890::t_c5caf99df71c50 69-70,72
+  s_a43aa3e7a4e890::t_e6879cad0fba59 65,67
+  s_a43aa3e7a4e890::t_d1b7e5bf77fd1d 84
+apps/console/wrangler.jsonc
+  s_a43aa3e7a4e890::t_deec04a32cfa1c 1-16
+apps/console/src/LandingPage.tsx
+  s_a43aa3e7a4e890::t_05e5316a7abade 1-9,11-23,26-29,32-35,38-46,49-54,56,58-59,63-64,69,71-74,82-90,93-98,102,105,107-110,113,116,118-120,122-131,135,139-144,148-153
+  s_a43aa3e7a4e890::t_6e3662da0bf20f 10
+  s_a43aa3e7a4e890::t_328655ebfe1026 24-25,30-31,36-37,47-48,55,57,60-62,65-68,70,75-81,91-92,99-101,103-104,106,111-112,114-115,117,121,132-134,136-138,145-147
+pnpm-lock.yaml
+  s_a43aa3e7a4e890::t_9d5ee6a1cb1797 57-59,231-277,503-506,513-518,525-530,536-540,546-550,557-562,569-586,593-598,605-610,617-622,629-634,642-648,656-676,684-690,698-704,712-718,726-732,738-748,755-760,767-772,793-795,908-916,1089-1095,1368-1370,1607-1609,1963-1966,2114-2118,2219-2221,2475-2478,2540-2543,2656-2662,2803-2817,2821-2832,2866-2871,3002-3028,3189-3190,3196-3200,3206-3210,3214-3216,3220-3222,3226-3228,3232-3240,3244-3246,3250-3252,3256-3258,3262-3264,3270-3274,3280-3294,3300-3304,3310-3314,3320-3324,3330-3334,3340-3347,3351-3353,3357-3359,3384-3388,3482-3493,3602-3605,3896-3897,4140-4141,4593-4594,4709-4720,4813-4814,5122-5152,5221-5222,5317-5322,5456-5479,5482-5483,5502-5514
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "1f318acb290fd415753a9fbdb66f6f26872d720c",
+  "prompts": {},
+  "sessions": {
+    "s_a43aa3e7a4e890": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f71ea-45a3-7ea2-9895-819a215b6808",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
