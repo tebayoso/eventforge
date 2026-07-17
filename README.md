@@ -2,6 +2,10 @@
 
 EventForge is a hybrid, policy-first operations console for event-driven Codex workflows. It receives GitHub, Linear, and Sentry events, creates bounded agent runs, preserves scoped memory, and requires explicit approval for consequential actions.
 
+## Demo video
+
+[Watch the EventForge demo on YouTube](https://youtu.be/pht3rrl--pE) for the end-to-end operations-console, GitHub-event, Codex-review, and approval workflow.
+
 ## Quick start
 
 ```bash
@@ -13,6 +17,8 @@ pnpm dev:console
 ```
 
 Open `http://localhost:5173`, then select **Run GitHub CI demo**. The control plane is at `http://localhost:4310`.
+
+For the shortest walkthrough, run the demo event, inspect the resulting agent run and approval proposal, then compare the flow with the [demo video](https://youtu.be/pht3rrl--pE).
 
 `docker compose up -d` starts PostgreSQL/pgvector, MinIO, and the control plane once its image is built. Provider OAuth credentials are never included in this repository; demo events exercise the same normalized event flow without them.
 
