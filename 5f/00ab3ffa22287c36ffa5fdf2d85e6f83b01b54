@@ -1,0 +1,32 @@
+apps/console/src/styles.css
+  s_61e9fcdd0d971d::t_5ab378dfbf41f8 5-68,70-101,103-126
+workfiles/agent-browser/README.md
+  s_61e9fcdd0d971d::t_ee9ab573303be3 40-47,49-50
+  s_61e9fcdd0d971d::t_2527114bf9eb75 48
+apps/console/index.html
+  s_61e9fcdd0d971d::t_f416cbef4a9c58 3-17
+apps/console/src/theme.ts
+  s_61e9fcdd0d971d::t_f416cbef4a9c58 1-25,31-37,39,41-44
+  s_61e9fcdd0d971d::t_fd0e4420738974 26-30,38,40
+apps/console/src/theme.test.ts
+  s_61e9fcdd0d971d::t_f416cbef4a9c58 1-29
+apps/console/src/App.tsx
+  s_61e9fcdd0d971d::t_2d15813f296848 41,80
+  s_61e9fcdd0d971d::t_82abc9d6d3313e 2,4,10,18,35,37-38,40,44-45,48,56-57,59,62-63,65,68-71,73,81-84
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "5f00ab3ffa22287c36ffa5fdf2d85e6f83b01b54",
+  "prompts": {},
+  "sessions": {
+    "s_61e9fcdd0d971d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f71db-e81e-7d23-9a74-d400b74b790a",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
