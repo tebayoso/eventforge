@@ -1,0 +1,22 @@
+README.md
+  s_cb07b89c712fa5::t_8dd75a4a9bb67f 5-8,21
+  s_cb07b89c712fa5::t_0d1ae0eb3cafd3 22
+plugins/eventforge/README.md
+  s_cb07b89c712fa5::t_8dd75a4a9bb67f 6-7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "4aba87bec2d6f7096fdad2a6a604ed0082b68c70",
+  "prompts": {},
+  "sessions": {
+    "s_cb07b89c712fa5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7187-4c4d-7273-9636-b2e90c713af2",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
