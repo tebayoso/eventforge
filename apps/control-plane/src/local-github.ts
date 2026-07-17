@@ -26,7 +26,7 @@ export function envValue(contents: string, key: string): string | undefined {
 export function webhookFormArgs(relayUrl: string, secret: string): string[] {
   return [
     "-f", "name=web",
-    "-f", "active=true",
+    "-F", "active=true",
     "-f", "events[]=check_run",
     "-f", `config[url]=${relayUrl}`,
     "-f", "config[content_type]=json",
@@ -93,10 +93,15 @@ async function hookExists(repository: string, hookId: number, relayUrl: string):
 }
 
 async function createHook(repository: string, relayUrl: string, secret: string): Promise<number> {
-  const response = await command(["api", "--method", "POST", `repos/${repository}/hooks`, ...webhookFormArgs(relayUrl, secret)]);
-  const hook = JSON.parse(response) as GitHubHook;
-  if (!Number.isInteger(hook.id)) throw new Error("GitHub created a webhook without an id.");
-  return hook.id;
+  try {
+    const response = await command(["api", "--method", "POST", `repos/${repository}/hooks`, ...webhookFormArgs(relayUrl, secret)]);
+    const hook = JSON.parse(response) as GitHubHook;
+    if (!Number.isInteger(hook.id)) throw new Error("GitHub created a webhook without an id.");
+    return hook.id;
+  } catch (error: unknown) {
+    const stderr = (error as { stderr?: string }).stderr?.trim();
+    throw new Error(stderr ? `Could not register the GitHub webhook: ${stderr}` : "Could not register the GitHub webhook.");
+  }
 }
 
 /**
