@@ -9,12 +9,13 @@ describe("local GitHub webhook bootstrap", () => {
 
   it("uses GitHub's signed JSON webhook configuration", () => {
     expect(webhookFormArgs("https://eventforge.trycloudflare.com", "secret")).toEqual(expect.arrayContaining([
-      "events[]=check_run", "config[content_type]=json", "config[insecure_ssl]=0", "config[secret]=secret"
+      "events[]=check_run", "events[]=issues", "config[content_type]=json", "config[insecure_ssl]=0", "config[secret]=secret"
     ]));
   });
 
   it("finds the temporary Cloudflare hostname in either cloudflared output stream", () => {
     expect(quickTunnelUrl("INF | https://eventforge-sky.trycloudflare.com | connected")).toBe("https://eventforge-sky.trycloudflare.com");
+    expect(quickTunnelUrl("INF Cloudflare API https://api.trycloudflare.com is reachable")).toBeUndefined();
     expect(quickTunnelUrl("no public URL yet")).toBeUndefined();
   });
 

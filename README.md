@@ -18,7 +18,7 @@ Open `http://localhost:5173`, then select **Run GitHub CI demo**. The control pl
 
 ## Test a real GitHub webhook through Cloudflare locally
 
-GitHub cannot deliver a webhook directly to `localhost`, so EventForge starts a local Cloudflare Quick Tunnel. Starting GitHub mode creates a random local webhook secret in the ignored `.env`, creates (or reuses) exactly one `check_run` webhook through the authenticated `gh` CLI, and patches that webhook to the newly created `trycloudflare.com` URL on every launch. The tunnel forwards signed deliveries to the control plane.
+GitHub cannot deliver a webhook directly to `localhost`, so EventForge starts a local Cloudflare Quick Tunnel. Starting GitHub mode creates a random local webhook secret in the ignored `.env`, creates (or reuses) exactly one webhook subscribed to `check_run` and `issues` through the authenticated `gh` CLI, and patches that webhook to the newly created `trycloudflare.com` URL on every launch. The tunnel forwards signed deliveries to the control plane, which acknowledges them before running Codex work in the background.
 
 ```bash
 cp .env.example .env
@@ -36,6 +36,18 @@ gh workflow run "EventForge CI failure demo" --repo OWNER/REPOSITORY
 ```
 
 The workflow fails intentionally. Once GitHub finishes it, the console shows a verified GitHub event, a bounded agent investigation, and an approval-gated remediation proposal. You can inspect the raw local event stream with `curl http://127.0.0.1:4310/events`. The public webhook endpoint and webhook id are stored in ignored `.eventforge/github-local-webhook.json`; remove the corresponding repository webhook in GitHub when you are done. Quick Tunnels are for local testing only, never production traffic.
+
+## Review a new GitHub issue in Codex
+
+Local GitHub mode also subscribes to `issues` events. Opening an issue creates a fresh, persisted Codex SDK thread in read-only mode, scoped to this repository. Its thread ID and review summary appear in the EventForge **Agent run log**; issue reviews never create a GitHub comment, branch, or pull request automatically.
+
+```bash
+gh issue create --repo OWNER/REPOSITORY \
+  --title "Review this engineering issue" \
+  --body "Describe the problem, expected behavior, and relevant context."
+```
+
+`pnpm dev:github` runs the Codex-backed runner. Keep the process running until the issue appears in the dashboard as a completed run; the issue text is treated as untrusted input and the Codex thread is configured read-only. GitHub receives `202 Accepted` immediately, while the review continues in the persisted Codex thread.
 
 ## Packages
 

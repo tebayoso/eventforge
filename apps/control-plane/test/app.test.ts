@@ -1,3 +1,4 @@
+import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { EventForgeStore } from "@eventforge/core";
 import { createApp } from "../src/app.js";
@@ -23,6 +24,58 @@ describe("control plane", () => {
     const app = await createApp({ persistAudit: false });
     const response = await app.inject({ method: "POST", url: "/webhooks/github", payload: { action: "check_run" } });
     expect(response.statusCode).toBe(401);
+    await app.close();
+  });
+
+  it("acknowledges a verified webhook before its Codex review finishes", async () => {
+    const previousSecret = process.env.GITHUB_WEBHOOK_SECRET;
+    const secret = "webhook-test-secret";
+    process.env.GITHUB_WEBHOOK_SECRET = secret;
+    let finishReview: (() => void) | undefined;
+    const delayedRunner: AgentRunner = {
+      investigate: async () => {
+        await new Promise<void>((resolve) => { finishReview = resolve; });
+        return { threadId: "thread-webhook", summary: "Issue review completed." };
+      }
+    };
+    const app = await createApp({ store: new EventForgeStore(), runner: delayedRunner, persistAudit: false });
+    const payload = JSON.stringify({ action: "opened", issue: { number: 7, title: "Acknowledge first" }, repository: { full_name: "tebayoso/eventforge" } });
+    const signature = `sha256=${createHmac("sha256", secret).update(payload).digest("hex")}`;
+    try {
+      const response = await app.inject({
+        method: "POST",
+        url: "/webhooks/github",
+        payload,
+        headers: { "content-type": "application/json", "x-github-delivery": "delivery-7", "x-github-event": "issues", "x-hub-signature-256": signature }
+      });
+      expect(response.statusCode).toBe(202);
+      expect((await app.inject({ method: "GET", url: "/runs" })).json()[0]).toMatchObject({ status: "running" });
+      finishReview?.();
+      await new Promise((resolve) => setImmediate(resolve));
+      expect((await app.inject({ method: "GET", url: "/runs" })).json()[0]).toMatchObject({ threadId: "thread-webhook", status: "completed" });
+    } finally {
+      if (previousSecret === undefined) delete process.env.GITHUB_WEBHOOK_SECRET;
+      else process.env.GITHUB_WEBHOOK_SECRET = previousSecret;
+      await app.close();
+    }
+  });
+
+  it("starts a read-only Codex review thread for a newly opened GitHub issue", async () => {
+    const app = await createApp({ store: new EventForgeStore(), runner, persistAudit: false });
+    const response = await app.inject({
+      method: "POST",
+      url: "/events",
+      payload: {
+        provider: "github",
+        topic: "issues",
+        payload: { action: "opened", issue: { number: 42, title: "Review webhook issue flow" }, repository: { full_name: "tebayoso/eventforge" } }
+      }
+    });
+    expect(response.statusCode).toBe(202);
+    const runs = await app.inject({ method: "GET", url: "/runs" });
+    expect(runs.json()[0]).toMatchObject({ threadId: "thread-1", status: "completed" });
+    const actions = await app.inject({ method: "GET", url: "/actions" });
+    expect(actions.json()).toEqual([]);
     await app.close();
   });
 

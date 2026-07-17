@@ -88,6 +88,10 @@ export function isGitHubCiFailure(event: EventEnvelope): boolean {
   return event.topic === "check_run" && checkRun?.conclusion === "failure";
 }
 
+export function isGitHubIssueOpened(event: EventEnvelope): boolean {
+  return event.provider === "github" && event.topic === "issues" && event.payload.action === "opened" && typeof event.payload.issue === "object";
+}
+
 export const demoEvents = {
   githubCiFailure: {
     action: "check_run",

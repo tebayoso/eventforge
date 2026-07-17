@@ -7,6 +7,7 @@ import { startLocalGitHubWebhook } from "./local-github.js";
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const projectRoot = resolve(packageRoot, "../..");
 dotenv.config({ path: resolve(projectRoot, ".env") });
+process.env.EVENTFORGE_CODEX_WORKDIR ??= projectRoot;
 
 const app = await createApp();
 const port = Number(process.env.PORT ?? 4310);

@@ -10,7 +10,10 @@ const execFile = promisify(execFileCallback);
 const DEFAULT_ORIGIN = "http://127.0.0.1:4310";
 const DEFAULT_WEBHOOK_PATH = "/webhooks/github";
 const QUICK_TUNNEL_TIMEOUT_MS = 30_000;
+const QUICK_TUNNEL_ATTEMPTS = 3;
+const QUICK_TUNNEL_RETRY_DELAY_MS = 1_000;
 const TUNNEL_READY_TIMEOUT_MS = 30_000;
+const GITHUB_WEBHOOK_EVENTS = ["check_run", "issues"] as const;
 
 type StoredWebhook = { repository: string; hookId: number; publicUrl?: string; tunnel?: "cloudflare_quick" };
 type GitHubHook = { id: number; config?: { url?: string } };
@@ -31,7 +34,7 @@ export function webhookFormArgs(relayUrl: string, secret: string): string[] {
   return [
     "-f", "name=web",
     "-F", "active=true",
-    "-f", "events[]=check_run",
+    ...GITHUB_WEBHOOK_EVENTS.flatMap((event) => ["-f", `events[]=${event}`]),
     "-f", `config[url]=${relayUrl}`,
     "-f", "config[content_type]=json",
     "-f", `config[secret]=${secret}`,
@@ -40,7 +43,7 @@ export function webhookFormArgs(relayUrl: string, secret: string): string[] {
 }
 
 export function quickTunnelUrl(output: string): string | undefined {
-  return output.match(/https:\/\/[-a-z0-9]+\.trycloudflare\.com\b/i)?.[0];
+  return output.match(/https:\/\/(?!api\.trycloudflare\.com\b)[-a-z0-9]+\.trycloudflare\.com\b/i)?.[0];
 }
 
 export function publicWebhookUrl(tunnelUrl: string, webhookPath = DEFAULT_WEBHOOK_PATH): string {
@@ -120,7 +123,7 @@ async function patchHook(repository: string, hookId: number, publicUrl: string, 
   }
 }
 
-async function waitForQuickTunnel(originUrl: string, cloudflaredBin: string, configPath?: string): Promise<{ tunnelUrl: string; close: () => Promise<void> }> {
+async function startQuickTunnelAttempt(originUrl: string, cloudflaredBin: string, configPath?: string): Promise<{ tunnelUrl: string; close: () => Promise<void> }> {
   const tunnel = spawn(cloudflaredBin, quickTunnelArgs(originUrl, configPath), { stdio: ["ignore", "pipe", "pipe"] });
   const output: string[] = [];
   let tunnelUrl: string | undefined;
@@ -159,6 +162,19 @@ async function waitForQuickTunnel(originUrl: string, cloudflaredBin: string, con
   } finally {
     clearTimeout(timeout);
   }
+}
+
+async function waitForQuickTunnel(originUrl: string, cloudflaredBin: string, configPath?: string): Promise<{ tunnelUrl: string; close: () => Promise<void> }> {
+  let lastError: Error | undefined;
+  for (let attempt = 1; attempt <= QUICK_TUNNEL_ATTEMPTS; attempt += 1) {
+    try {
+      return await startQuickTunnelAttempt(originUrl, cloudflaredBin, configPath);
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error("Cloudflare Quick Tunnel failed to start.");
+      if (attempt < QUICK_TUNNEL_ATTEMPTS) await new Promise((resolve) => setTimeout(resolve, QUICK_TUNNEL_RETRY_DELAY_MS));
+    }
+  }
+  throw new Error(`Cloudflare Quick Tunnel failed after ${QUICK_TUNNEL_ATTEMPTS} attempts: ${lastError?.message ?? "unknown error"}`);
 }
 
 async function waitForTunnelHealth(tunnelUrl: string): Promise<void> {

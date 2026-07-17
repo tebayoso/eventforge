@@ -10,6 +10,7 @@ import {
   createForgeDraft,
   demoEvents,
   isGitHubCiFailure,
+  isGitHubIssueOpened,
   matchesWorkflow,
   normalizeEvent,
   policyAllowsAction,
@@ -46,6 +47,21 @@ export function createDefaultWorkflow(): WorkflowDefinition {
   };
 }
 
+export function createIssueReviewWorkflow(): WorkflowDefinition {
+  return {
+    id: randomUUID(),
+    workspaceId: DEFAULT_WORKSPACE,
+    projectId: DEFAULT_PROJECT,
+    name: "Review newly opened GitHub issues",
+    enabled: true,
+    trigger: { provider: "github", topic: "issues" },
+    filters: { action: "opened" },
+    agentProfile: "issue-triager",
+    memoryScope: "project",
+    policy: { approvalMode: "approval_required", allowedCapabilities: ["read"], allowedRepositories: ["tebayoso/eventforge"], allowedPaths: ["**"], allowedDomains: [], allowedProviders: ["github"] }
+  };
+}
+
 function secretFor(provider: Provider): string | undefined {
   if (provider === "github") return process.env.GITHUB_WEBHOOK_SECRET;
   if (provider === "linear") return process.env.LINEAR_WEBHOOK_SECRET;
@@ -73,6 +89,7 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
   const runner = options.runner ?? createRunner();
   const auditSink = options.persistAudit !== false && process.env.DATABASE_URL ? new PostgresAuditSink(process.env.DATABASE_URL) : undefined;
   store.addWorkflow(createDefaultWorkflow());
+  store.addWorkflow(createIssueReviewWorkflow());
 
   await app.register(cors, { origin: true });
   await app.register(rawBody, { global: false, encoding: false, runFirst: true });
@@ -91,6 +108,11 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
     try {
       const result = await runner.investigate({ event, workflow, memories });
       store.memory.remember({ workspaceId: event.workspaceId, projectId: event.projectId, text: result.summary, tags: [event.provider, event.topic, "agent-summary"] });
+      if (isGitHubIssueOpened(event)) {
+        store.updateRun(run.id, { threadId: result.threadId, summary: result.summary, status: "completed", finishedAt: new Date().toISOString() });
+        store.audit(event.workspaceId, "agent_run", run.id, "Read-only Codex issue review completed; no provider action was proposed.");
+        return;
+      }
       const capabilities = ["write_files", "git_commit", "provider_write"];
       const allowed = policyAllowsAction(workflow.policy, capabilities);
       const proposal: ActionProposal = {
@@ -110,12 +132,17 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
     }
   }
 
-  async function ingest(provider: Provider, payload: Record<string, unknown>, input: { signatureStatus: EventEnvelope["signatureStatus"]; deliveryId?: string; topicHint?: string; workspaceId?: string; projectId?: string }) {
+  async function ingest(provider: Provider, payload: Record<string, unknown>, input: { signatureStatus: EventEnvelope["signatureStatus"]; deliveryId?: string; topicHint?: string; workspaceId?: string; projectId?: string; awaitWorkflows?: boolean }) {
     const event = normalizeEvent({ provider, payload, signatureStatus: input.signatureStatus, deliveryId: input.deliveryId, topicHint: input.topicHint, workspaceId: input.workspaceId ?? DEFAULT_WORKSPACE, projectId: input.projectId ?? DEFAULT_PROJECT });
     const appended = store.appendEvent(event);
     if (!appended.created) return { duplicate: true, event: appended.event, runs: [] };
     const workflows = store.workflows(event.workspaceId).filter((workflow) => matchesWorkflow(workflow, event));
-    await Promise.all(workflows.map((workflow) => runWorkflow(workflow, event)));
+    const execution = Promise.all(workflows.map((workflow) => runWorkflow(workflow, event)));
+    if (input.awaitWorkflows !== false) {
+      await execution;
+    } else {
+      void execution.catch((error: unknown) => app.log.error({ error, eventId: event.id }, "background workflow execution failed"));
+    }
     return { duplicate: false, event, runs: store.runs().filter((run) => run.eventId === event.id) };
   }
 
@@ -159,7 +186,12 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
     const isDemo = process.env.EVENTFORGE_DEMO_MODE === "true" && request.headers["x-eventforge-demo"] === "true";
     const verified = secret ? verifyHmac(raw, signatureFor(provider.data, request.headers), secret) : false;
     if (!verified && !isDemo) return reply.status(401).send({ error: "Invalid or missing webhook signature." });
-    const result = await ingest(provider.data, payload, { signatureStatus: verified ? "verified" : "demo", deliveryId: deliveryIdFor(provider.data, request.headers), topicHint: provider.data === "github" ? String(request.headers["x-github-event"] ?? "unknown") : undefined });
+    const result = await ingest(provider.data, payload, {
+      signatureStatus: verified ? "verified" : "demo",
+      deliveryId: deliveryIdFor(provider.data, request.headers),
+      topicHint: provider.data === "github" ? String(request.headers["x-github-event"] ?? "unknown") : undefined,
+      awaitWorkflows: false
+    });
     return reply.status(result.duplicate ? 200 : 202).send(result);
   });
 
