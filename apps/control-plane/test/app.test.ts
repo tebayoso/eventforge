@@ -7,7 +7,13 @@ import {
   type AuthContext,
   type WorkflowDefinition,
 } from "@eventforge/core";
-import { configuredBrowserOrigins, createApp, createDefaultWorkflow } from "../src/app.js";
+import {
+  configuredBrowserOrigins,
+  createApp,
+  createDefaultWorkflow,
+  isLoopbackRequestHost,
+  type AppOptions,
+} from "../src/app.js";
 import type { AgentRunner } from "../src/runner.js";
 import {
   createAutomationAuthContext,
@@ -47,6 +53,7 @@ async function withRemoteApp(
     workspaceId: string;
     projectId: string;
   }>,
+  extraOptions: Pick<AppOptions, "relayController" | "tunnelProvisioner"> = {},
 ): Promise<void> {
   const keys = [
     "EVENTFORGE_RUNTIME_MODE",
@@ -67,6 +74,7 @@ async function withRemoteApp(
     persistAudit: false,
     authenticate: async () => auth ?? undefined,
     integrations,
+    ...extraOptions,
   });
   try {
     await callback(app);
@@ -90,6 +98,47 @@ function workspaceWorkflow(workspaceId: string, projectId: string): WorkflowDefi
 }
 
 describe("control plane", () => {
+  it("recognizes only explicit loopback request hosts", () => {
+    expect(isLoopbackRequestHost("localhost")).toBe(true);
+    expect(isLoopbackRequestHost("127.0.0.1")).toBe(true);
+    expect(isLoopbackRequestHost("::1")).toBe(true);
+    expect(isLoopbackRequestHost("[::1]")).toBe(true);
+    expect(isLoopbackRequestHost("eventforge.dev")).toBe(false);
+  });
+
+  it("exposes only health and signed webhook routes through a public tunnel host", async () => {
+    const app = await createApp({ persistAudit: false });
+    expect(
+      (
+        await app.inject({
+          method: "GET",
+          url: "/health",
+          headers: { host: "calm-river-birch.eventforge.dev" },
+        })
+      ).statusCode,
+    ).toBe(200);
+    expect(
+      (
+        await app.inject({
+          method: "GET",
+          url: "/events",
+          headers: { host: "calm-river-birch.eventforge.dev" },
+        })
+      ).statusCode,
+    ).toBe(404);
+    expect(
+      (
+        await app.inject({
+          method: "POST",
+          url: "/webhooks/github",
+          headers: { host: "calm-river-birch.eventforge.dev" },
+          payload: {},
+        })
+      ).statusCode,
+    ).toBe(401);
+    await app.close();
+  });
+
   it("permits credentialed browser requests only from configured console origins", async () => {
     const previousOrigins = process.env.EVENTFORGE_ALLOWED_ORIGINS;
     process.env.EVENTFORGE_ALLOWED_ORIGINS = "https://eventforge.dev";
@@ -995,5 +1044,81 @@ describe("control plane", () => {
         ).statusCode,
       ).toBe(403);
     });
+  });
+
+  it("starts the loopback relay on demand and reports its status", async () => {
+    const relayController = {
+      ensure: async (provider: "github" | "linear" | "sentry") => ({
+        state: "ready" as const,
+        provider,
+        endpoint: `https://calm-river-birch.eventforge.dev/webhooks/${provider}`,
+        publicUrl: "https://calm-river-birch.eventforge.dev",
+      }),
+      status: () => ({ state: "stopped" as const }),
+      close: async () => undefined,
+    };
+    const app = await createApp({ persistAudit: false, relayController });
+    const started = await app.inject({
+      method: "POST",
+      url: "/relay/ensure",
+      payload: { provider: "sentry" },
+    });
+    expect(started.statusCode).toBe(200);
+    expect(started.json()).toMatchObject({
+      state: "ready",
+      provider: "sentry",
+      endpoint: "https://calm-river-birch.eventforge.dev/webhooks/sentry",
+    });
+    expect((await app.inject({ method: "GET", url: "/relay" })).json()).toEqual({
+      state: "stopped",
+    });
+    await app.close();
+  });
+
+  it("provisions managed tunnels only for an authenticated owner with install scope", async () => {
+    const provision = async () => ({
+      tunnelId: "00000000-0000-4000-8000-000000000010",
+      tunnelName: "eventforge-calm-river-birch",
+      hostname: "calm-river-birch.eventforge.dev",
+      publicUrl: "https://calm-river-birch.eventforge.dev",
+      token: "tunnel-token-with-at-least-thirty-two-characters",
+    });
+    const tunnelProvisioner = { provision };
+    await withRemoteApp(
+      new EventForgeStore(),
+      async (app) => {
+        const response = await app.inject({
+          method: "POST",
+          url: "/tunnels/provision",
+          payload: { originUrl: "http://127.0.0.1:4310" },
+        });
+        expect(response.statusCode).toBe(201);
+        expect(response.headers["cache-control"]).toBe("no-store");
+        expect(response.json()).toMatchObject({
+          hostname: "calm-river-birch.eventforge.dev",
+        });
+      },
+      remoteOwner,
+      undefined,
+      { tunnelProvisioner },
+    );
+
+    await withRemoteApp(
+      new EventForgeStore(),
+      async (app) => {
+        expect(
+          (
+            await app.inject({
+              method: "POST",
+              url: "/tunnels/provision",
+              payload: { originUrl: "http://127.0.0.1:4310" },
+            })
+          ).statusCode,
+        ).toBe(403);
+      },
+      { ...remoteOwner, role: "operator" },
+      undefined,
+      { tunnelProvisioner },
+    );
   });
 });

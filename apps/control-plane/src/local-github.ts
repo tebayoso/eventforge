@@ -1,7 +1,8 @@
 import { randomBytes } from "node:crypto";
+import { ManagedTunnelLeaseSchema, type ManagedTunnelLease } from "@eventforge/core";
 import { execFile as execFileCallback, spawn } from "node:child_process";
 import { once } from "node:events";
-import { chmod, mkdir, readFile, writeFile } from "node:fs/promises";
+import { chmod, mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { devNull } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { promisify } from "node:util";
@@ -25,13 +26,15 @@ type StoredWebhook = {
   repository: string;
   hookId: number;
   publicUrl?: string;
-  tunnel?: "cloudflare_quick" | "cloudflare_named";
+  tunnel?: "cloudflare_quick" | "cloudflare_named" | "eventforge_managed";
 };
 type GitHubHook = { id: number; config?: { url?: string } };
 
 export type LocalGitHubWebhook = {
   repository: string;
   publicUrl: string;
+  publicBaseUrl: string;
+  tunnelName?: string;
   hookId: number;
   close: () => Promise<void>;
 };
@@ -79,6 +82,35 @@ export function namedTunnelArgs(
   configPath = devNull,
 ): string[] {
   return ["--config", configPath, "tunnel", "--url", originUrl, "run", tunnelName];
+}
+
+export function tokenTunnelArgs(tokenPath: string): string[] {
+  return ["tunnel", "--no-autoupdate", "run", "--token-file", tokenPath];
+}
+
+export async function requestManagedTunnelLease(
+  provisioningUrl: string,
+  bearerToken: string,
+  originUrl: string,
+  fetchImpl: typeof fetch = fetch,
+): Promise<ManagedTunnelLease> {
+  const response = await fetchImpl(new URL("/tunnels/provision", `${provisioningUrl}/`), {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      authorization: `Bearer ${bearerToken}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ originUrl }),
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!response.ok) {
+    const detail = (await response.text()).slice(0, 300).trim();
+    throw new Error(
+      `EventForge tunnel provisioning returned ${response.status}${detail ? `: ${detail}` : "."}`,
+    );
+  }
+  return ManagedTunnelLeaseSchema.parse(await response.json());
 }
 
 async function command(args: string[]): Promise<string> {
@@ -330,6 +362,9 @@ export async function startLocalGitHubWebhook(
     cloudflaredConfig?: string;
     namedTunnel?: string;
     namedTunnelPublicUrl?: string;
+    provisioningUrl?: string;
+    provisioningToken?: string;
+    provisioningFetch?: typeof fetch;
     tunnelReadyTimeoutMs?: number;
     log?: (message: string) => void;
   } = {},
@@ -364,19 +399,47 @@ export async function startLocalGitHubWebhook(
   const namedTunnel = options.namedTunnel ?? process.env.EVENTFORGE_CLOUDFLARED_TUNNEL;
   const namedTunnelPublicUrl =
     options.namedTunnelPublicUrl ?? process.env.EVENTFORGE_CLOUDFLARED_PUBLIC_URL;
+  const provisioningUrl = options.provisioningUrl ?? process.env.EVENTFORGE_TUNNEL_PROVISIONING_URL;
+  const provisioningToken =
+    options.provisioningToken ??
+    process.env.EVENTFORGE_TUNNEL_PROVISIONING_TOKEN ??
+    process.env.EVENTFORGE_API_TOKEN;
+  if (provisioningUrl && !provisioningToken)
+    throw new Error(
+      "Set both EVENTFORGE_TUNNEL_PROVISIONING_URL and a provisioning/API token for an EventForge-managed tunnel.",
+    );
   if ((namedTunnel && !namedTunnelPublicUrl) || (!namedTunnel && namedTunnelPublicUrl))
     throw new Error(
       "Set both EVENTFORGE_CLOUDFLARED_TUNNEL and EVENTFORGE_CLOUDFLARED_PUBLIC_URL for a named tunnel.",
     );
+  const managedLease =
+    provisioningUrl && provisioningToken
+      ? await requestManagedTunnelLease(
+          provisioningUrl,
+          provisioningToken,
+          originUrl,
+          options.provisioningFetch,
+        )
+      : undefined;
+  const tokenPath = managedLease
+    ? join(rootDir, ".eventforge", `${managedLease.tunnelId}.token`)
+    : undefined;
+  if (managedLease && tokenPath) {
+    await mkdir(dirname(tokenPath), { recursive: true });
+    await writeFile(tokenPath, `${managedLease.token}\n`, { mode: 0o600 });
+    await chmod(tokenPath, 0o600);
+  }
   const tunnel = await waitForHealthyTunnel(
     () =>
-      namedTunnel && namedTunnelPublicUrl
-        ? startTunnelAttempt(
-            cloudflaredBin,
-            namedTunnelArgs(originUrl, namedTunnel, cloudflaredConfig),
-            namedTunnelPublicUrl,
-          )
-        : waitForQuickTunnel(originUrl, cloudflaredBin, cloudflaredConfig),
+      managedLease && tokenPath
+        ? startTunnelAttempt(cloudflaredBin, tokenTunnelArgs(tokenPath), managedLease.publicUrl)
+        : namedTunnel && namedTunnelPublicUrl
+          ? startTunnelAttempt(
+              cloudflaredBin,
+              namedTunnelArgs(originUrl, namedTunnel, cloudflaredConfig),
+              namedTunnelPublicUrl,
+            )
+          : waitForQuickTunnel(originUrl, cloudflaredBin, cloudflaredConfig),
     options.tunnelReadyTimeoutMs,
   );
   try {
@@ -391,17 +454,28 @@ export async function startLocalGitHubWebhook(
     await mkdir(dirname(statePath), { recursive: true });
     await writeFile(
       statePath,
-      `${JSON.stringify({ repository, hookId, publicUrl: webhookUrl, tunnelUrl: tunnel.tunnelUrl, tunnel: namedTunnel ? "cloudflare_named" : "cloudflare_quick" }, null, 2)}\n`,
+      `${JSON.stringify({ repository, hookId, publicUrl: webhookUrl, tunnelUrl: tunnel.tunnelUrl, tunnelName: managedLease?.tunnelName ?? namedTunnel, tunnel: managedLease ? "eventforge_managed" : namedTunnel ? "cloudflare_named" : "cloudflare_quick" }, null, 2)}\n`,
       { mode: 0o600 },
     );
 
     options.log?.(
-      `GitHub webhook #${hookId} now targets ${webhookUrl} through Cloudflare ${namedTunnel ? `named tunnel ${namedTunnel}` : "Quick Tunnel"} at ${tunnel.tunnelUrl}, forwarding to ${originUrl}.`,
+      `GitHub webhook #${hookId} now targets ${webhookUrl} through Cloudflare ${managedLease ? `EventForge-managed tunnel ${managedLease.tunnelName}` : namedTunnel ? `named tunnel ${namedTunnel}` : "Quick Tunnel"} at ${tunnel.tunnelUrl}, forwarding to ${originUrl}.`,
     );
 
-    return { repository, publicUrl: webhookUrl, hookId, close: tunnel.close };
+    return {
+      repository,
+      publicUrl: webhookUrl,
+      publicBaseUrl: tunnel.tunnelUrl,
+      tunnelName: managedLease?.tunnelName ?? namedTunnel,
+      hookId,
+      close: async () => {
+        await tunnel.close();
+        if (tokenPath) await unlink(tokenPath).catch(() => undefined);
+      },
+    };
   } catch (error) {
     await tunnel.close();
+    if (tokenPath) await unlink(tokenPath).catch(() => undefined);
     throw error;
   }
 }

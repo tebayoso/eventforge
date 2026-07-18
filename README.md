@@ -58,7 +58,7 @@ See the [Codex plugin installation](plugins/eventforge/README.md) and [Electron 
 
 ## Test a real GitHub webhook through Cloudflare locally
 
-GitHub cannot deliver a webhook directly to `localhost`, so EventForge starts a local Cloudflare Quick Tunnel. Starting GitHub mode creates a random local webhook secret in the ignored `.env`, creates (or reuses) exactly one webhook subscribed to `check_run`, `issues`, `pull_request`, `pull_request_review`, and `issue_comment` through the authenticated `gh` CLI, and patches that webhook to the newly created `trycloudflare.com` URL on every launch. The tunnel forwards signed deliveries to the control plane, which acknowledges them before running Codex work in the background.
+GitHub cannot deliver a webhook directly to `localhost`, so EventForge starts a local Cloudflare relay. Starting GitHub mode creates a random local webhook secret in the ignored `.env`, creates (or reuses) exactly one webhook subscribed to `check_run`, `issues`, `pull_request`, `pull_request_review`, and `issue_comment` through the authenticated `gh` CLI, and patches that webhook to the active public URL on every launch. The tunnel forwards signed deliveries to the control plane, which acknowledges them before running Codex work in the background.
 
 In the first terminal:
 
@@ -74,9 +74,13 @@ In a second terminal:
 pnpm dev:console
 ```
 
-`cloudflared` must be on your `PATH` (for macOS: `brew install cloudflared`). Set `EVENTFORGE_CLOUDFLARED_BIN` if it is installed elsewhere. EventForge intentionally starts Quick Tunnels with an empty Cloudflare configuration so unrelated named-tunnel files cannot alter the local webhook route; set `EVENTFORGE_CLOUDFLARED_CONFIG` only when you explicitly need a different config. If a Quick Tunnel publishes a hostname that never becomes healthy, EventForge closes it and retries with a fresh hostname before touching GitHub.
+`cloudflared` must be on your `PATH` (for macOS: `brew install cloudflared`). Set `EVENTFORGE_CLOUDFLARED_BIN` if it is installed elsewhere. Without managed-tunnel settings, EventForge starts a credential-free Quick Tunnel with an empty Cloudflare configuration so unrelated named-tunnel files cannot alter the local webhook route. If a Quick Tunnel publishes a hostname that never becomes healthy, EventForge closes it and retries with a fresh hostname before touching GitHub.
 
-For a stable local relay, create and route a named Cloudflare Tunnel, then set both `EVENTFORGE_CLOUDFLARED_TUNNEL` and `EVENTFORGE_CLOUDFLARED_PUBLIC_URL` in the ignored `.env`. The same `pnpm dev:github` command starts that tunnel, verifies its public `/health` endpoint, and patches the repository webhook on every launch. If either setting is missing, startup fails closed instead of silently using the wrong tunnel.
+The preferred hosted flow assigns a stable, random-looking three-word hostname to each actor/workspace, such as `calm-river-birch.eventforge.dev`. Set `EVENTFORGE_TUNNEL_PROVISIONING_URL` to the authenticated remote EventForge API and `EVENTFORGE_TUNNEL_PROVISIONING_TOKEN` to a short-lived owner token. The hosted API—not the MCP client—holds the Cloudflare account credential, creates or reuses the tunnel and DNS record, and returns only a tunnel-scoped token. The local daemon stores that token in ignored `.eventforge/` with mode `0600` and passes it to `cloudflared` through `--token-file`, keeping it out of process arguments. Managed provisioning remains unavailable on the public deployment until remote authentication and valid Cloudflare account/zone secrets are configured.
+
+With the local API running, the MCP `listen_for_webhook` tool calls `POST /relay/ensure`. That starts the relay once on demand and returns the selected provider endpoint without returning its credential. GitHub registration is patched during that startup; Linear and Sentry expose their signed ingress paths on the same relay but still require their provider secrets and provider-side webhook configuration.
+
+As a manual fallback, create and route a named Cloudflare Tunnel, then set both `EVENTFORGE_CLOUDFLARED_TUNNEL` and `EVENTFORGE_CLOUDFLARED_PUBLIC_URL` in the ignored `.env`. The same `pnpm dev:github` command starts that tunnel, verifies its public `/health` endpoint, and patches the repository webhook on every launch. If either setting is missing, startup fails closed instead of silently using the wrong tunnel.
 
 Leave both processes running, then open `http://localhost:5173`. Use the **EventForge CI failure demo** GitHub Actions workflow's **Run workflow** button, or dispatch it from the terminal:
 

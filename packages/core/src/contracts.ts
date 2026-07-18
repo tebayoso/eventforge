@@ -29,6 +29,25 @@ export const AuthContextSchema = z.object({
 });
 export type AuthContext = z.infer<typeof AuthContextSchema>;
 
+export const ManagedTunnelLeaseSchema = z.object({
+  tunnelId: z.string().uuid(),
+  tunnelName: z.string().min(1),
+  hostname: z.string().min(1),
+  publicUrl: z.string().url(),
+  token: z.string().min(32),
+});
+export type ManagedTunnelLease = z.infer<typeof ManagedTunnelLeaseSchema>;
+
+export const LocalRelayStatusSchema = z.object({
+  state: z.enum(["stopped", "starting", "ready", "failed"]),
+  provider: z.enum(["github", "linear", "sentry"]).optional(),
+  endpoint: z.string().url().optional(),
+  publicUrl: z.string().url().optional(),
+  tunnelName: z.string().optional(),
+  error: z.string().optional(),
+});
+export type LocalRelayStatus = z.infer<typeof LocalRelayStatusSchema>;
+
 export const EventEnvelopeSchema = z.object({
   id: z.string().uuid(),
   provider: ProviderSchema,
@@ -210,7 +229,7 @@ export type ForgeJob = z.infer<typeof ForgeJobSchema>;
 export type AuditEntry = {
   id: string;
   workspaceId: string;
-  kind: "event_received" | "workflow_matched" | "agent_run" | "approval" | "forge";
+  kind: "event_received" | "workflow_matched" | "agent_run" | "approval" | "forge" | "connector";
   subjectId: string;
   message: string;
   createdAt: string;
