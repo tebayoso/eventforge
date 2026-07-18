@@ -33,7 +33,7 @@ Reusable pattern: Quick Tunnel URLs change on each launch. Do not dispatch a pro
 
 - Created GitHub issue [#1](https://github.com/tebayoso/eventforge/issues/1) with an explicit no-write review request. GitHub delivered the signed `issues` event to EventForge.
 - Confirmed the first implementation correctly started Codex thread `019f71ce-21ca-7001-9c77-2b30380e0ae1` and created no action, but GitHub timed out because the webhook response waited for the 24-second Codex review.
-- Changed verified webhook processing to enqueue the workflow and acknowledge it immediately. Redelivered the same GitHub delivery: GitHub recorded HTTP `202`, and EventForge completed fresh persisted thread `019f71cf-98c8-7213-ace1-ed7d293e90a1` with an assessment and an empty action queue.
+- Changed verified webhook processing to start workflow analysis in the background and acknowledge it immediately. Redelivered the same GitHub delivery: GitHub recorded HTTP `202`, and EventForge completed fresh process-retained thread `019f71cf-98c8-7213-ace1-ed7d293e90a1` with an assessment and an empty action queue.
 - Opened that thread in the Codex desktop app. The review identified the event as a test-only request and retained the read-only policy.
 
 Reusable pattern: after opening a test issue, confirm the GitHub delivery is `202` before waiting for `/runs` to become `completed`; then assert `/actions` is an empty array. A slow agent must never delay the provider acknowledgment.
@@ -97,3 +97,36 @@ Reusable pattern: validate the marketing route and the preserved application rou
 - Browser console contained only Vite/React development notices, with no application errors.
 
 Reusable pattern: after changing a marketing route, validate the page’s outcome-led headings in the accessibility tree, test at least one in-page anchor, then open the retained application route before returning the browser to the marketing page.
+
+## 2026-07-18 — Production-hardening acceptance flow
+
+- Started the credential-free control plane on `http://127.0.0.1:4310` and Vite console on `http://localhost:5173/console`; used the `eventforge-quality` agent-browser session.
+- Confirmed the exact-origin CORS boundary: `http://127.0.0.1:5173/console` reported offline while the configured `http://localhost:5173` origin reported online. Browser console inspection contained no application errors.
+- Switched light and dark themes. Outcome: both `document.documentElement.dataset.theme` and `localStorage.eventforge-theme` updated, with no CSP error. Repeated the console snapshot at a 390×844 viewport and found no missing primary workflow controls.
+- Ran the GitHub CI demo, opened two proposals produced by the normal run plus an MCP-started analysis, rejected one and approved the other. Outcome: both linked agent runs moved from `waiting_for_approval` to `completed`; the approved run stated that execution still requires a dedicated policy-controlled worker.
+- Created a Forge draft from “Create a GitHub read-only connector for deployment status events.” Outcome: requested scopes were exactly `events:read` and `github:read`; `provider:write` was absent. Opened the keyboard-accessible file tabs, closed the dialog with Escape, then approved the reviewed draft. No install or execution occurred.
+- Stopped the control plane while leaving the console open. Outcome: status changed to **Control plane degraded**, cached data remained visible, and each affected panel said its refresh failed. Restarting the control plane returned the status to online without reloading the browser.
+- Sent an invalid GitHub delivery with `x-eventforge-demo: true` directly to `/webhooks/github`. Outcome: HTTP `401`; demo mode cannot bypass provider signatures. Ran the normal `/events/demo` flow afterward and confirmed the approval proposal still appeared.
+- Evidence is stored under `workfiles/agent-browser/screenshots/`: `quality-console-initial.png`, `quality-console-dark.png`, `quality-console-mobile.png`, `quality-console-decisions.png`, `quality-forge-approved.png`, `quality-console-degraded.png`, and `quality-console-final.png`.
+
+Reusable pattern: keep the exact configured browser origin, verify mutation outcomes in both the affected resource and the audit/run timeline, test cached degraded state by stopping only the API, and treat public webhook routes as signed-only even when demo mode is enabled.
+
+## 2026-07-18 — eventforge.dev production landing deployment
+
+- Deployed the console static-assets Worker to the `eventforge.dev` custom domain as Cloudflare version `859e9d5f-5b27-4113-a124-51534cef0821`.
+- Verified Cloudflare public DNS returned both IPv4 and IPv6 records. The local macOS resolver retained its pre-deploy negative answer, so the `eventforge-release-resolved` agent-browser session used a temporary Chromium host resolver rule for the already-published Cloudflare address; no application or DNS configuration was changed for this workaround.
+- Opened `https://eventforge.dev/` and confirmed the production title, primary navigation, “One place for every webhook. Less noise.” hero, console CTA, and exact demo target `https://youtu.be/pht3rrl--pE`.
+- Followed **See your event inbox** and confirmed the final URL was `https://eventforge.dev/console`. The console rendered its event feed, connector health, approval queue, run log, Forge Studio, and audit controls while truthfully reporting **Control plane offline** because this release deploys only the static shell.
+- Browser error inspection and filtered console output were empty. Direct HTTPS checks returned `200` for `/` and the `/console` SPA fallback with CSP, permissions policy, referrer policy, anti-framing, and MIME-sniffing headers.
+- Evidence is stored at `workfiles/agent-browser/screenshots/eventforge-dev-live.png` and `workfiles/agent-browser/screenshots/eventforge-dev-console.png`.
+
+Reusable pattern: after a new custom-domain attachment, distinguish public DNS propagation from a developer machine's negative DNS cache. Verify authoritative/public resolvers and HTTPS independently, then use a temporary browser resolver override only for local acceptance testing; never commit that override or treat it as production configuration.
+
+## 2026-07-18 — GitHub pull request to local Codex review
+
+- Started `pnpm dev:github` with the local named tunnel `eventforge-local`. EventForge verified `https://eventforge-hooks.planeflare.com/health`, then patched GitHub webhook `#653895042` to the signed `/webhooks/github` endpoint with `pull_request`, `pull_request_review`, and `issue_comment` subscriptions alongside the existing issue and check-run events.
+- Pushed commit `40ac4c7` to PR [#3](https://github.com/tebayoso/eventforge/pull/3). GitHub delivery `3831934487258726400` sent `pull_request:synchronize` and received HTTP `202` in 0.69 seconds.
+- Confirmed local event `1edbf54f-d29e-43ea-a8f9-e6bc0aae0a38` recorded `signatureStatus: verified`, repository `tebayoso/eventforge`, PR `#3`, and the exact pushed SHA.
+- Waited for the background read-only review. Outcome: run `1f374ffc-62e6-41ee-90f3-ea81f93335a3` completed in Codex thread `019f758c-2523-71d3-9b19-a8a89ddaae4d`; `/actions` remained empty. Opened the resulting task in the Codex desktop app.
+
+Reusable pattern: keep `pnpm dev:github` running, require public health plus an active matching GitHub hook before pushing, assert the provider delivery returns `202`, then correlate the delivery GUID to a verified local event and wait independently for the run's `threadId`. A PR review must remain read-only and leave `/actions` empty.

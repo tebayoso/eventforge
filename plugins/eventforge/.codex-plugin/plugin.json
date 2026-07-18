@@ -1,8 +1,31 @@
 {
   "name": "eventforge",
-  "version": "0.1.0",
+  "version": "0.1.0+codex.20260718125454",
   "description": "Event-driven, policy-gated engineering workflows for Codex.",
+  "author": {
+    "name": "EventForge",
+    "email": "jorge@pox.me",
+    "url": "https://eventforge.dev"
+  },
+  "homepage": "https://eventforge.dev",
+  "repository": "https://github.com/tebayoso/eventforge",
+  "license": "Apache-2.0",
+  "keywords": ["codex", "mcp", "webhooks", "agentic-workflows", "developer-tools"],
   "mcpServers": "./.mcp.json",
-  "skills": ["./skills/eventforge"],
-  "hooks": "./hooks/hooks.json"
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "EventForge",
+    "shortDescription": "Policy-gated engineering automations",
+    "longDescription": "Connect verified engineering events to scoped Codex workflows with explicit approvals and a reviewable local audit timeline.",
+    "developerName": "EventForge",
+    "category": "Developer Tools",
+    "capabilities": ["Read", "Write with approval"],
+    "websiteURL": "https://eventforge.dev",
+    "defaultPrompt": [
+      "Review recent verified engineering events.",
+      "Show workflows and pending approvals.",
+      "Forge a connector draft for my integration."
+    ],
+    "brandColor": "#F97316"
+  }
 }

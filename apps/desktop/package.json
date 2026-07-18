@@ -1,23 +1,66 @@
 {
   "name": "@eventforge/desktop",
   "version": "0.1.0",
+  "description": "Local EventForge engineering operations console and private memory daemon.",
+  "author": "Jorge <jorge@pox.me>",
   "private": true,
   "type": "module",
-  "main": "src/main.ts",
+  "main": "dist/main.js",
   "scripts": {
-    "build": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit",
     "test": "vitest run",
-    "dev": "electron --import tsx ./src/main.ts"
+    "dev": "pnpm run build && electron .",
+    "package": "pnpm --filter @eventforge/console build --mode desktop && pnpm run build && CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --dir",
+    "dist": "pnpm --filter @eventforge/console build --mode desktop && pnpm run build && electron-builder"
   },
   "dependencies": {
     "@lancedb/lancedb": "^0.31.0",
-    "electron": "^37.2.6",
-    "fastify": "^5.5.0",
-    "tsx": "^4.20.3"
+    "fastify": "^5.5.0"
   },
   "devDependencies": {
+    "electron": "43.1.1",
+    "electron-builder": "26.15.3",
     "vitest": "^3.2.4"
+  },
+  "build": {
+    "appId": "dev.eventforge.desktop",
+    "productName": "EventForge",
+    "asar": true,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../console/dist",
+        "to": "console",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "linux": {
+      "category": "Development",
+      "target": [
+        "AppImage"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    }
   }
 }

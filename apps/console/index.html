@@ -3,19 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; connect-src 'self' http://127.0.0.1:4310 http://127.0.0.1:4311 https://api.eventforge.dev; img-src 'self' data:; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+    />
     <meta name="theme-color" content="#10151a" />
-    <meta name="description" content="Centralize webhooks, reduce operational noise, and turn important events into useful work." />
-    <script>
-      (() => {
-        const storageKey = "eventforge-theme";
-        let theme;
-        try { theme = localStorage.getItem(storageKey); } catch { /* Storage can be disabled. */ }
-        if (theme !== "light" && theme !== "dark") theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-        document.documentElement.dataset.theme = theme;
-        document.documentElement.style.colorScheme = theme;
-      })();
-    </script>
+    <meta
+      name="description"
+      content="Centralize webhooks, reduce operational noise, and turn important events into useful work."
+    />
     <title>EventForge — One place for every webhook</title>
   </head>
-  <body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
