@@ -752,9 +752,12 @@ describe("control plane", () => {
     expect(second.statusCode).toBe(200);
     await app.close();
 
-    process.env.EVENTFORGE_RATE_LIMIT_PER_MINUTE = "0";
+    process.env.EVENTFORGE_RATE_LIMIT_PER_MINUTE = "1";
     const limited = await createApp({ persistAudit: false });
-    expect((await limited.inject({ method: "GET", url: "/events" })).statusCode).toBe(429);
+    expect((await limited.inject({ method: "GET", url: "/events" })).statusCode).toBe(200);
+    const rateLimited = await limited.inject({ method: "GET", url: "/events" });
+    expect(rateLimited.statusCode).toBe(429);
+    expect(Number(rateLimited.headers["retry-after"])).toBeGreaterThan(0);
     await limited.close();
     Object.entries(previous).forEach(([key, value]) => {
       const env = {

@@ -88,7 +88,7 @@ export function tokenTunnelArgs(tokenPath: string): string[] {
   return ["tunnel", "--no-autoupdate", "run", "--token-file", tokenPath];
 }
 
-export async function requestManagedTunnelLease(
+async function requestManagedTunnelLease(
   provisioningUrl: string,
   bearerToken: string,
   originUrl: string,
