@@ -121,3 +121,12 @@ Reusable pattern: keep the exact configured browser origin, verify mutation outc
 - Evidence is stored at `workfiles/agent-browser/screenshots/eventforge-dev-live.png` and `workfiles/agent-browser/screenshots/eventforge-dev-console.png`.
 
 Reusable pattern: after a new custom-domain attachment, distinguish public DNS propagation from a developer machine's negative DNS cache. Verify authoritative/public resolvers and HTTPS independently, then use a temporary browser resolver override only for local acceptance testing; never commit that override or treat it as production configuration.
+
+## 2026-07-18 — GitHub pull request to local Codex review
+
+- Started `pnpm dev:github` with the local named tunnel `eventforge-local`. EventForge verified `https://eventforge-hooks.planeflare.com/health`, then patched GitHub webhook `#653895042` to the signed `/webhooks/github` endpoint with `pull_request`, `pull_request_review`, and `issue_comment` subscriptions alongside the existing issue and check-run events.
+- Pushed commit `40ac4c7` to PR [#3](https://github.com/tebayoso/eventforge/pull/3). GitHub delivery `3831934487258726400` sent `pull_request:synchronize` and received HTTP `202` in 0.69 seconds.
+- Confirmed local event `1edbf54f-d29e-43ea-a8f9-e6bc0aae0a38` recorded `signatureStatus: verified`, repository `tebayoso/eventforge`, PR `#3`, and the exact pushed SHA.
+- Waited for the background read-only review. Outcome: run `1f374ffc-62e6-41ee-90f3-ea81f93335a3` completed in Codex thread `019f758c-2523-71d3-9b19-a8a89ddaae4d`; `/actions` remained empty. Opened the resulting task in the Codex desktop app.
+
+Reusable pattern: keep `pnpm dev:github` running, require public health plus an active matching GitHub hook before pushing, assert the provider delivery returns `202`, then correlate the delivery GUID to a verified local event and wait independently for the run's `threadId`. A PR review must remain read-only and leave `/actions` empty.
