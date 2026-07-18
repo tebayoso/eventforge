@@ -33,7 +33,7 @@ Reusable pattern: Quick Tunnel URLs change on each launch. Do not dispatch a pro
 
 - Created GitHub issue [#1](https://github.com/tebayoso/eventforge/issues/1) with an explicit no-write review request. GitHub delivered the signed `issues` event to EventForge.
 - Confirmed the first implementation correctly started Codex thread `019f71ce-21ca-7001-9c77-2b30380e0ae1` and created no action, but GitHub timed out because the webhook response waited for the 24-second Codex review.
-- Changed verified webhook processing to enqueue the workflow and acknowledge it immediately. Redelivered the same GitHub delivery: GitHub recorded HTTP `202`, and EventForge completed fresh persisted thread `019f71cf-98c8-7213-ace1-ed7d293e90a1` with an assessment and an empty action queue.
+- Changed verified webhook processing to start workflow analysis in the background and acknowledge it immediately. Redelivered the same GitHub delivery: GitHub recorded HTTP `202`, and EventForge completed fresh process-retained thread `019f71cf-98c8-7213-ace1-ed7d293e90a1` with an assessment and an empty action queue.
 - Opened that thread in the Codex desktop app. The review identified the event as a test-only request and retained the read-only policy.
 
 Reusable pattern: after opening a test issue, confirm the GitHub delivery is `202` before waiting for `/runs` to become `completed`; then assert `/actions` is an empty array. A slow agent must never delay the provider acknowledgment.
@@ -97,3 +97,16 @@ Reusable pattern: validate the marketing route and the preserved application rou
 - Browser console contained only Vite/React development notices, with no application errors.
 
 Reusable pattern: after changing a marketing route, validate the page’s outcome-led headings in the accessibility tree, test at least one in-page anchor, then open the retained application route before returning the browser to the marketing page.
+
+## 2026-07-18 — Production-hardening acceptance flow
+
+- Started the credential-free control plane on `http://127.0.0.1:4310` and Vite console on `http://localhost:5173/console`; used the `eventforge-quality` agent-browser session.
+- Confirmed the exact-origin CORS boundary: `http://127.0.0.1:5173/console` reported offline while the configured `http://localhost:5173` origin reported online. Browser console inspection contained no application errors.
+- Switched light and dark themes. Outcome: both `document.documentElement.dataset.theme` and `localStorage.eventforge-theme` updated, with no CSP error. Repeated the console snapshot at a 390×844 viewport and found no missing primary workflow controls.
+- Ran the GitHub CI demo, opened two proposals produced by the normal run plus an MCP-started analysis, rejected one and approved the other. Outcome: both linked agent runs moved from `waiting_for_approval` to `completed`; the approved run stated that execution still requires a dedicated policy-controlled worker.
+- Created a Forge draft from “Create a GitHub read-only connector for deployment status events.” Outcome: requested scopes were exactly `events:read` and `github:read`; `provider:write` was absent. Opened the keyboard-accessible file tabs, closed the dialog with Escape, then approved the reviewed draft. No install or execution occurred.
+- Stopped the control plane while leaving the console open. Outcome: status changed to **Control plane degraded**, cached data remained visible, and each affected panel said its refresh failed. Restarting the control plane returned the status to online without reloading the browser.
+- Sent an invalid GitHub delivery with `x-eventforge-demo: true` directly to `/webhooks/github`. Outcome: HTTP `401`; demo mode cannot bypass provider signatures. Ran the normal `/events/demo` flow afterward and confirmed the approval proposal still appeared.
+- Evidence is stored under `workfiles/agent-browser/screenshots/`: `quality-console-initial.png`, `quality-console-dark.png`, `quality-console-mobile.png`, `quality-console-decisions.png`, `quality-forge-approved.png`, `quality-console-degraded.png`, and `quality-console-final.png`.
+
+Reusable pattern: keep the exact configured browser origin, verify mutation outcomes in both the affected resource and the audit/run timeline, test cached degraded state by stopping only the API, and treat public webhook routes as signed-only even when demo mode is enabled.

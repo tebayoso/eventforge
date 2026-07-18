@@ -14,7 +14,14 @@ describe("console theme preferences", () => {
 
   it("ignores invalid and unavailable local storage values", () => {
     expect(readStoredTheme({ getItem: () => "system", setItem: vi.fn() })).toBeUndefined();
-    expect(readStoredTheme({ getItem: () => { throw new Error("blocked"); }, setItem: vi.fn() })).toBeUndefined();
+    expect(
+      readStoredTheme({
+        getItem: () => {
+          throw new Error("blocked");
+        },
+        setItem: vi.fn(),
+      }),
+    ).toBeUndefined();
   });
 
   it("applies and persists an explicit user choice", () => {

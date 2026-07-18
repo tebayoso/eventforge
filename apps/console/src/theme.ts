@@ -25,8 +25,16 @@ export function getInitialTheme(): Theme {
   if (typeof window === "undefined") return "light";
   let storedTheme: Theme | undefined;
   let systemPrefersDark = false;
-  try { storedTheme = readStoredTheme(window.localStorage); } catch { /* Storage can be disabled. */ }
-  try { systemPrefersDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false; } catch { /* Some embedded browsers block media queries. */ }
+  try {
+    storedTheme = readStoredTheme(window.localStorage);
+  } catch {
+    /* Storage can be disabled. */
+  }
+  try {
+    systemPrefersDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
+  } catch {
+    /* Some embedded browsers block media queries. */
+  }
   return resolveTheme(storedTheme, systemPrefersDark);
 }
 

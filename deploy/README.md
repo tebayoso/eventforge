@@ -15,27 +15,29 @@ Provider -> https://hooks.eventforge.dev -> signed webhook verification --------
 
 The Vite console is deployed as a static-assets Worker because it has no server-side runtime needs. The control plane remains a Node/Fastify service: it uses the Codex SDK, Postgres, and process APIs, so moving it to Workers would be an unsupported runtime change. A remotely managed, named Cloudflare Tunnel publishes the `api` and `hooks` hostnames without opening an origin ingress port. The existing `trycloudflare.com` Quick Tunnel is local-development-only.
 
-`api.eventforge.dev` must be protected with Cloudflare Access before it is made public. CORS is an additional browser control, not authentication. Keep `hooks.eventforge.dev` public only for provider webhook paths; its signature verification remains enforced by EventForge. Do not point a provider webhook at `api.eventforge.dev`.
+The diagram is the target Track B architecture, not a currently supported production deployment. The control plane now refuses remote startup without injected MFA authentication, PostgreSQL, encryption, and explicit origins; the repository does not yet ship that identity-provider integration. Do not expose local mode through Cloudflare Access or Tunnel as a substitute.
+
+When Track B is enabled, `api.eventforge.dev` must be protected with application authentication and may additionally use Cloudflare Access. CORS is an additional browser control, not authentication. Keep `hooks.eventforge.dev` public only for provider webhook paths; its signature verification remains enforced by EventForge. Do not point a provider webhook at `api.eventforge.dev`.
 
 ## Externally supplied values
 
 Keep all secret values in the deployment platform's secret store, Kubernetes Secret, or ignored `.env`; do not put them in Wrangler configuration, Helm values, Git, or browser `VITE_*` variables.
 
-| Value | Where it is supplied | Purpose |
-| --- | --- | --- |
-| `CLOUDFLARE_API_TOKEN` | CI or deploy shell | Least-privilege token used by Wrangler to publish the console. |
-| `CLOUDFLARE_ACCOUNT_ID` | CI or deploy shell | Cloudflare account selection for Wrangler when the token can access more than one account. |
-| `CLOUDFLARE_TUNNEL_TOKEN` | Ignored Compose `.env` or Kubernetes `eventforge-cloudflared` Secret | Token for the remotely managed production Tunnel; never pass it as a command argument. |
-| `VITE_EVENTFORGE_API_URL` | Console build environment | Public API base URL. Production value: `https://api.eventforge.dev`. It is compiled into browser assets and is not a secret. |
-| `EVENTFORGE_ALLOWED_ORIGINS` | Control-plane environment | Comma-separated browser allowlist. Production value: `https://eventforge.dev`. The control plane refuses an empty production allowlist. |
-| `DATABASE_URL` | Existing `eventforge-postgres` Secret | Postgres/pgvector connection string. |
-| `OPENAI_API_KEY` | Existing `eventforge-runtime` Secret | Required for Codex-backed runs. |
-| `EVENTFORGE_MASTER_KEY` | Existing `eventforge-runtime` Secret | At least 32 random bytes; generate and rotate outside source control. |
-| `GITHUB_WEBHOOK_SECRET`, `LINEAR_WEBHOOK_SECRET`, `SENTRY_WEBHOOK_SECRET` | Existing `eventforge-runtime` Secret | Required for live webhook signature verification. |
-| `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`, `LINEAR_CLIENT_ID`, `LINEAR_CLIENT_SECRET`, `SENTRY_AUTH_TOKEN` | Existing `eventforge-runtime` Secret | Optional provider integrations; omit if that integration is disabled. |
-| `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY` | Existing `eventforge-runtime` Secret or environment | Optional artifact storage configuration. |
+| Value                                                                                                      | Where it is supplied                                                 | Purpose                                                                                                                                 |
+| ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`                                                                                     | CI or deploy shell                                                   | Least-privilege token used by Wrangler to publish the console.                                                                          |
+| `CLOUDFLARE_ACCOUNT_ID`                                                                                    | CI or deploy shell                                                   | Cloudflare account selection for Wrangler when the token can access more than one account.                                              |
+| `CLOUDFLARE_TUNNEL_TOKEN`                                                                                  | Ignored Compose `.env` or Kubernetes `eventforge-cloudflared` Secret | Token for the remotely managed production Tunnel; never pass it as a command argument.                                                  |
+| `VITE_EVENTFORGE_API_URL`                                                                                  | Console build environment                                            | Public API base URL. Production value: `https://api.eventforge.dev`. It is compiled into browser assets and is not a secret.            |
+| `EVENTFORGE_ALLOWED_ORIGINS`                                                                               | Control-plane environment                                            | Comma-separated browser allowlist. Production value: `https://eventforge.dev`. The control plane refuses an empty production allowlist. |
+| `DATABASE_URL`                                                                                             | Existing `eventforge-postgres` Secret                                | Postgres/pgvector connection string.                                                                                                    |
+| `OPENAI_API_KEY`                                                                                           | Existing `eventforge-runtime` Secret                                 | Required for Codex-backed runs.                                                                                                         |
+| `EVENTFORGE_ENCRYPTION_KEY`                                                                                | Existing `eventforge-runtime` Secret                                 | At least 32 random bytes; generate and rotate outside source control.                                                                   |
+| `GITHUB_WEBHOOK_SECRET`, `LINEAR_WEBHOOK_SECRET`, `SENTRY_WEBHOOK_SECRET`                                  | Existing `eventforge-runtime` Secret                                 | Required for live webhook signature verification.                                                                                       |
+| `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`, `LINEAR_CLIENT_ID`, `LINEAR_CLIENT_SECRET`, `SENTRY_AUTH_TOKEN` | Existing `eventforge-runtime` Secret                                 | Reserved for Track B provider-account integrations; not consumed by the local release.                                                  |
+| `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`                                               | Existing `eventforge-runtime` Secret or environment                  | Reserved for Track B immutable artifact storage; not consumed by the local release.                                                     |
 
-## Cloudflare preflight — required before any mutation
+## Track B Cloudflare preflight — reference only
 
 Do not run the deploy commands until all of the following are verified by the domain/account owner:
 
@@ -49,7 +51,7 @@ Do not run the deploy commands until all of the following are verified by the do
 
 Cloudflare's current documentation covers [Workers custom domains](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/), [Static Assets](https://developers.cloudflare.com/workers/static-assets/), [remotely managed Tunnels](https://developers.cloudflare.com/tunnel/setup/), and [Kubernetes tunnel health/replica guidance](https://developers.cloudflare.com/tunnel/deployment-guides/kubernetes/).
 
-## Deploy the console
+## Deploy the console shell
 
 `apps/console/wrangler.jsonc` is the source of truth for the static Worker, SPA fallback, `eventforge.dev` custom domain, and disabled `workers.dev` hostname. Its security headers are in `apps/console/public/_headers`.
 
@@ -63,32 +65,35 @@ pnpm --filter @eventforge/console deploy:cloudflare
 
 For a local Worker-assets preview, use `pnpm --filter @eventforge/console preview:cloudflare`. It uses the local console API URL unless `VITE_EVENTFORGE_API_URL` is set for the build.
 
+Until Track B remote authentication is enabled, publishing these static assets produces only the landing page and an offline operations shell. It is not a functioning remote EventForge deployment.
+
 ## Deploy the control plane and named Tunnel
 
 ### Docker Compose
 
-Create the ignored `.env` from `.env.example`, set the production values above, then run the control plane and Tunnel together:
+For local infrastructure validation, create the ignored `.env` from `.env.example` and start PostgreSQL plus MinIO without a public tunnel:
 
 ```bash
-docker compose --profile app --profile cloudflare-tunnel up --build -d
+docker compose up -d
 ```
 
-`cloudflared` has no published host port. Cloudflare controls public hostname-to-service mappings; the connector only needs outbound access to Cloudflare (including port 7844 where network policy/firewalls restrict egress).
+The `app` and `cloudflare-tunnel` profiles are deployment artifacts for the future remote release. Do not enable them until the status document marks remote authentication and durable repositories supported. The control-plane image can still be built and inspected with `docker compose --profile app build control-plane`. `cloudflared` has no published host port; when eventually enabled, it only needs outbound access to Cloudflare.
 
-### Kubernetes / Helm
+### Kubernetes / Helm — Track B reference
 
-The chart keeps the control plane at one replica because workflow, run, and memory state is currently process-local. It is not safe to raise `replicaCount` until that state has been moved to shared durable storage. The independently replicated Tunnel connectors provide connection availability, not control-plane load balancing.
+The chart is render/lint tested but is not a production release while remote mode is disabled. It keeps the control plane at one replica because workflow, run, approval, and memory projections are currently process-local. It is not safe to raise `replicaCount` until shared repository wiring and restart hydration are complete.
 
 ```bash
 kubectl create secret generic eventforge-postgres \
   --from-literal=database-url='postgres://…'
 kubectl create secret generic eventforge-runtime \
   --from-literal=openai-api-key="$OPENAI_API_KEY" \
-  --from-literal=master-key="$(openssl rand -base64 48)" \
+  --from-literal=encryption-key="$(openssl rand -base64 48)" \
   --from-literal=github-webhook-secret="$GITHUB_WEBHOOK_SECRET"
 kubectl create secret generic eventforge-cloudflared \
   --from-literal=tunnel-token="$CLOUDFLARE_TUNNEL_TOKEN"
 helm upgrade --install eventforge ./deploy/helm/eventforge \
+  --set-string image.digest='sha256:PUBLISHED_CONTROL_PLANE_DIGEST' \
   --set cloudflareTunnel.enabled=true \
   --set providerSecrets.github.webhookEnabled=true \
   --set-string env.EVENTFORGE_ALLOWED_ORIGINS='https://eventforge.dev'
@@ -96,7 +101,7 @@ helm upgrade --install eventforge ./deploy/helm/eventforge \
 
 Add the other provider and storage values from the table to the runtime secret before enabling those integrations. Set only the matching `providerSecrets.<provider>.<credential>Enabled=true` flag after its secret exists; webhook verification does not require unrelated OAuth credentials. The chart probes the control plane at `/health` and each `cloudflared` connector at `/ready`.
 
-## Post-deploy verification
+## Track B acceptance checklist
 
 1. Confirm the Tunnel shows two healthy connectors in Cloudflare and `kubectl get pods` shows the control plane Ready plus both `cloudflared` pods Ready.
 2. From an approved Access session, verify `https://api.eventforge.dev/health` returns `200` and reports `eventforge-control-plane`. Verify an unauthenticated request to an application API path is challenged by Access.
