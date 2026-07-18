@@ -13,13 +13,21 @@ export class LocalRelayController implements RelayController {
   private active?: LocalGitHubWebhook;
   private pending?: Promise<LocalGitHubWebhook>;
   private current: LocalRelayStatus = { state: "stopped" };
+  private closed = false;
 
   constructor(private readonly start: () => Promise<LocalGitHubWebhook>) {}
 
   async ensure(provider: RelayProvider): Promise<LocalRelayStatus> {
+    if (this.closed) throw new Error("Local relay controller is closed.");
     if (!this.active) {
       this.current = { state: "starting", provider };
-      this.pending ??= this.start();
+      this.pending ??= this.start().then(async (active) => {
+        if (this.closed) {
+          await active.close();
+          throw new Error("Local relay controller closed during startup.");
+        }
+        return active;
+      });
       try {
         this.active = await this.pending;
       } catch (error) {
@@ -49,9 +57,14 @@ export class LocalRelayController implements RelayController {
   }
 
   async close(): Promise<void> {
-    await this.active?.close();
-    this.active = undefined;
-    this.pending = undefined;
-    this.current = { state: "stopped" };
+    this.closed = true;
+    try {
+      if (this.active) await this.active.close();
+      else await this.pending?.catch(() => undefined);
+    } finally {
+      this.active = undefined;
+      this.pending = undefined;
+      this.current = { state: "stopped" };
+    }
   }
 }

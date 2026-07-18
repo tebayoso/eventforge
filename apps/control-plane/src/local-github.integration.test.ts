@@ -172,6 +172,45 @@ describe("local GitHub webhook integration", () => {
     expect(mocks.unlink).toHaveBeenCalled();
   });
 
+  it("removes a managed token and closes every tunnel attempt when startup stays unhealthy", async () => {
+    const processes: ReturnType<typeof tunnelProcess>[] = [];
+    mocks.spawn.mockImplementation(() => {
+      const child = tunnelProcess("");
+      processes.push(child);
+      return child;
+    });
+    mocks.readFile.mockResolvedValue("");
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("unreachable edge")));
+    const provisioningFetch = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          tunnelId: "f2b4017c-f521-4f96-b2be-945897607b9d",
+          tunnelName: "eventforge-calm-river-birch",
+          hostname: "calm-river-birch.eventforge.dev",
+          publicUrl: "https://calm-river-birch.eventforge.dev",
+          token: "managed-tunnel-token-with-more-than-thirty-two-characters",
+        }),
+        { status: 201, headers: { "content-type": "application/json" } },
+      ),
+    );
+    const { startLocalGitHubWebhook } = await import("./local-github.js");
+    await expect(
+      startLocalGitHubWebhook({
+        rootDir: "/tmp/eventforge-managed-failure",
+        repository: "owner/repo",
+        provisioningUrl: "https://api.eventforge.dev",
+        provisioningToken: "owner-access-token",
+        provisioningFetch,
+        tunnelReadyTimeoutMs: 1,
+      }),
+    ).rejects.toThrow("remained unhealthy");
+    expect(processes).toHaveLength(3);
+    expect(processes.every((child) => child.killed)).toBe(true);
+    expect(mocks.unlink).toHaveBeenCalledWith(
+      expect.stringContaining("f2b4017c-f521-4f96-b2be-945897607b9d.token"),
+    );
+  });
+
   it("replaces a published tunnel that never becomes healthy", async () => {
     let unhealthy: ReturnType<typeof tunnelProcess> | undefined;
     mocks.spawn
