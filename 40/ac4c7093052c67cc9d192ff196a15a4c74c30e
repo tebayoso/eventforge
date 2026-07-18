@@ -1,0 +1,60 @@
+apps/control-plane/test/app.test.ts
+  s_cb07b89c712fa5::t_1391cc7925e34d 384-450
+apps/control-plane/test/runner.test.ts
+  s_cb07b89c712fa5::t_61b0c9cde813b2 88-101
+packages/core/test/core.test.ts
+  s_cb07b89c712fa5::t_61b0c9cde813b2 12,276-289,635-640
+.env.example
+  s_cb07b89c712fa5::t_db0419b9acb011 32-35
+apps/control-plane/src/runner.ts
+  s_cb07b89c712fa5::t_61b0c9cde813b2 42,48-49,85
+  s_cb07b89c712fa5::t_aa32b3968c934c 50
+packages/core/src/events.ts
+  s_cb07b89c712fa5::t_61b0c9cde813b2 277-294
+packages/core/src/workflows.ts
+  s_cb07b89c712fa5::t_61b0c9cde813b2 26
+apps/control-plane/src/local-github.integration.test.ts
+  s_cb07b89c712fa5::t_b86353a60d6dbb 148-153,155-156
+  s_cb07b89c712fa5::t_72c7643f9d2668 143
+  s_cb07b89c712fa5::t_dc11bb75320bcc 109-127
+  s_cb07b89c712fa5::t_f7bde44b117cf5 129-137,154
+  s_cb07b89c712fa5::t_d412604d893b55 128,138-142,144-147,157-158
+apps/control-plane/src/local-github.ts
+  s_cb07b89c712fa5::t_3ecf29a61cf8a7 273-276,278,291,297,303,333,380
+  s_cb07b89c712fa5::t_8ebb4790646647 298-300,302,304-312
+  s_cb07b89c712fa5::t_f23e0b10fa6859 28,76-83,180,182-183,185,189,234,240,293,295-296,301,313,331-332,361-362,364-379,399
+  s_cb07b89c712fa5::t_61b0c9cde813b2 16-22,319
+  s_cb07b89c712fa5::t_67e6446511d763 260,363,394
+  s_cb07b89c712fa5::t_b28807bd3c8a3c 292,294
+apps/control-plane/src/local-github.test.ts
+  s_cb07b89c712fa5::t_67e6446511d763 62
+  s_cb07b89c712fa5::t_dc11bb75320bcc 5,61,63-69
+  s_cb07b89c712fa5::t_61b0c9cde813b2 25-27
+  s_cb07b89c712fa5::t_a09e2d4e4b9848 70-72
+apps/control-plane/src/app.ts
+  s_cb07b89c712fa5::t_e10bebfe321549 270
+  s_cb07b89c712fa5::t_61b0c9cde813b2 12,15,121-143,171,263,287,299
+  s_cb07b89c712fa5::t_aa32b3968c934c 264-269,271-274
+README.md
+  s_cb07b89c712fa5::t_501a9ea8ade733 61,101-112
+  s_cb07b89c712fa5::t_db0419b9acb011 77-79
+  s_cb07b89c712fa5::t_498688a18bc964 113
+packages/core/src/contracts.ts
+  s_cb07b89c712fa5::t_e10bebfe321549 130-136
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "40ac4c7093052c67cc9d192ff196a15a4c74c30e",
+  "prompts": {},
+  "sessions": {
+    "s_cb07b89c712fa5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7187-4c4d-7273-9636-b2e90c713af2",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
