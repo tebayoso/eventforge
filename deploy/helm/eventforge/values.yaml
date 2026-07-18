@@ -1,6 +1,8 @@
 image:
-  repository: ghcr.io/eventforge/control-plane
-  tag: latest
+  repository: ghcr.io/tebayoso/eventforge-control-plane
+  tag: "0.1.0"
+  # Release automation must override this with the published multi-arch digest.
+  digest: ""
   pullPolicy: IfNotPresent
 # The current store is process-local. Keep a single replica until workflow, run, and memory state are shared.
 replicaCount: 1
@@ -17,7 +19,7 @@ postgres:
 secrets:
   existingSecret: eventforge-runtime
   openaiApiKeyKey: openai-api-key
-  masterKeyKey: master-key
+  encryptionKeyKey: encryption-key
 providerSecrets:
   github:
     webhookEnabled: false
@@ -37,6 +39,9 @@ providerSecrets:
     authTokenEnabled: false
     authTokenKey: sentry-auth-token
 env:
+  EVENTFORGE_RUNTIME_MODE: remote
+  EVENTFORGE_HOST: "0.0.0.0"
+  EVENTFORGE_CODEX_WORKDIR: "/workspaces"
   EVENTFORGE_RUNNER: codex
   EVENTFORGE_DEMO_MODE: "false"
   EVENTFORGE_ALLOWED_ORIGINS: "https://eventforge.dev"
@@ -46,12 +51,34 @@ cloudflareTunnel:
   image:
     repository: cloudflare/cloudflared
     tag: "2026.7.2"
+    digest: "sha256:4f6655284ab3d252b7f28fedb19fe6c8fc82ee5b1295c20ac74d475e5398a52d"
     pullPolicy: IfNotPresent
   existingSecret: eventforge-cloudflared
   tokenKey: tunnel-token
+  podSecurityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: ["ALL"]
+    readOnlyRootFilesystem: true
   resources:
     requests: { cpu: 50m, memory: 64Mi }
     limits: { cpu: 250m, memory: 128Mi }
 resources:
   requests: { cpu: 250m, memory: 512Mi }
   limits: { cpu: "1", memory: 1Gi }
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: ["ALL"]
+  readOnlyRootFilesystem: true
+  seccompProfile:
+    type: RuntimeDefault

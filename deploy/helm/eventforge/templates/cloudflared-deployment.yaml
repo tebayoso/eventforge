@@ -18,10 +18,13 @@ spec:
         app.kubernetes.io/name: {{ include "eventforge.name" . }}-cloudflared
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
+      automountServiceAccountToken: false
+      securityContext: {{- toYaml .Values.cloudflareTunnel.podSecurityContext | nindent 8 }}
       containers:
         - name: cloudflared
-          image: "{{ .Values.cloudflareTunnel.image.repository }}:{{ .Values.cloudflareTunnel.image.tag }}"
+          image: "{{ .Values.cloudflareTunnel.image.repository }}@{{ .Values.cloudflareTunnel.image.digest }}"
           imagePullPolicy: {{ .Values.cloudflareTunnel.image.pullPolicy }}
+          securityContext: {{- toYaml .Values.cloudflareTunnel.containerSecurityContext | nindent 12 }}
           command: ["cloudflared", "tunnel", "--no-autoupdate", "--loglevel", "info", "--metrics", "0.0.0.0:2000", "run"]
           env:
             - name: TUNNEL_TOKEN
@@ -42,4 +45,9 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 10
           resources: {{- toYaml .Values.cloudflareTunnel.resources | nindent 12 }}
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - name: tmp
+          emptyDir: {}
 {{- end }}

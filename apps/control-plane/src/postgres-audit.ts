@@ -14,9 +14,11 @@ export class PostgresAuditSink {
       `insert into eventforge_audit_entries (id, workspace_id, kind, subject_id, message, created_at)
        values ($1, $2, $3, $4, $5, $6)
        on conflict (id) do nothing`,
-      [entry.id, entry.workspaceId, entry.kind, entry.subjectId, entry.message, entry.createdAt]
+      [entry.id, entry.workspaceId, entry.kind, entry.subjectId, entry.message, entry.createdAt],
     );
   }
 
-  async close(): Promise<void> { await this.#pool.end(); }
+  async close(): Promise<void> {
+    await this.#pool.end();
+  }
 }

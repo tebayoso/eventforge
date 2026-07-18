@@ -1,8 +1,11 @@
 {
-  "eventforge": {
-    "command": "eventforge-mcp",
-    "env": {
-      "EVENTFORGE_API_URL": "http://127.0.0.1:4310"
+  "mcpServers": {
+    "eventforge": {
+      "command": "node",
+      "args": ["${PLUGIN_ROOT}/server/eventforge-mcp.mjs"],
+      "env": {
+        "EVENTFORGE_API_URL": "http://127.0.0.1:4310"
+      }
     }
   }
 }

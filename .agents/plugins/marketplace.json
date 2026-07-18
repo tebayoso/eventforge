@@ -1,0 +1,20 @@
+{
+  "name": "eventforge-local",
+  "interface": {
+    "displayName": "EventForge Development"
+  },
+  "plugins": [
+    {
+      "name": "eventforge",
+      "source": {
+        "source": "local",
+        "path": "./plugins/eventforge"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

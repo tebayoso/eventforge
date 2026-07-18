@@ -2,17 +2,26 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "eventforge.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "eventforge.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
-    matchLabels: { app.kubernetes.io/name: {{ include "eventforge.name" . }} }
+    matchLabels:
+      app.kubernetes.io/name: {{ include "eventforge.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
   template:
     metadata:
-      labels: { app.kubernetes.io/name: {{ include "eventforge.name" . }} }
+      labels:
+        app.kubernetes.io/name: {{ include "eventforge.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
+      automountServiceAccountToken: false
+      securityContext: {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: control-plane
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ .Values.image.repository }}{{- if .Values.image.digest }}@{{ .Values.image.digest }}{{- else }}:{{ .Values.image.tag }}{{- end }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports: [{ name: http, containerPort: {{ .Values.service.port }} }]
           env:
@@ -20,6 +29,12 @@ spec:
               value: {{ .Values.service.port | quote }}
             - name: EVENTFORGE_RUNNER
               value: {{ .Values.env.EVENTFORGE_RUNNER | quote }}
+            - name: EVENTFORGE_RUNTIME_MODE
+              value: {{ .Values.env.EVENTFORGE_RUNTIME_MODE | quote }}
+            - name: EVENTFORGE_HOST
+              value: {{ .Values.env.EVENTFORGE_HOST | quote }}
+            - name: EVENTFORGE_CODEX_WORKDIR
+              value: {{ .Values.env.EVENTFORGE_CODEX_WORKDIR | quote }}
             - name: EVENTFORGE_DEMO_MODE
               value: {{ .Values.env.EVENTFORGE_DEMO_MODE | quote }}
             - name: EVENTFORGE_ALLOWED_ORIGINS
@@ -28,8 +43,8 @@ spec:
               valueFrom: { secretKeyRef: { name: {{ .Values.postgres.existingSecret }}, key: {{ .Values.postgres.databaseUrlKey }} } }
             - name: OPENAI_API_KEY
               valueFrom: { secretKeyRef: { name: {{ .Values.secrets.existingSecret }}, key: {{ .Values.secrets.openaiApiKeyKey }} } }
-            - name: EVENTFORGE_MASTER_KEY
-              valueFrom: { secretKeyRef: { name: {{ .Values.secrets.existingSecret }}, key: {{ .Values.secrets.masterKeyKey }} } }
+            - name: EVENTFORGE_ENCRYPTION_KEY
+              valueFrom: { secretKeyRef: { name: {{ .Values.secrets.existingSecret }}, key: {{ .Values.secrets.encryptionKeyKey }} } }
 {{- if .Values.providerSecrets.github.webhookEnabled }}
             - name: GITHUB_WEBHOOK_SECRET
               valueFrom:
@@ -84,4 +99,16 @@ spec:
 {{- end }}
           readinessProbe: { httpGet: { path: /health, port: http }, initialDelaySeconds: 5 }
           livenessProbe: { httpGet: { path: /health, port: http }, initialDelaySeconds: 15 }
+          securityContext: {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+            - { name: eventforge-home, mountPath: /home/node }
+            - { name: eventforge-workspaces, mountPath: /workspaces }
           resources: {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: eventforge-home
+          emptyDir: {}
+        - name: eventforge-workspaces
+          emptyDir: {}
