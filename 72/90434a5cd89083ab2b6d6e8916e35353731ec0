@@ -1,0 +1,35 @@
+pnpm-workspace.yaml
+  s_cb07b89c712fa5::t_9bd394ec9e08ad 10
+workfiles/devpost/SUBMISSION.md
+  s_cb07b89c712fa5::t_14ba03a47a9286 1-102
+README.md
+  s_cb07b89c712fa5::t_14ba03a47a9286 15-16
+  s_cb07b89c712fa5::t_3b19fccc16e8e0 5-14
+workfiles/agent-browser/README.md
+  s_cb07b89c712fa5::t_f0a5a423c303be 51-57
+  s_cb07b89c712fa5::t_874131913eee28 41-50
+apps/console/src/LandingPage.tsx
+  s_cb07b89c712fa5::t_994df9eded7c12 104
+apps/console/src/styles.css
+  s_cb07b89c712fa5::t_632b7e65eb18bd 112-113,122-132,142-145
+  s_cb07b89c712fa5::t_281421e7cf1c6a 146-147
+apps/console/src/App.tsx
+  s_cb07b89c712fa5::t_632b7e65eb18bd 18-19,36-37,74,89-92
+  s_cb07b89c712fa5::t_19dda2961fa3c3 80
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "7290434a5cd89083ab2b6d6e8916e35353731ec0",
+  "prompts": {},
+  "sessions": {
+    "s_cb07b89c712fa5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7187-4c4d-7273-9636-b2e90c713af2",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
