@@ -110,3 +110,14 @@ Reusable pattern: after changing a marketing route, validate the page’s outcom
 - Evidence is stored under `workfiles/agent-browser/screenshots/`: `quality-console-initial.png`, `quality-console-dark.png`, `quality-console-mobile.png`, `quality-console-decisions.png`, `quality-forge-approved.png`, `quality-console-degraded.png`, and `quality-console-final.png`.
 
 Reusable pattern: keep the exact configured browser origin, verify mutation outcomes in both the affected resource and the audit/run timeline, test cached degraded state by stopping only the API, and treat public webhook routes as signed-only even when demo mode is enabled.
+
+## 2026-07-18 — eventforge.dev production landing deployment
+
+- Deployed the console static-assets Worker to the `eventforge.dev` custom domain as Cloudflare version `859e9d5f-5b27-4113-a124-51534cef0821`.
+- Verified Cloudflare public DNS returned both IPv4 and IPv6 records. The local macOS resolver retained its pre-deploy negative answer, so the `eventforge-release-resolved` agent-browser session used a temporary Chromium host resolver rule for the already-published Cloudflare address; no application or DNS configuration was changed for this workaround.
+- Opened `https://eventforge.dev/` and confirmed the production title, primary navigation, “One place for every webhook. Less noise.” hero, console CTA, and exact demo target `https://youtu.be/pht3rrl--pE`.
+- Followed **See your event inbox** and confirmed the final URL was `https://eventforge.dev/console`. The console rendered its event feed, connector health, approval queue, run log, Forge Studio, and audit controls while truthfully reporting **Control plane offline** because this release deploys only the static shell.
+- Browser error inspection and filtered console output were empty. Direct HTTPS checks returned `200` for `/` and the `/console` SPA fallback with CSP, permissions policy, referrer policy, anti-framing, and MIME-sniffing headers.
+- Evidence is stored at `workfiles/agent-browser/screenshots/eventforge-dev-live.png` and `workfiles/agent-browser/screenshots/eventforge-dev-console.png`.
+
+Reusable pattern: after a new custom-domain attachment, distinguish public DNS propagation from a developer machine's negative DNS cache. Verify authoritative/public resolvers and HTTPS independently, then use a temporary browser resolver override only for local acceptance testing; never commit that override or treat it as production configuration.
