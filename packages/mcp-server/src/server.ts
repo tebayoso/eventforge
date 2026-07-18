@@ -26,20 +26,25 @@ export function createEventForgeServer(api: EventForgeApi): McpServer {
     "listen_for_webhook",
     {
       description:
-        "Return a verified provider webhook endpoint and installation guidance. Provider credentials are never returned.",
+        "Ensure the local EventForge relay is running, then return the verified provider webhook endpoint. Managed tunnel credentials are never returned.",
       inputSchema: { provider: z.enum(["github", "linear", "sentry"]) },
-      annotations: { readOnlyHint: true, openWorldHint: false },
+      annotations: { readOnlyHint: false, openWorldHint: true },
     },
     async ({ provider }) => {
-      const baseUrl = process.env.EVENTFORGE_PUBLIC_URL ?? api.baseUrl;
+      const relay = await api.post<{
+        state: string;
+        endpoint?: string;
+        publicUrl?: string;
+        tunnelName?: string;
+      }>("/relay/ensure", { provider });
       return json({
+        ...relay,
         provider,
-        endpoint: `${baseUrl.replace(/\/$/, "")}/webhooks/${provider}`,
         verification:
           provider === "github"
             ? "HMAC SHA-256 x-hub-signature-256"
             : "Configure the provider signing secret in EventForge.",
-        note: "Use the deterministic demo endpoint only for local demonstrations.",
+        note: "The relay is local and provider payloads remain subject to signature verification and workflow policy.",
       });
     },
   );

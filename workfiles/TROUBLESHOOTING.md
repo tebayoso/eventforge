@@ -26,6 +26,8 @@
 - Install `cloudflared` and authenticate the `gh` CLI for the target repository.
 - Set `EVENTFORGE_GITHUB_REPOSITORY=OWNER/REPOSITORY` when automatic detection is ambiguous.
 - Quick Tunnels are temporary and receive a new URL on each launch; EventForge patches its single managed repository webhook.
+- For managed `*.eventforge.dev` relays, configure both `EVENTFORGE_TUNNEL_PROVISIONING_URL` and `EVENTFORGE_TUNNEL_PROVISIONING_TOKEN` locally. Configure `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_ZONE_ID`, `CLOUDFLARE_API_TOKEN`, and `EVENTFORGE_TUNNEL_NAMING_KEY` only on the authenticated hosted control plane.
+- A `503` from `/tunnels/provision` means hosted provisioning is intentionally disabled. A `401`/`403` means the session lacks authenticated owner identity or `eventforge:install` scope. Do not copy an account-wide Cloudflare token into the local MCP environment.
 - Do not reuse Quick Tunnels for production traffic.
 
 ## Docker Compose configuration fails

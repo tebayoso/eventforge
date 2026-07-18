@@ -46,7 +46,12 @@ describe("control-plane entrypoint", () => {
       close: mocks.close,
       log: { info: mocks.info },
     });
-    mocks.startWebhook.mockResolvedValue({ close: vi.fn(), hookId: 1 });
+    mocks.startWebhook.mockResolvedValue({
+      close: vi.fn(),
+      hookId: 1,
+      publicBaseUrl: "https://relay.example",
+      publicUrl: "https://relay.example/webhooks/github",
+    });
     await import("../src/index.js");
     expect(mocks.startWebhook).toHaveBeenCalledWith(
       expect.objectContaining({ originUrl: "http://127.0.0.1:4310", log: expect.any(Function) }),

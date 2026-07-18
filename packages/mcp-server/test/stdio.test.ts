@@ -34,22 +34,15 @@ describe("EventForge MCP stdio protocol", () => {
     expect(result.tools.map((tool) => tool.name).sort()).toEqual([...EVENTFORGE_TOOL_NAMES].sort());
   });
 
-  it("executes a local read-only tool without contacting the control plane", async () => {
+  it("fails safely when the on-demand local relay is unavailable", async () => {
     const client = await connect();
     const result = await client.callTool({
       name: "listen_for_webhook",
       arguments: { provider: "github" },
     });
 
-    expect(result.isError).not.toBe(true);
-    expect(result.content).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          type: "text",
-          text: expect.stringContaining("/webhooks/github"),
-        }),
-      ]),
-    );
+    expect(result.isError).toBe(true);
+    expect(JSON.stringify(result.content)).not.toContain("ECONNREFUSED");
   });
 
   it("returns protocol validation and downstream API errors safely", async () => {

@@ -11,6 +11,7 @@ Updated: 2026-07-18
 | Policy and approvals                 | Resource-aware evaluator foundation; versioned approval/rejection/expiry; default approval required; execution worker not implemented    |
 | Codex runner                         | Read-only investigation, structured result, process-lifetime thread ID retention, and `resumeThread` support                             |
 | MCP package                          | Compiled stdio and Streamable HTTP server; npm pack and discovery smoke tests                                                            |
+| Local relay                          | On-demand MCP startup; Quick/manual named fallbacks; managed per-user tunnel client and hosted provisioner foundation                    |
 | Codex plugin                         | Manifest, skills, MCP registration, and health-only opt-in lifecycle hook                                                                |
 | Electron                             | Compiled main/preload, constrained IPC, separate private user-data SQLite daemon, navigation controls, and package configuration         |
 | Quality                              | Format, lint, typecheck, tests with coverage, builds, package smoke, deployment validation, dependency audit, secret scan, and CodeQL CI |
@@ -29,5 +30,6 @@ Updated: 2026-07-18
 - S3-compatible immutable Forge artifacts, disposable sandbox validation, dependency/source scanning, and out-of-process connector installation.
 - pgvector embedding/index/query integration. Local vector search is reported as disabled until an acceptance test passes.
 - Multi-workspace production operations and hardened owner-managed integration credentials.
+- Deployment of the authenticated managed-tunnel provisioner with valid Cloudflare account/zone credentials; the public site does not expose tunnel minting yet.
 
 Remote mode remains unavailable through the standard entry point while these items are incomplete. This is a security boundary, not a hidden configuration switch.

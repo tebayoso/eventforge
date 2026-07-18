@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   writeFile: vi.fn(),
   mkdir: vi.fn(),
   chmod: vi.fn(),
+  unlink: vi.fn(),
   spawn: vi.fn(),
 }));
 
@@ -16,6 +17,7 @@ vi.mock("node:fs/promises", () => ({
   writeFile: mocks.writeFile,
   mkdir: mocks.mkdir,
   chmod: mocks.chmod,
+  unlink: mocks.unlink,
 }));
 vi.mock("node:child_process", () => ({ execFile: vi.fn(), spawn: mocks.spawn }));
 
@@ -48,6 +50,7 @@ describe("local GitHub webhook integration", () => {
     mocks.mkdir.mockResolvedValue(undefined);
     mocks.writeFile.mockResolvedValue(undefined);
     mocks.chmod.mockResolvedValue(undefined);
+    mocks.unlink.mockResolvedValue(undefined);
     mocks.spawn.mockImplementation(() => tunnelProcess());
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, status: 200 }));
   });
@@ -123,6 +126,50 @@ describe("local GitHub webhook integration", () => {
       expect.anything(),
     );
     await result.close();
+  });
+
+  it("requests an EventForge-managed tunnel and keeps its token out of process arguments", async () => {
+    const token = "managed-tunnel-token-with-more-than-thirty-two-characters";
+    mocks.readFile.mockImplementation(async (path: string) =>
+      path.endsWith(".env") ? "GITHUB_WEBHOOK_SECRET=existing-secret\n" : "",
+    );
+    mocks.execFile.mockResolvedValue({ stdout: JSON.stringify({ id: 81 }) });
+    const provisioningFetch = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          tunnelId: "f2b4017c-f521-4f96-b2be-945897607b9d",
+          tunnelName: "eventforge-calm-river-birch",
+          hostname: "calm-river-birch.eventforge.dev",
+          publicUrl: "https://calm-river-birch.eventforge.dev",
+          token,
+        }),
+        { status: 201, headers: { "content-type": "application/json" } },
+      ),
+    );
+    const { startLocalGitHubWebhook } = await import("./local-github.js");
+    const result = await startLocalGitHubWebhook({
+      rootDir: "/tmp/eventforge-managed",
+      repository: "owner/repo",
+      provisioningUrl: "https://api.eventforge.dev",
+      provisioningToken: "owner-access-token",
+      provisioningFetch,
+    });
+    expect(result).toMatchObject({
+      tunnelName: "eventforge-calm-river-birch",
+      publicBaseUrl: "https://calm-river-birch.eventforge.dev",
+    });
+    const spawnArgs = mocks.spawn.mock.calls[0]?.[1] as string[];
+    expect(spawnArgs).toEqual(
+      expect.arrayContaining(["--token-file", expect.stringContaining(".eventforge")]),
+    );
+    expect(spawnArgs.join(" ")).not.toContain(token);
+    expect(mocks.writeFile).toHaveBeenCalledWith(
+      expect.stringContaining("f2b4017c-f521-4f96-b2be-945897607b9d.token"),
+      `${token}\n`,
+      { mode: 0o600 },
+    );
+    await result.close();
+    expect(mocks.unlink).toHaveBeenCalled();
   });
 
   it("replaces a published tunnel that never becomes healthy", async () => {

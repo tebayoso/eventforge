@@ -31,6 +31,8 @@ import {
   resolveRuntimeConfig,
   type RequestAuthenticator,
 } from "./runtime.js";
+import type { RelayController } from "./local-relay.js";
+import type { TunnelProvisioner } from "./managed-tunnel.js";
 
 const DEFAULT_WORKSPACE = "demo-workspace";
 const DEFAULT_PROJECT = "eventforge-demo-service";
@@ -43,12 +45,14 @@ type IntegrationBinding = {
   workspaceId: string;
   projectId: string;
 };
-type AppOptions = {
+export type AppOptions = {
   store?: EventForgeStore;
   runner?: AgentRunner;
   persistAudit?: boolean;
   authenticate?: RequestAuthenticator;
   integrations?: IntegrationBinding[];
+  relayController?: RelayController;
+  tunnelProvisioner?: TunnelProvisioner;
 };
 
 declare module "fastify" {
@@ -70,6 +74,20 @@ export function configuredBrowserOrigins(
   if (environment === "production")
     throw new Error("EVENTFORGE_ALLOWED_ORIGINS must list the production console origin.");
   return [LOCAL_CONSOLE_ORIGIN];
+}
+
+export function isLoopbackRequestHost(hostname: string): boolean {
+  return (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1" ||
+    hostname === "[::1]"
+  );
+}
+
+function isPublicRelayPath(url: string): boolean {
+  const pathname = new URL(url, "http://localhost").pathname;
+  return pathname === "/health" || /^\/webhooks\/(github|linear|sentry)$/.test(pathname);
 }
 
 export function createDefaultWorkflow(): WorkflowDefinition {
@@ -189,6 +207,13 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
       )
     : undefined;
   app.addHook("onRequest", async (request, reply) => {
+    if (
+      runtime.mode !== "remote" &&
+      !isLoopbackRequestHost(request.hostname) &&
+      !isPublicRelayPath(request.url)
+    ) {
+      return reply.status(404).send({ error: "Not found." });
+    }
     const rate = requestLimiter.consume(request.ip);
     if (!rate.allowed)
       return reply
@@ -763,6 +788,58 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
     const job = store.decideForge(forgeId, parsed.data.approved, actor.actorId);
     if (!job) return reply.status(404).send({ error: "Forge job not found" });
     return job;
+  });
+
+  app.get("/relay", async (_request, reply) => {
+    if (runtime.mode === "remote")
+      return reply.status(409).send({ error: "The local relay runs on the user's machine." });
+    if (!options.relayController)
+      return reply.status(503).send({ error: "Local relay controller is unavailable." });
+    return options.relayController.status();
+  });
+  app.post("/relay/ensure", async (request, reply) => {
+    if (runtime.mode === "remote")
+      return reply.status(409).send({ error: "The local relay runs on the user's machine." });
+    if (!options.relayController)
+      return reply.status(503).send({ error: "Local relay controller is unavailable." });
+    const parsed = z
+      .object({ provider: z.enum(["github", "linear", "sentry"]) })
+      .safeParse(request.body);
+    if (!parsed.success) return reply.status(400).send({ error: parsed.error.flatten() });
+    try {
+      return await options.relayController.ensure(parsed.data.provider);
+    } catch (error) {
+      request.log.error({ error }, "local relay startup failed");
+      return reply.status(502).send({ error: "Local relay failed to start." });
+    }
+  });
+  app.post("/tunnels/provision", async (request, reply) => {
+    if (!options.tunnelProvisioner)
+      return reply.status(503).send({ error: "Managed tunnel provisioning is not configured." });
+    const actor = authFor(request);
+    if (actor.role !== "owner" || !actor.scopes.includes("eventforge:install"))
+      return reply.status(403).send({ error: "Owner role and eventforge:install scope required." });
+    const parsed = z
+      .object({ originUrl: z.string().url().default("http://127.0.0.1:4310") })
+      .safeParse(request.body);
+    if (!parsed.success) return reply.status(400).send({ error: parsed.error.flatten() });
+    try {
+      const lease = await options.tunnelProvisioner.provision({
+        actorId: actor.actorId,
+        workspaceId: actor.workspaceId,
+        originUrl: parsed.data.originUrl,
+      });
+      store.audit(
+        actor.workspaceId,
+        "connector",
+        lease.tunnelId,
+        `Owner provisioned managed relay ${lease.hostname}.`,
+      );
+      return reply.header("cache-control", "no-store").status(201).send(lease);
+    } catch (error) {
+      request.log.error({ error }, "managed tunnel provisioning failed");
+      return reply.status(502).send({ error: "Managed tunnel provisioning failed." });
+    }
   });
 
   return app;

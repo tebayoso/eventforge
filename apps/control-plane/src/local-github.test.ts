@@ -6,6 +6,7 @@ import {
   publicWebhookUrl,
   quickTunnelArgs,
   quickTunnelUrl,
+  tokenTunnelArgs,
   webhookFormArgs,
 } from "./local-github.js";
 
@@ -67,6 +68,16 @@ describe("local GitHub webhook bootstrap", () => {
       "http://127.0.0.1:4310",
       "run",
       "eventforge-local",
+    ]);
+  });
+
+  it("passes a managed tunnel credential by protected file rather than process arguments", () => {
+    expect(tokenTunnelArgs("/private/eventforge.token")).toEqual([
+      "tunnel",
+      "--no-autoupdate",
+      "run",
+      "--token-file",
+      "/private/eventforge.token",
     ]);
   });
 

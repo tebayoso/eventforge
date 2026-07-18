@@ -66,6 +66,11 @@ describe("EventForge MCP tool registry", () => {
     expect(toolCalls.map((call) => call.name).sort()).toEqual([...EVENTFORGE_TOOL_NAMES].sort());
     expect(requests).toEqual(
       expect.arrayContaining([
+        expect.objectContaining({
+          method: "POST",
+          path: "/relay/ensure",
+          body: { provider: "linear" },
+        }),
         expect.objectContaining({ method: "POST", path: "/events" }),
         expect.objectContaining({ method: "GET", path: expect.stringContaining("/memory?") }),
         expect.objectContaining({ method: "POST", path: "/agent-runs" }),
