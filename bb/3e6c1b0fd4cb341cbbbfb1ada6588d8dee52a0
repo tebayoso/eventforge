@@ -1,0 +1,82 @@
+workfiles/TROUBLESHOOTING.md
+  s_cb07b89c712fa5::t_6809a9ad88c99e 29-30
+apps/control-plane/src/managed-tunnel.ts
+  s_cb07b89c712fa5::t_7b108be4e87c48 113-121
+  s_cb07b89c712fa5::t_fdbe5e1cda107b 39-41,59-61,176-179,198-199
+  s_cb07b89c712fa5::t_a66dc23230b402 1-38,42-58,62-112,122-175,180-197,200-207
+apps/control-plane/src/local-relay.test.ts
+  s_cb07b89c712fa5::t_fdb8c3e207ccdf 31-39,46-48
+  s_cb07b89c712fa5::t_25c4262362867f 1-30,41-45,49-52,58-59
+  s_cb07b89c712fa5::t_fdbe5e1cda107b 40
+  s_cb07b89c712fa5::t_89b7ca0d2475e9 53-57
+apps/control-plane/src/local-github.integration.test.ts
+  s_cb07b89c712fa5::t_8fe95f856ee1ed 10,20,53,131-172
+  s_cb07b89c712fa5::t_055f168efd39c7 173-174
+packages/mcp-server/test/stdio.test.ts
+  s_cb07b89c712fa5::t_89b7ca0d2475e9 37,44-45
+README.md
+  s_cb07b89c712fa5::t_6809a9ad88c99e 61,77,79-83
+workfiles/STATUS.md
+  s_cb07b89c712fa5::t_fdbe5e1cda107b 14
+  s_cb07b89c712fa5::t_6809a9ad88c99e 33
+apps/control-plane/src/local-relay.ts
+  s_cb07b89c712fa5::t_89b7ca0d2475e9 29
+  s_cb07b89c712fa5::t_f273f61ff5c5e9 1-28,30-57
+apps/control-plane/src/local-github.test.ts
+  s_cb07b89c712fa5::t_ad682e4aa9fe17 9,74-80
+  s_cb07b89c712fa5::t_8fa7403bac8950 81-83
+apps/control-plane/src/app.ts
+  s_cb07b89c712fa5::t_18956cc7a1411a 34-35,48,54-55,793-820,822-843
+  s_cb07b89c712fa5::t_7b108be4e87c48 79,86-92,210-216
+  s_cb07b89c712fa5::t_b931dc39e0b0b9 80-85
+  s_cb07b89c712fa5::t_fdbe5e1cda107b 821
+  s_cb07b89c712fa5::t_4b4f9396e187cd 844
+apps/control-plane/src/index.ts
+  s_cb07b89c712fa5::t_036ddf52af79c2 25
+  s_cb07b89c712fa5::t_24cbe46a6fd470 6-7,17-24,26-28,30,35
+packages/mcp-server/src/server.ts
+  s_cb07b89c712fa5::t_5f1db3f0bd10c4 29,31,34-39,41,47
+apps/control-plane/src/managed-tunnel.test.ts
+  s_cb07b89c712fa5::t_8ececc21489568 1-25,27-30,32-83,94-103,105-157,161-162
+  s_cb07b89c712fa5::t_7b108be4e87c48 84-93
+  s_cb07b89c712fa5::t_fdbe5e1cda107b 26,31,104,158-160
+apps/control-plane/test/app.test.ts
+  s_cb07b89c712fa5::t_7b108be4e87c48 14,101-104,106-141
+  s_cb07b89c712fa5::t_d605341f6d2e73 10-13,15-16,56,77,1048-1123
+  s_cb07b89c712fa5::t_b931dc39e0b0b9 105
+packages/core/src/contracts.ts
+  s_cb07b89c712fa5::t_ccf8d66e597a4f 32-50
+  s_cb07b89c712fa5::t_fdbe5e1cda107b 232
+.env.example
+  s_cb07b89c712fa5::t_6809a9ad88c99e 36-39,42-47
+apps/control-plane/test/index.test.ts
+  s_cb07b89c712fa5::t_89b7ca0d2475e9 49-54
+packages/mcp-server/test/server.test.ts
+  s_cb07b89c712fa5::t_89b7ca0d2475e9 69-73
+workfiles/ARCHITECTURE.md
+  s_cb07b89c712fa5::t_d39df240fab618 11
+  s_cb07b89c712fa5::t_6809a9ad88c99e 12-13
+  s_cb07b89c712fa5::t_7b108be4e87c48 33
+plugins/eventforge/server/eventforge-mcp.mjs
+  s_cb07b89c712fa5::t_f917ab1d5904a9 42
+apps/control-plane/src/local-github.ts
+  s_cb07b89c712fa5::t_72a921a451d510 2,5,29,36-37,87-115,365-367,403-406,408-410,415-431,434,436,457,462,465-475,478
+  s_cb07b89c712fa5::t_fdbe5e1cda107b 402,435,437-442
+  s_cb07b89c712fa5::t_02a8d78fe4d724 407
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "bb3e6c1b0fd4cb341cbbbfb1ada6588d8dee52a0",
+  "prompts": {},
+  "sessions": {
+    "s_cb07b89c712fa5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7187-4c4d-7273-9636-b2e90c713af2",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
