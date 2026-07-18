@@ -9,6 +9,7 @@ import {
   providerAdapters,
   isGitHubCiFailure,
   isGitHubIssueOpened,
+  isGitHubPullRequestReviewEvent,
   matchesWorkflow,
   policyAllowsAction,
   redactPayload,
@@ -272,6 +273,20 @@ describe("event security", () => {
       isGitHubIssueOpened({ ...ci, topic: "issues", payload: { action: "opened", issue: {} } }),
     ).toBe(true);
     expect(isGitHubIssueOpened(ci)).toBe(false);
+    expect(
+      isGitHubPullRequestReviewEvent({
+        ...ci,
+        topic: "pull_request",
+        payload: { action: "opened", pull_request: { number: 3 } },
+      }),
+    ).toBe(true);
+    expect(
+      isGitHubPullRequestReviewEvent({
+        ...ci,
+        topic: "pull_request",
+        payload: { action: "closed", pull_request: { number: 3 } },
+      }),
+    ).toBe(false);
   });
 });
 
@@ -617,6 +632,12 @@ describe("guarded forge and policy", () => {
       topicHint: "check_run",
     });
     expect(matchesWorkflow(workflow, event)).toBe(true);
+    expect(
+      matchesWorkflow(
+        { ...workflow, filters: { "check_run.conclusion": ["failure", "cancelled"] } },
+        event,
+      ),
+    ).toBe(true);
     expect(matchesWorkflow({ ...workflow, enabled: false }, event)).toBe(false);
     expect(
       matchesWorkflow({ ...workflow, trigger: { provider: "github", topic: "issues" } }, event),

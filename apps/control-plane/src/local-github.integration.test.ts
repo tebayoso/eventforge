@@ -106,6 +106,56 @@ describe("local GitHub webhook integration", () => {
     await result.close();
   });
 
+  it("uses a configured named tunnel instead of requesting a random hostname", async () => {
+    mocks.readFile.mockRejectedValue(Object.assign(new Error("missing"), { code: "ENOENT" }));
+    mocks.execFile.mockResolvedValue({ stdout: JSON.stringify({ id: 80 }) });
+    const { startLocalGitHubWebhook } = await import("./local-github.js");
+    const result = await startLocalGitHubWebhook({
+      rootDir: "/tmp/eventforge-named",
+      repository: "owner/repo",
+      namedTunnel: "eventforge-local",
+      namedTunnelPublicUrl: "https://eventforge-hooks.example.com",
+    });
+    expect(result.publicUrl).toBe("https://eventforge-hooks.example.com/webhooks/github");
+    expect(mocks.spawn).toHaveBeenCalledWith(
+      "cloudflared",
+      expect.arrayContaining(["run", "eventforge-local"]),
+      expect.anything(),
+    );
+    await result.close();
+  });
+
+  it("replaces a published tunnel that never becomes healthy", async () => {
+    let unhealthy: ReturnType<typeof tunnelProcess> | undefined;
+    mocks.spawn
+      .mockImplementationOnce(() => {
+        unhealthy = tunnelProcess("INF https://unhealthy-tunnel.trycloudflare.com ready");
+        return unhealthy;
+      })
+      .mockImplementationOnce(() =>
+        tunnelProcess("INF https://healthy-tunnel.trycloudflare.com ready"),
+      );
+    mocks.readFile.mockRejectedValue(Object.assign(new Error("missing"), { code: "ENOENT" }));
+    mocks.execFile.mockResolvedValue({ stdout: JSON.stringify({ id: 79 }) });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (url: URL) => {
+        if (url.hostname === "healthy-tunnel.trycloudflare.com") return { ok: true, status: 200 };
+        throw new Error("unreachable edge");
+      }),
+    );
+
+    const { startLocalGitHubWebhook } = await import("./local-github.js");
+    const result = await startLocalGitHubWebhook({
+      rootDir: "/tmp/eventforge-retry",
+      repository: "owner/repo",
+      tunnelReadyTimeoutMs: 1,
+    });
+    expect(unhealthy?.killed).toBe(true);
+    expect(result.publicUrl).toBe("https://healthy-tunnel.trycloudflare.com/webhooks/github");
+    await result.close();
+  });
+
   it("closes the tunnel when repository discovery is invalid", async () => {
     const child = tunnelProcess();
     mocks.spawn.mockReturnValue(child);

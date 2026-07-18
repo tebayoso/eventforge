@@ -127,7 +127,13 @@ export const WorkflowDefinitionSchema = z.object({
   enabled: z.boolean().default(true),
   trigger: z.object({ provider: ProviderSchema, topic: z.string().min(1) }),
   filters: z.record(z.unknown()).default({}),
-  agentProfile: z.enum(["ci-investigator", "issue-triager", "alert-responder", "custom"]),
+  agentProfile: z.enum([
+    "ci-investigator",
+    "issue-triager",
+    "pull-request-reviewer",
+    "alert-responder",
+    "custom",
+  ]),
   memoryScope: z.enum(["project", "workspace"]),
   policy: ExecutionPolicySchema,
 });

@@ -13,13 +13,19 @@ const QUICK_TUNNEL_TIMEOUT_MS = 30_000;
 const QUICK_TUNNEL_ATTEMPTS = 3;
 const QUICK_TUNNEL_RETRY_DELAY_MS = 1_000;
 const TUNNEL_READY_TIMEOUT_MS = 30_000;
-const GITHUB_WEBHOOK_EVENTS = ["check_run", "issues"] as const;
+const GITHUB_WEBHOOK_EVENTS = [
+  "check_run",
+  "issues",
+  "pull_request",
+  "pull_request_review",
+  "issue_comment",
+] as const;
 
 type StoredWebhook = {
   repository: string;
   hookId: number;
   publicUrl?: string;
-  tunnel?: "cloudflare_quick";
+  tunnel?: "cloudflare_quick" | "cloudflare_named";
 };
 type GitHubHook = { id: number; config?: { url?: string } };
 
@@ -65,6 +71,14 @@ export function publicWebhookUrl(tunnelUrl: string, webhookPath = DEFAULT_WEBHOO
 
 export function quickTunnelArgs(originUrl: string, configPath = devNull): string[] {
   return ["--config", configPath, "tunnel", "--url", originUrl];
+}
+
+export function namedTunnelArgs(
+  originUrl: string,
+  tunnelName: string,
+  configPath = devNull,
+): string[] {
+  return ["--config", configPath, "tunnel", "--url", originUrl, "run", tunnelName];
 }
 
 async function command(args: string[]): Promise<string> {
@@ -163,16 +177,16 @@ async function patchHook(
   }
 }
 
-async function startQuickTunnelAttempt(
-  originUrl: string,
+async function startTunnelAttempt(
   cloudflaredBin: string,
-  configPath?: string,
+  args: string[],
+  publishedUrl?: string,
 ): Promise<{ tunnelUrl: string; close: () => Promise<void> }> {
-  const tunnel = spawn(cloudflaredBin, quickTunnelArgs(originUrl, configPath), {
+  const tunnel = spawn(cloudflaredBin, args, {
     stdio: ["ignore", "pipe", "pipe"],
   });
   const output: string[] = [];
-  let tunnelUrl: string | undefined;
+  let tunnelUrl = publishedUrl;
   let settle: ((value: { tunnelUrl: string; close: () => Promise<void> }) => void) | undefined;
   let fail: ((reason: Error) => void) | undefined;
   const ready = new Promise<{ tunnelUrl: string; close: () => Promise<void> }>(
@@ -217,12 +231,13 @@ async function startQuickTunnelAttempt(
         ),
       );
   });
+  if (tunnelUrl) queueMicrotask(finish);
   const timeout = setTimeout(() => {
     if (!tunnelUrl) {
       tunnel.kill("SIGTERM");
       fail?.(
         new Error(
-          `Cloudflare Quick Tunnel did not publish a URL within ${QUICK_TUNNEL_TIMEOUT_MS / 1000} seconds.`,
+          `Cloudflare Tunnel did not publish a URL within ${QUICK_TUNNEL_TIMEOUT_MS / 1000} seconds.`,
         ),
       );
     }
@@ -242,7 +257,7 @@ async function waitForQuickTunnel(
   let lastError: Error | undefined;
   for (let attempt = 1; attempt <= QUICK_TUNNEL_ATTEMPTS; attempt += 1) {
     try {
-      return await startQuickTunnelAttempt(originUrl, cloudflaredBin, configPath);
+      return await startTunnelAttempt(cloudflaredBin, quickTunnelArgs(originUrl, configPath));
     } catch (error) {
       lastError =
         error instanceof Error ? error : new Error("Cloudflare Quick Tunnel failed to start.");
@@ -255,9 +270,12 @@ async function waitForQuickTunnel(
   );
 }
 
-async function waitForTunnelHealth(tunnelUrl: string): Promise<void> {
+async function waitForTunnelHealth(
+  tunnelUrl: string,
+  timeoutMs = TUNNEL_READY_TIMEOUT_MS,
+): Promise<void> {
   const healthUrl = new URL("/health", `${tunnelUrl}/`);
-  const deadline = Date.now() + TUNNEL_READY_TIMEOUT_MS;
+  const deadline = Date.now() + timeoutMs;
   let lastStatus = "no response";
   while (Date.now() < deadline) {
     try {
@@ -270,13 +288,35 @@ async function waitForTunnelHealth(tunnelUrl: string): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
   throw new Error(
-    `Cloudflare Quick Tunnel did not reach ${healthUrl} within ${TUNNEL_READY_TIMEOUT_MS / 1000} seconds (${lastStatus}).`,
+    `Cloudflare Quick Tunnel did not reach ${healthUrl} within ${timeoutMs / 1000} seconds (${lastStatus}).`,
+  );
+}
+
+async function waitForHealthyTunnel(
+  startTunnel: () => Promise<{ tunnelUrl: string; close: () => Promise<void> }>,
+  readyTimeoutMs?: number,
+): Promise<{ tunnelUrl: string; close: () => Promise<void> }> {
+  let lastError: Error | undefined;
+  for (let attempt = 1; attempt <= QUICK_TUNNEL_ATTEMPTS; attempt += 1) {
+    const tunnel = await startTunnel();
+    try {
+      await waitForTunnelHealth(tunnel.tunnelUrl, readyTimeoutMs);
+      return tunnel;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error("Quick Tunnel health check failed.");
+      await tunnel.close();
+      if (attempt < QUICK_TUNNEL_ATTEMPTS)
+        await new Promise((resolve) => setTimeout(resolve, QUICK_TUNNEL_RETRY_DELAY_MS));
+    }
+  }
+  throw new Error(
+    `Cloudflare Tunnel remained unhealthy after ${QUICK_TUNNEL_ATTEMPTS} attempts: ${lastError?.message ?? "unknown error"}`,
   );
 }
 
 /**
  * Starts a Cloudflare Quick Tunnel for the local control plane and patches the
- * saved GitHub check_run webhook on every launch. Quick Tunnel hostnames are
+ * saved GitHub engineering-event webhook on every launch. Quick Tunnel hostnames are
  * intentionally short-lived, while the GitHub webhook and signing secret persist.
  */
 export async function startLocalGitHubWebhook(
@@ -288,6 +328,9 @@ export async function startLocalGitHubWebhook(
     webhookPath?: string;
     cloudflaredBin?: string;
     cloudflaredConfig?: string;
+    namedTunnel?: string;
+    namedTunnelPublicUrl?: string;
+    tunnelReadyTimeoutMs?: number;
     log?: (message: string) => void;
   } = {},
 ): Promise<LocalGitHubWebhook> {
@@ -315,13 +358,28 @@ export async function startLocalGitHubWebhook(
 
   const originUrl =
     options.originUrl ?? process.env.EVENTFORGE_LOCAL_TUNNEL_ORIGIN ?? DEFAULT_ORIGIN;
-  const tunnel = await waitForQuickTunnel(
-    originUrl,
-    options.cloudflaredBin ?? process.env.EVENTFORGE_CLOUDFLARED_BIN ?? "cloudflared",
-    options.cloudflaredConfig ?? process.env.EVENTFORGE_CLOUDFLARED_CONFIG,
+  const cloudflaredBin =
+    options.cloudflaredBin ?? process.env.EVENTFORGE_CLOUDFLARED_BIN ?? "cloudflared";
+  const cloudflaredConfig = options.cloudflaredConfig ?? process.env.EVENTFORGE_CLOUDFLARED_CONFIG;
+  const namedTunnel = options.namedTunnel ?? process.env.EVENTFORGE_CLOUDFLARED_TUNNEL;
+  const namedTunnelPublicUrl =
+    options.namedTunnelPublicUrl ?? process.env.EVENTFORGE_CLOUDFLARED_PUBLIC_URL;
+  if ((namedTunnel && !namedTunnelPublicUrl) || (!namedTunnel && namedTunnelPublicUrl))
+    throw new Error(
+      "Set both EVENTFORGE_CLOUDFLARED_TUNNEL and EVENTFORGE_CLOUDFLARED_PUBLIC_URL for a named tunnel.",
+    );
+  const tunnel = await waitForHealthyTunnel(
+    () =>
+      namedTunnel && namedTunnelPublicUrl
+        ? startTunnelAttempt(
+            cloudflaredBin,
+            namedTunnelArgs(originUrl, namedTunnel, cloudflaredConfig),
+            namedTunnelPublicUrl,
+          )
+        : waitForQuickTunnel(originUrl, cloudflaredBin, cloudflaredConfig),
+    options.tunnelReadyTimeoutMs,
   );
   try {
-    await waitForTunnelHealth(tunnel.tunnelUrl);
     const webhookUrl = publicWebhookUrl(tunnel.tunnelUrl, options.webhookPath);
     const secret = await ensureSecret(envPath);
     process.env.GITHUB_WEBHOOK_SECRET = secret;
@@ -333,12 +391,12 @@ export async function startLocalGitHubWebhook(
     await mkdir(dirname(statePath), { recursive: true });
     await writeFile(
       statePath,
-      `${JSON.stringify({ repository, hookId, publicUrl: webhookUrl, tunnelUrl: tunnel.tunnelUrl, tunnel: "cloudflare_quick" }, null, 2)}\n`,
+      `${JSON.stringify({ repository, hookId, publicUrl: webhookUrl, tunnelUrl: tunnel.tunnelUrl, tunnel: namedTunnel ? "cloudflare_named" : "cloudflare_quick" }, null, 2)}\n`,
       { mode: 0o600 },
     );
 
     options.log?.(
-      `GitHub webhook #${hookId} now targets ${webhookUrl} through Cloudflare Quick Tunnel ${tunnel.tunnelUrl}, forwarding to ${originUrl}.`,
+      `GitHub webhook #${hookId} now targets ${webhookUrl} through Cloudflare ${namedTunnel ? `named tunnel ${namedTunnel}` : "Quick Tunnel"} at ${tunnel.tunnelUrl}, forwarding to ${originUrl}.`,
     );
 
     return { repository, publicUrl: webhookUrl, hookId, close: tunnel.close };
