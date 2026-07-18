@@ -230,6 +230,8 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
         .status(429)
         .send({ error: "Request rate limit exceeded." });
     }
+  });
+  app.addHook("onRequest", async (request, reply) => {
     if (
       runtime.mode !== "remote" ||
       request.url === "/health" ||
