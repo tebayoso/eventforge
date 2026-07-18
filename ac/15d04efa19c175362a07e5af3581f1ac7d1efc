@@ -1,0 +1,38 @@
+workfiles/STATUS.md
+  s_cb07b89c712fa5::t_25a9dafa3da0ca 17
+  s_cb07b89c712fa5::t_9e4088c578ea06 7-16
+apps/control-plane/src/app.ts
+  s_cb07b89c712fa5::t_358c24993383e5 5,117,140,183-186,221-227,229,232
+apps/control-plane/package.json
+  s_cb07b89c712fa5::t_71567dd0d937c3 26,28,33
+apps/control-plane/src/runner.ts
+  s_cb07b89c712fa5::t_358c24993383e5 5
+apps/console/src/api.ts
+  s_cb07b89c712fa5::t_358c24993383e5 17
+apps/control-plane/test/app.test.ts
+  s_cb07b89c712fa5::t_358c24993383e5 755,757-760
+apps/control-plane/src/local-github.ts
+  s_cb07b89c712fa5::t_358c24993383e5 91
+README.md
+  s_cb07b89c712fa5::t_33d8368892abf5 30,36
+  s_cb07b89c712fa5::t_25a9dafa3da0ca 5-27,39-48
+  s_cb07b89c712fa5::t_9e4088c578ea06 28-29,31-35,37-38
+pnpm-lock.yaml
+  s_cb07b89c712fa5::t_b67154a5fecc83 111-113,121-123,3498-3500,7877-7878
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "ac15d04efa19c175362a07e5af3581f1ac7d1efc",
+  "prompts": {},
+  "sessions": {
+    "s_cb07b89c712fa5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7187-4c4d-7273-9636-b2e90c713af2",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
