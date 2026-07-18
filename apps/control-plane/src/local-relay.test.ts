@@ -56,4 +56,28 @@ describe("local relay controller", () => {
       error: "Local relay failed to start.",
     });
   });
+
+  it("closes a relay that finishes starting during shutdown", async () => {
+    const close = vi.fn().mockResolvedValue(undefined);
+    const active = {
+      repository: "owner/repo",
+      publicUrl: "https://calm-river-birch.eventforge.dev/webhooks/github",
+      publicBaseUrl: "https://calm-river-birch.eventforge.dev",
+      tunnelName: "eventforge-calm-river-birch",
+      hookId: 42,
+      close,
+    };
+    let resolveStart!: (value: typeof active) => void;
+    const controller = new LocalRelayController(
+      () => new Promise<typeof active>((resolve) => (resolveStart = resolve)),
+    );
+    const startup = controller.ensure("github");
+    const shutdown = controller.close();
+    resolveStart(active);
+    await expect(startup).rejects.toThrow("closed during startup");
+    await shutdown;
+    expect(close).toHaveBeenCalledOnce();
+    expect(controller.status()).toEqual({ state: "stopped" });
+    await expect(controller.ensure("github")).rejects.toThrow("is closed");
+  });
 });
