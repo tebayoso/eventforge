@@ -101,7 +101,7 @@ export default function LandingPage() {
         <p className="ef-hero-intro">EventForge centralizes the signals from the tools your team already uses, filters out the chatter, and turns the important events into useful work.</p>
         <div className="ef-hero-actions">
           <a className="ef-primary-cta" href="/console">See your event inbox <ArrowDownRight size={18} /></a>
-          <a className="ef-text-cta" href="#problem"><Play size={15} fill="currentColor" /> See what it solves</a>
+          <a className="ef-text-cta" href="https://youtu.be/pht3rrl--pE" target="_blank" rel="noreferrer"><Play size={15} fill="currentColor" /> Watch the demo</a>
         </div>
         <div className="ef-hero-footnote"><span className="ef-live-dot" /> Keep your current stack. Give its signals one useful place to go.</div>
       </div>

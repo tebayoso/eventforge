@@ -2,6 +2,18 @@
 
 EventForge is a hybrid, policy-first operations console for event-driven Codex workflows. It receives GitHub, Linear, and Sentry events, creates bounded agent runs, preserves scoped memory, and requires explicit approval for consequential actions.
 
+## Hackathon submission
+
+- **Code repository:** [github.com/tebayoso/eventforge](https://github.com/tebayoso/eventforge)
+
+### How Codex and GPT-5.6 were used
+
+Codex, using GPT-5.6, was the engineering collaborator for EventForge: it translated the product requirements into the TypeScript monorepo, implemented the event-ingestion, policy, approval, memory, MCP/plugin, and operations-console flows, and ran the test, build, and browser-validation loops.
+
+The product also uses the Codex SDK at runtime. A verified GitHub event can create a persisted, read-only Codex thread that reviews untrusted engineering evidence within the workflow's policy boundary; EventForge records the resulting summary and requires separate approval before any consequential action.
+
+The complete Devpost-ready title, story, tags, installation method, and final-submission checklist are in [workfiles/devpost/SUBMISSION.md](workfiles/devpost/SUBMISSION.md).
+
 ## Demo video
 
 [Watch the EventForge demo on YouTube](https://youtu.be/pht3rrl--pE) for the end-to-end operations-console, GitHub-event, Codex-review, and approval workflow.

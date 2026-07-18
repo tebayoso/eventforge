@@ -38,6 +38,23 @@ Reusable pattern: Quick Tunnel URLs change on each launch. Do not dispatch a pro
 
 Reusable pattern: after opening a test issue, confirm the GitHub delivery is `202` before waiting for `/runs` to become `completed`; then assert `/actions` is an empty array. A slow agent must never delay the provider acknowledgment.
 
+## 2026-07-18 — Forge artifact safety-review flow
+
+- Started the deterministic local control plane with `EVENTFORGE_DEMO_MODE=true pnpm --filter @eventforge/control-plane start` and the console with `pnpm dev:console -- --host 127.0.0.1`.
+- Opened `http://localhost:5173/console` in the `eventforge-forge` agent-browser session, selected **Forge draft**, and confirmed the validation notice appeared.
+- Selected **Review artifact**. Outcome: the accessible dialog exposed requested scopes, scanner status, every generated file as keyboard-accessible tabs, and a read-only source pane before showing **Approve artifact**.
+- Approved the validated demo artifact. Outcome: the dialog closed and the console confirmed that installation remains a separate local action; no generated connector was executed or hot-loaded.
+- Captured the review state at `/tmp/eventforge-forge-review.png`.
+
+Reusable pattern: exercise Forge Studio by creating a draft, opening **Review artifact**, checking the source tabs and scanner report, then approve only a validated demo artifact. Approval must not install or execute generated code.
+
+## 2026-07-18 — Public landing submission CTA
+
+- Opened `http://localhost:5173/` in the `eventforge-landing` agent-browser session.
+- Verified the hero exposes **Watch the demo** and that it targets `https://youtu.be/pht3rrl--pE`; the console CTA remains routed to `/console`.
+
+Reusable pattern: keep the demo CTA on the public landing page and verify its exact target without navigating away from the local application.
+
 ## 2026-07-17 — Console theme switcher smoke flow
 
 - Started the Vite console and opened `http://127.0.0.1:5173/` in the `eventforge-theme-smoke` agent-browser session.
