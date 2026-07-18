@@ -1,0 +1,19 @@
+README.md
+  s_cb07b89c712fa5::t_b4406f7864a639 79
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "53594219d449968d4538654d569a216d83f77ebf",
+  "prompts": {},
+  "sessions": {
+    "s_cb07b89c712fa5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7187-4c4d-7273-9636-b2e90c713af2",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
