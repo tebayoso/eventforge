@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import cors from "@fastify/cors";
 import rawBody from "fastify-raw-body";
 import Fastify, { type FastifyInstance } from "fastify";
@@ -13,30 +13,60 @@ import {
   isGitHubIssueOpened,
   matchesWorkflow,
   normalizeEvent,
-  policyAllowsAction,
-  verifyHmac,
+  evaluatePolicy,
+  providerAdapters,
   type ActionProposal,
+  type AuthContext,
   type EventEnvelope,
   type Provider,
-  type WorkflowDefinition
+  type WorkflowDefinition,
 } from "@eventforge/core";
 import { createRunner, type AgentRunner } from "./runner.js";
 import { PostgresAuditSink } from "./postgres-audit.js";
+import {
+  createAutomationAuthContext,
+  FixedWindowLimiter,
+  resolveRuntimeConfig,
+  type RequestAuthenticator,
+} from "./runtime.js";
 
 const DEFAULT_WORKSPACE = "demo-workspace";
 const DEFAULT_PROJECT = "eventforge-demo-service";
 const LOCAL_CONSOLE_ORIGIN = "http://localhost:5173";
 
-type AppOptions = { store?: EventForgeStore; runner?: AgentRunner; persistAudit?: boolean };
+type IntegrationBinding = {
+  provider: Exclude<Provider, "custom">;
+  installationKey?: string;
+  repository?: string;
+  workspaceId: string;
+  projectId: string;
+};
+type AppOptions = {
+  store?: EventForgeStore;
+  runner?: AgentRunner;
+  persistAudit?: boolean;
+  authenticate?: RequestAuthenticator;
+  integrations?: IntegrationBinding[];
+};
 
 declare module "fastify" {
-  interface FastifyRequest { rawBody?: string | Buffer; }
+  interface FastifyRequest {
+    rawBody?: string | Buffer;
+  }
 }
 
-export function configuredBrowserOrigins(value = process.env.EVENTFORGE_ALLOWED_ORIGINS, environment = process.env.NODE_ENV): string[] {
-  const origins = value?.split(",").map((origin) => origin.trim()).filter(Boolean) ?? [];
+export function configuredBrowserOrigins(
+  value = process.env.EVENTFORGE_ALLOWED_ORIGINS,
+  environment = process.env.NODE_ENV,
+): string[] {
+  const origins =
+    value
+      ?.split(",")
+      .map((origin) => origin.trim())
+      .filter(Boolean) ?? [];
   if (origins.length > 0) return origins;
-  if (environment === "production") throw new Error("EVENTFORGE_ALLOWED_ORIGINS must list the production console origin.");
+  if (environment === "production")
+    throw new Error("EVENTFORGE_ALLOWED_ORIGINS must list the production console origin.");
   return [LOCAL_CONSOLE_ORIGIN];
 }
 
@@ -51,7 +81,15 @@ export function createDefaultWorkflow(): WorkflowDefinition {
     filters: { "check_run.conclusion": "failure" },
     agentProfile: "ci-investigator",
     memoryScope: "project",
-    policy: { approvalMode: "approval_required", allowedCapabilities: ["read", "write_files", "git_commit", "provider_write"], allowedRepositories: ["eventforge/demo-service"], allowedPaths: ["src/**", "test/**"], allowedDomains: ["api.github.com"], allowedProviders: ["github"] }
+    policy: {
+      version: 1,
+      approvalMode: "approval_required",
+      allowedCapabilities: ["read", "write_files", "git_commit", "provider_write"],
+      allowedRepositories: ["eventforge/demo-service"],
+      allowedPaths: ["src/**", "test/**"],
+      allowedDomains: ["api.github.com"],
+      allowedProviders: ["github"],
+    },
   };
 }
 
@@ -66,7 +104,15 @@ export function createIssueReviewWorkflow(): WorkflowDefinition {
     filters: { action: "opened" },
     agentProfile: "issue-triager",
     memoryScope: "project",
-    policy: { approvalMode: "approval_required", allowedCapabilities: ["read"], allowedRepositories: ["tebayoso/eventforge"], allowedPaths: ["**"], allowedDomains: [], allowedProviders: ["github"] }
+    policy: {
+      version: 1,
+      approvalMode: "approval_required",
+      allowedCapabilities: ["read"],
+      allowedRepositories: ["tebayoso/eventforge"],
+      allowedPaths: ["**"],
+      allowedDomains: [],
+      allowedProviders: ["github"],
+    },
   };
 }
 
@@ -77,190 +123,614 @@ function secretFor(provider: Provider): string | undefined {
   return undefined;
 }
 
-function signatureFor(provider: Provider, headers: Record<string, unknown>): string | undefined {
-  if (provider === "github") return String(headers["x-hub-signature-256"] ?? "") || undefined;
-  if (provider === "linear") return String(headers["linear-signature"] ?? headers["x-linear-signature"] ?? "") || undefined;
-  if (provider === "sentry") return String(headers["sentry-hook-signature"] ?? headers["x-sentry-signature"] ?? "") || undefined;
-  return undefined;
-}
-
-function deliveryIdFor(provider: Provider, headers: Record<string, unknown>): string | undefined {
-  if (provider === "github") return String(headers["x-github-delivery"] ?? "") || undefined;
-  if (provider === "linear") return String(headers["linear-delivery"] ?? "") || undefined;
-  if (provider === "sentry") return String(headers["sentry-hook-resource"] ?? "") || undefined;
-  return undefined;
-}
-
 export async function createApp(options: AppOptions = {}): Promise<FastifyInstance> {
-  const app = Fastify({ logger: process.env.NODE_ENV !== "test" });
+  const runtime = resolveRuntimeConfig(process.env, Boolean(options.authenticate));
+  const app = Fastify({
+    logger: process.env.NODE_ENV !== "test",
+    bodyLimit: runtime.bodyLimit,
+    requestIdHeader: "x-request-id",
+  });
   const store = options.store ?? new EventForgeStore();
   const runner = options.runner ?? createRunner();
-  const auditSink = options.persistAudit !== false && process.env.DATABASE_URL ? new PostgresAuditSink(process.env.DATABASE_URL) : undefined;
+  const auditSink =
+    options.persistAudit !== false && process.env.DATABASE_URL
+      ? new PostgresAuditSink(process.env.DATABASE_URL)
+      : undefined;
+  const requestLimiter = new FixedWindowLimiter(runtime.rateLimitPerMinute, 60_000);
+  const agentLimiter = new FixedWindowLimiter(runtime.agentRunsPerHour, 60 * 60_000);
+  const authContexts = new WeakMap<object, AuthContext>();
+  const idempotentDecisions = new Map<string, ActionProposal>();
   const allowedOrigins = configuredBrowserOrigins();
   store.addWorkflow(createDefaultWorkflow());
   store.addWorkflow(createIssueReviewWorkflow());
 
   await app.register(cors, {
-    origin: (origin, callback) => callback(null, origin === undefined || allowedOrigins.includes(origin)),
+    origin: (origin, callback) =>
+      callback(null, origin === undefined || allowedOrigins.includes(origin)),
     credentials: true,
     methods: ["GET", "POST", "PATCH", "OPTIONS"],
-    allowedHeaders: ["content-type"],
-    maxAge: 86_400
+    allowedHeaders: ["content-type", "authorization", "idempotency-key", "x-csrf-token"],
+    maxAge: 86_400,
   });
   await app.register(rawBody, { global: false, encoding: false, runFirst: true });
-  app.addHook("onResponse", async () => {
-    if (!auditSink) return;
-    const recent = store.auditEntries().slice(0, 1)[0];
-    if (recent) await auditSink.append(recent).catch((error: unknown) => app.log.warn({ error }, "audit persistence failed"));
+  const unsubscribeAudit = auditSink
+    ? store.subscribeAudit((entry) =>
+        auditSink
+          .append(entry)
+          .catch((error: unknown) =>
+            app.log.error({ error, auditId: entry.id }, "audit persistence failed"),
+          ),
+      )
+    : undefined;
+  app.addHook("onRequest", async (request, reply) => {
+    const rate = requestLimiter.consume(request.ip);
+    if (!rate.allowed)
+      return reply
+        .header("retry-after", rate.retryAfterSeconds)
+        .status(429)
+        .send({ error: "Request rate limit exceeded." });
+    if (
+      runtime.mode !== "remote" ||
+      request.url === "/health" ||
+      request.url.startsWith("/webhooks/")
+    )
+      return;
+    const auth = await options.authenticate?.(request);
+    if (!auth || !auth.mfaVerified)
+      return reply.status(401).send({ error: "Authenticated MFA session required." });
+    authContexts.set(request, auth);
+    if (request.method === "GET" && !auth.scopes.includes("eventforge:read")) {
+      return reply.status(403).send({ error: "eventforge:read scope required." });
+    }
   });
-  app.addHook("onClose", async () => { await auditSink?.close(); });
+  app.addHook("onClose", async () => {
+    unsubscribeAudit?.();
+    await auditSink?.close();
+  });
+
+  function authFor(request: object, workspaceId = DEFAULT_WORKSPACE): AuthContext {
+    return (
+      authContexts.get(request) ?? {
+        actorId: "local-owner",
+        workspaceId,
+        role: "owner",
+        mfaVerified: runtime.mode !== "remote",
+        scopes: [
+          "eventforge:read",
+          "eventforge:operate",
+          "eventforge:approve",
+          "eventforge:forge",
+          "eventforge:install",
+        ],
+      }
+    );
+  }
+
+  function scopedWorkspace(request: object, requested?: string): string | undefined {
+    return runtime.mode === "remote" ? authFor(request).workspaceId : requested;
+  }
+
+  function ownsWorkspace(request: object, workspaceId: string): boolean {
+    return runtime.mode !== "remote" || authFor(request).workspaceId === workspaceId;
+  }
 
   async function runWorkflow(workflow: WorkflowDefinition, event: EventEnvelope): Promise<void> {
-    store.audit(event.workspaceId, "workflow_matched", workflow.id, `${workflow.name} matched ${event.provider}:${event.topic}.`);
-    const memories = store.memory.query(event.workspaceId, event.projectId, JSON.stringify(event.payload)).map((memory) => memory.text);
-    const run = store.addRun({ id: randomUUID(), workflowId: workflow.id, eventId: event.id, status: "running", memoryIds: [], startedAt: new Date().toISOString() });
+    store.audit(
+      event.workspaceId,
+      "workflow_matched",
+      workflow.id,
+      `${workflow.name} matched ${event.provider}:${event.topic}.`,
+    );
+    const memories = store.memory
+      .query(event.workspaceId, event.projectId, JSON.stringify(event.payload))
+      .map((memory) => memory.text);
+    const run = store.addRun({
+      id: randomUUID(),
+      workflowId: workflow.id,
+      eventId: event.id,
+      status: "running",
+      memoryIds: [],
+      startedAt: new Date().toISOString(),
+    });
     store.audit(event.workspaceId, "agent_run", run.id, "Agent investigation started.");
     try {
-      const result = await runner.investigate({ event, workflow, memories });
-      store.memory.remember({ workspaceId: event.workspaceId, projectId: event.projectId, text: result.summary, tags: [event.provider, event.topic, "agent-summary"] });
+      const previousThreadId = store
+        .runs()
+        .find(
+          (candidate) =>
+            candidate.eventId === event.id &&
+            candidate.workflowId === workflow.id &&
+            candidate.id !== run.id,
+        )?.threadId;
+      const result = await runner.investigate({
+        event,
+        workflow,
+        memories,
+        threadId: previousThreadId,
+      });
+      store.memory.remember({
+        workspaceId: event.workspaceId,
+        projectId: event.projectId,
+        text: result.summary,
+        tags: [event.provider, event.topic, "agent-summary"],
+      });
       if (isGitHubIssueOpened(event)) {
-        store.updateRun(run.id, { threadId: result.threadId, summary: result.summary, status: "completed", finishedAt: new Date().toISOString() });
-        store.audit(event.workspaceId, "agent_run", run.id, "Read-only Codex issue review completed; no provider action was proposed.");
+        store.updateRun(run.id, {
+          threadId: result.threadId,
+          summary: result.summary,
+          structuredResult: result.structured,
+          status: "completed",
+          finishedAt: new Date().toISOString(),
+        });
+        store.audit(
+          event.workspaceId,
+          "agent_run",
+          run.id,
+          "Read-only Codex issue review completed; no provider action was proposed.",
+        );
         return;
       }
       const capabilities = ["write_files", "git_commit", "provider_write"];
-      const allowed = policyAllowsAction(workflow.policy, capabilities);
+      const repository = event.repository;
+      const decision = evaluatePolicy(workflow.policy, {
+        actor: createAutomationAuthContext(event.workspaceId),
+        provider: event.provider,
+        repository,
+        paths: [],
+        domains: event.provider === "github" ? ["api.github.com"] : [],
+        capabilities,
+      });
+      if (!decision.allowed) {
+        store.updateRun(run.id, {
+          threadId: result.threadId,
+          summary: `${result.summary} Policy denied the proposal: ${decision.reasons.join(" ")}`,
+          structuredResult: result.structured,
+          status: "completed",
+          finishedAt: new Date().toISOString(),
+        });
+        store.audit(
+          event.workspaceId,
+          "agent_run",
+          run.id,
+          "Agent analysis completed; policy denied creation of a write proposal.",
+        );
+        return;
+      }
+      const policySnapshotHash = createHash("sha256")
+        .update(JSON.stringify(workflow.policy))
+        .digest("hex");
       const proposal: ActionProposal = {
-        id: randomUUID(), workflowId: workflow.id, eventId: event.id,
-        title: isGitHubCiFailure(event) ? "Create a remediation branch and PR proposal" : "Create a reviewed remediation proposal",
+        id: randomUUID(),
+        workflowId: workflow.id,
+        eventId: event.id,
+        title: isGitHubCiFailure(event)
+          ? "Create a remediation branch and PR proposal"
+          : "Create a reviewed remediation proposal",
         type: isGitHubCiFailure(event) ? "open_pull_request" : "custom",
-        risk: "medium", requiredCapabilities: capabilities,
+        risk: "medium",
+        requiredCapabilities: capabilities,
+        resources: {
+          provider: event.provider,
+          repository,
+          paths: [],
+          domains: decision.resources.domains,
+        },
+        policyVersion: decision.policyVersion,
+        policySnapshotHash,
+        version: 1,
         diff: "# Proposed remediation\n\n1. Reproduce the failure.\n2. Add a focused regression test.\n3. Prepare a branch and pull request after approval.",
-        status: "pending", createdAt: new Date().toISOString(), auditEventIds: []
+        status: "pending",
+        createdAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 24 * 60 * 60_000).toISOString(),
+        auditEventIds: [],
       };
       store.addAction(proposal);
-      store.updateRun(run.id, { threadId: result.threadId, summary: allowed.allowed ? result.summary : `${result.summary} Policy note: ${allowed.reason}`, actionProposalId: proposal.id, status: "waiting_for_approval", finishedAt: new Date().toISOString() });
-      store.audit(event.workspaceId, "agent_run", run.id, "Agent analysis completed; write proposal is waiting for approval.");
+      store.updateRun(run.id, {
+        threadId: result.threadId,
+        summary: result.summary,
+        structuredResult: result.structured,
+        actionProposalId: proposal.id,
+        status: "waiting_for_approval",
+        finishedAt: new Date().toISOString(),
+      });
+      store.audit(
+        event.workspaceId,
+        "agent_run",
+        run.id,
+        "Agent analysis completed; write proposal is waiting for approval.",
+      );
     } catch (error) {
-      store.updateRun(run.id, { status: "failed", summary: error instanceof Error ? error.message : "Unknown runner failure", finishedAt: new Date().toISOString() });
+      store.updateRun(run.id, {
+        status: "failed",
+        summary: error instanceof Error ? error.message : "Unknown runner failure",
+        finishedAt: new Date().toISOString(),
+      });
       store.audit(event.workspaceId, "agent_run", run.id, "Agent investigation failed.");
     }
   }
 
-  async function ingest(provider: Provider, payload: Record<string, unknown>, input: { signatureStatus: EventEnvelope["signatureStatus"]; deliveryId?: string; topicHint?: string; workspaceId?: string; projectId?: string; awaitWorkflows?: boolean }) {
-    const event = normalizeEvent({ provider, payload, signatureStatus: input.signatureStatus, deliveryId: input.deliveryId, topicHint: input.topicHint, workspaceId: input.workspaceId ?? DEFAULT_WORKSPACE, projectId: input.projectId ?? DEFAULT_PROJECT });
+  async function ingest(
+    provider: Provider,
+    payload: Record<string, unknown>,
+    input: {
+      signatureStatus: EventEnvelope["signatureStatus"];
+      deliveryId?: string;
+      topicHint?: string;
+      workspaceId?: string;
+      projectId?: string;
+      repository?: string;
+      awaitWorkflows?: boolean;
+    },
+  ) {
+    const event = normalizeEvent({
+      provider,
+      payload,
+      signatureStatus: input.signatureStatus,
+      deliveryId: input.deliveryId,
+      topicHint: input.topicHint,
+      workspaceId: input.workspaceId ?? DEFAULT_WORKSPACE,
+      projectId: input.projectId ?? DEFAULT_PROJECT,
+      repository: input.repository,
+    });
     const appended = store.appendEvent(event);
     if (!appended.created) return { duplicate: true, event: appended.event, runs: [] };
-    const workflows = store.workflows(event.workspaceId).filter((workflow) => matchesWorkflow(workflow, event));
+    const workflows = store
+      .workflows(event.workspaceId)
+      .filter((workflow) => matchesWorkflow(workflow, event));
     const execution = Promise.all(workflows.map((workflow) => runWorkflow(workflow, event)));
     if (input.awaitWorkflows !== false) {
       await execution;
     } else {
-      void execution.catch((error: unknown) => app.log.error({ error, eventId: event.id }, "background workflow execution failed"));
+      void execution.catch((error: unknown) =>
+        app.log.error({ error, eventId: event.id }, "background workflow execution failed"),
+      );
     }
-    return { duplicate: false, event, runs: store.runs().filter((run) => run.eventId === event.id) };
+    return {
+      duplicate: false,
+      event,
+      runs: store.runs().filter((run) => run.eventId === event.id),
+    };
   }
 
-  app.get("/health", async () => ({ ok: true, service: "eventforge-control-plane", mode: process.env.EVENTFORGE_RUNNER ?? "demo" }));
-  app.get("/events", async (request) => store.events((request.query as { workspaceId?: string }).workspaceId));
-  app.get("/workflows", async (request) => store.workflows((request.query as { workspaceId?: string }).workspaceId));
-  app.get("/runs", async () => store.runs());
-  app.get("/actions", async (request) => store.actions((request.query as { workspaceId?: string }).workspaceId));
-  app.get("/audit", async (request) => store.auditEntries((request.query as { workspaceId?: string }).workspaceId));
+  app.get("/health", async () => ({
+    ok: true,
+    service: "eventforge-control-plane",
+    runtime: runtime.mode,
+    runner: process.env.EVENTFORGE_RUNNER ?? "demo",
+  }));
+  app.get("/events", async (request) =>
+    store.events(scopedWorkspace(request, (request.query as { workspaceId?: string }).workspaceId)),
+  );
+  app.get("/workflows", async (request) =>
+    store.workflows(
+      scopedWorkspace(request, (request.query as { workspaceId?: string }).workspaceId),
+    ),
+  );
+  app.get("/runs", async (request) => {
+    const workspaceId = scopedWorkspace(request);
+    return workspaceId
+      ? store
+          .runs()
+          .filter((run) => store.workflowById(run.workflowId)?.workspaceId === workspaceId)
+      : store.runs();
+  });
+  app.get("/actions", async (request) =>
+    store.actions(
+      scopedWorkspace(request, (request.query as { workspaceId?: string }).workspaceId),
+    ),
+  );
+  app.get("/audit", async (request) =>
+    store.auditEntries(
+      scopedWorkspace(request, (request.query as { workspaceId?: string }).workspaceId),
+    ),
+  );
   app.get("/memory", async (request) => {
     const query = request.query as { workspaceId?: string; projectId?: string; q?: string };
-    return store.memory.query(query.workspaceId ?? DEFAULT_WORKSPACE, query.projectId ?? DEFAULT_PROJECT, query.q ?? "event");
+    return store.memory.query(
+      scopedWorkspace(request, query.workspaceId) ?? DEFAULT_WORKSPACE,
+      query.projectId ?? DEFAULT_PROJECT,
+      query.q ?? "event",
+    );
   });
-  app.get("/connectors", async () => ([
-    { provider: "github", status: process.env.GITHUB_WEBHOOK_SECRET ? "configured" : "demo", capabilities: ["webhook", "read", "approval-gated write"] },
-    { provider: "linear", status: process.env.LINEAR_CLIENT_ID ? "configured" : "demo", capabilities: ["webhook", "read"] },
-    { provider: "sentry", status: process.env.SENTRY_AUTH_TOKEN ? "configured" : "demo", capabilities: ["webhook", "read"] }
-  ]));
+  app.get("/connectors", async (request) => {
+    const workspaceId = scopedWorkspace(request) ?? DEFAULT_WORKSPACE;
+    const connected = (provider: IntegrationBinding["provider"]) =>
+      options.integrations?.some(
+        (binding) => binding.workspaceId === workspaceId && binding.provider === provider,
+      );
+    return [
+      {
+        provider: "github",
+        status:
+          runtime.mode === "remote"
+            ? connected("github")
+              ? "configured"
+              : "unconfigured"
+            : process.env.GITHUB_WEBHOOK_SECRET
+              ? "configured"
+              : "demo",
+        capabilities: ["webhook", "read", "approval-gated write"],
+      },
+      {
+        provider: "linear",
+        status:
+          runtime.mode === "remote"
+            ? connected("linear")
+              ? "configured"
+              : "unconfigured"
+            : process.env.LINEAR_CLIENT_ID
+              ? "configured"
+              : "demo",
+        capabilities: ["webhook", "read"],
+      },
+      {
+        provider: "sentry",
+        status:
+          runtime.mode === "remote"
+            ? connected("sentry")
+              ? "configured"
+              : "unconfigured"
+            : process.env.SENTRY_AUTH_TOKEN
+              ? "configured"
+              : "demo",
+        capabilities: ["webhook", "read"],
+      },
+    ];
+  });
 
   app.post("/workflows", async (request, reply) => {
+    const actor = authFor(request);
+    if (runtime.mode === "remote" && actor.role !== "owner")
+      return reply.status(403).send({ error: "Owner role required." });
     const parsed = WorkflowDefinitionSchema.safeParse(request.body);
     if (!parsed.success) return reply.status(400).send({ error: parsed.error.flatten() });
+    if (!ownsWorkspace(request, parsed.data.workspaceId))
+      return reply.status(403).send({ error: "Cannot create a workflow in another workspace." });
     return reply.status(201).send(store.addWorkflow(parsed.data));
   });
   app.patch("/workflows/:id/policy", async (request, reply) => {
     const workflow = store.workflowById((request.params as { id: string }).id);
     const parsed = ExecutionPolicySchema.safeParse(request.body);
     if (!workflow) return reply.status(404).send({ error: "Workflow not found" });
+    if (!ownsWorkspace(request, workflow.workspaceId))
+      return reply.status(403).send({ error: "Cannot change another workspace policy." });
+    if (runtime.mode === "remote" && authFor(request, workflow.workspaceId).role !== "owner")
+      return reply.status(403).send({ error: "Owner role required." });
     if (!parsed.success) return reply.status(400).send({ error: parsed.error.flatten() });
     workflow.policy = parsed.data;
     return workflow;
   });
 
   app.post("/webhooks/:provider", { config: { rawBody: true } }, async (request, reply) => {
-    const provider = z.enum(["github", "linear", "sentry", "custom"]).safeParse((request.params as { provider: string }).provider);
+    const provider = z
+      .enum(["github", "linear", "sentry"])
+      .safeParse((request.params as { provider: string }).provider);
     if (!provider.success) return reply.status(404).send({ error: "Unknown provider" });
     const payload = request.body as Record<string, unknown>;
-    if (!payload || typeof payload !== "object") return reply.status(400).send({ error: "Webhook body must be JSON." });
+    if (!payload || typeof payload !== "object")
+      return reply.status(400).send({ error: "Webhook body must be JSON." });
     const secret = secretFor(provider.data);
     const raw = request.rawBody?.toString() ?? JSON.stringify(payload);
-    const isDemo = process.env.EVENTFORGE_DEMO_MODE === "true" && request.headers["x-eventforge-demo"] === "true";
-    const verified = secret ? verifyHmac(raw, signatureFor(provider.data, request.headers), secret) : false;
-    if (!verified && !isDemo) return reply.status(401).send({ error: "Invalid or missing webhook signature." });
+    const verification = providerAdapters[provider.data].verify({
+      rawBody: raw,
+      payload,
+      headers: request.headers,
+      secret,
+    });
+    if (!verification.verified)
+      return reply
+        .status(401)
+        .send({ error: verification.reason ?? "Invalid or missing webhook signature." });
+    const binding = options.integrations?.find(
+      (item) =>
+        item.provider === provider.data &&
+        (!item.installationKey || item.installationKey === verification.installationKey),
+    );
+    if (runtime.mode === "remote" && !binding)
+      return reply
+        .status(403)
+        .send({ error: "Webhook installation is not mapped to a workspace." });
     const result = await ingest(provider.data, payload, {
-      signatureStatus: verified ? "verified" : "demo",
-      deliveryId: deliveryIdFor(provider.data, request.headers),
-      topicHint: provider.data === "github" ? String(request.headers["x-github-event"] ?? "unknown") : undefined,
-      awaitWorkflows: false
+      signatureStatus: "verified",
+      deliveryId: verification.deliveryId,
+      topicHint: verification.topic,
+      workspaceId: binding?.workspaceId,
+      projectId: binding?.projectId,
+      repository:
+        runtime.mode === "remote"
+          ? binding?.repository
+          : provider.data === "github"
+            ? process.env.EVENTFORGE_GITHUB_REPOSITORY
+            : undefined,
+      awaitWorkflows: false,
     });
     return reply.status(result.duplicate ? 200 : 202).send(result);
   });
 
   app.post("/events/demo", async (request, reply) => {
-    if (process.env.EVENTFORGE_DEMO_MODE !== "true" && process.env.NODE_ENV !== "test") return reply.status(403).send({ error: "Demo mode is disabled." });
-    const provider = z.enum(["github", "linear", "sentry"]).default("github").parse((request.body as { provider?: string } | undefined)?.provider);
-    const payload = provider === "github" ? demoEvents.githubCiFailure : provider === "linear" ? demoEvents.linearIssue : demoEvents.sentryIssue;
-    const topicHint = provider === "github" ? "check_run" : provider === "linear" ? "create" : "created";
-    return reply.status(202).send(await ingest(provider, payload, { signatureStatus: "demo", deliveryId: `demo-${provider}-${Date.now()}`, topicHint }));
+    if (runtime.mode === "remote")
+      return reply
+        .status(403)
+        .send({ error: "Demo event injection is unavailable in remote mode." });
+    if (process.env.EVENTFORGE_DEMO_MODE !== "true" && process.env.NODE_ENV !== "test")
+      return reply.status(403).send({ error: "Demo mode is disabled." });
+    const provider = z
+      .enum(["github", "linear", "sentry"])
+      .default("github")
+      .parse((request.body as { provider?: string } | undefined)?.provider);
+    const payload =
+      provider === "github"
+        ? demoEvents.githubCiFailure
+        : provider === "linear"
+          ? demoEvents.linearIssue
+          : demoEvents.sentryIssue;
+    const topicHint =
+      provider === "github" ? "check_run" : provider === "linear" ? "create" : "created";
+    return reply.status(202).send(
+      await ingest(provider, payload, {
+        signatureStatus: "demo",
+        deliveryId: `demo-${provider}-${Date.now()}`,
+        topicHint,
+        repository: provider === "github" ? "eventforge/demo-service" : undefined,
+      }),
+    );
   });
   app.post("/events", async (request, reply) => {
-    const parsed = z.object({
-      provider: z.enum(["custom", "github", "linear", "sentry"]).default("custom"),
-      topic: z.string().min(1),
-      payload: z.record(z.unknown()),
-      workspaceId: z.string().default(DEFAULT_WORKSPACE),
-      projectId: z.string().default(DEFAULT_PROJECT)
-    }).safeParse(request.body);
+    if (runtime.mode === "remote" && !authFor(request).scopes.includes("eventforge:operate"))
+      return reply.status(403).send({ error: "eventforge:operate scope required." });
+    const parsed = z
+      .object({
+        provider: z.enum(["custom", "github", "linear", "sentry"]).default("custom"),
+        topic: z.string().min(1),
+        payload: z.record(z.unknown()),
+        workspaceId: z.string().default(DEFAULT_WORKSPACE),
+        projectId: z.string().default(DEFAULT_PROJECT),
+      })
+      .safeParse(request.body);
     if (!parsed.success) return reply.status(400).send({ error: parsed.error.flatten() });
-    return reply.status(202).send(await ingest(parsed.data.provider, parsed.data.payload, {
-      signatureStatus: "unverified", topicHint: parsed.data.topic, workspaceId: parsed.data.workspaceId, projectId: parsed.data.projectId,
-      deliveryId: `manual-${randomUUID()}`
-    }));
+    if (!ownsWorkspace(request, parsed.data.workspaceId))
+      return reply.status(403).send({ error: "Cannot emit an event into another workspace." });
+    return reply.status(202).send(
+      await ingest(parsed.data.provider, parsed.data.payload, {
+        signatureStatus: "unverified",
+        topicHint: parsed.data.topic,
+        workspaceId: parsed.data.workspaceId,
+        projectId: parsed.data.projectId,
+        deliveryId: `manual-${randomUUID()}`,
+      }),
+    );
   });
   app.post("/agent-runs", async (request, reply) => {
-    const parsed = z.object({ workflowId: z.string().uuid(), eventId: z.string().uuid() }).safeParse(request.body);
+    const parsed = z
+      .object({ workflowId: z.string().uuid(), eventId: z.string().uuid() })
+      .safeParse(request.body);
     if (!parsed.success) return reply.status(400).send({ error: parsed.error.flatten() });
     const workflow = store.workflowById(parsed.data.workflowId);
     const event = store.eventById(parsed.data.eventId);
-    if (!workflow || !event) return reply.status(404).send({ error: "Workflow or event not found" });
+    if (!workflow || !event)
+      return reply.status(404).send({ error: "Workflow or event not found" });
+    if (
+      !ownsWorkspace(request, workflow.workspaceId) ||
+      !ownsWorkspace(request, event.workspaceId) ||
+      event.workspaceId !== workflow.workspaceId
+    ) {
+      return reply.status(403).send({ error: "Cannot run an agent across workspace boundaries." });
+    }
+    if (
+      runtime.mode === "remote" &&
+      !authFor(request, workflow.workspaceId).scopes.includes("eventforge:operate")
+    )
+      return reply.status(403).send({ error: "eventforge:operate scope required." });
+    const quota = agentLimiter.consume(
+      `${authFor(request, workflow.workspaceId).workspaceId}:agent-runs`,
+    );
+    if (!quota.allowed)
+      return reply
+        .header("retry-after", quota.retryAfterSeconds)
+        .status(429)
+        .send({ error: "Agent-run quota exceeded." });
     await runWorkflow(workflow, event);
-    return reply.status(202).send(store.runs().find((run) => run.eventId === event.id && run.workflowId === workflow.id));
+    return reply
+      .status(202)
+      .send(store.runs().find((run) => run.eventId === event.id && run.workflowId === workflow.id));
   });
 
   app.post("/actions/:id/decision", async (request, reply) => {
-    const parsed = z.object({ approved: z.boolean(), reviewer: z.string().min(1) }).safeParse(request.body);
+    const parsed = z
+      .object({
+        approved: z.boolean(),
+        version: z.number().int().positive().optional(),
+        reason: z.string().min(1).max(500).optional(),
+      })
+      .safeParse(request.body);
     if (!parsed.success) return reply.status(400).send({ error: parsed.error.flatten() });
-    const action = store.decideAction((request.params as { id: string }).id, parsed.data.approved, parsed.data.reviewer);
+    const actionId = (request.params as { id: string }).id;
+    const idempotencyKey = String(request.headers["idempotency-key"] ?? "");
+    const idempotencyScope = idempotencyKey ? `${actionId}:${idempotencyKey}` : undefined;
+    const action = store.actionById(actionId);
     if (!action) return reply.status(404).send({ error: "Action not found" });
-    return action;
+    const workflow = store.workflowById(action.workflowId);
+    if (!workflow) return reply.status(409).send({ error: "Action workflow no longer exists." });
+    const actor = authFor(request, workflow.workspaceId);
+    if (actor.workspaceId !== workflow.workspaceId || !["owner", "operator"].includes(actor.role)) {
+      return reply.status(403).send({ error: "Actor cannot decide this workspace action." });
+    }
+    if (runtime.mode === "remote" && !actor.scopes.includes("eventforge:approve"))
+      return reply.status(403).send({ error: "eventforge:approve scope required." });
+    if (idempotencyScope && idempotentDecisions.has(idempotencyScope))
+      return idempotentDecisions.get(idempotencyScope);
+    if (workflow.policy.version !== action.policyVersion)
+      return reply.status(409).send({ error: "Action was created under a stale policy version." });
+    const policy = evaluatePolicy(workflow.policy, {
+      actor,
+      provider: action.resources.provider,
+      repository: action.resources.repository,
+      paths: action.resources.paths,
+      domains: action.resources.domains,
+      capabilities: action.requiredCapabilities,
+    });
+    if (!policy.allowed)
+      return reply
+        .status(403)
+        .send({ error: "Current policy denies this action.", reasons: policy.reasons });
+    const decided = store.decideAction(actionId, {
+      approved: parsed.data.approved,
+      reviewer: actor.actorId,
+      expectedVersion: parsed.data.version,
+      reason: parsed.data.reason,
+    });
+    if (decided.error === "not_found") return reply.status(404).send({ error: decided.message });
+    if (decided.error)
+      return reply.status(409).send({ error: decided.message, action: decided.value });
+    const linkedRun = store.runs().find((run) => run.actionProposalId === actionId);
+    if (linkedRun && decided.value) {
+      const outcome =
+        decided.value.status === "approved"
+          ? "Proposal approved; execution remains pending a dedicated policy-controlled worker."
+          : "Proposal rejected; no write was performed.";
+      store.updateRun(linkedRun.id, {
+        status: "completed",
+        summary: `${linkedRun.summary ?? "Agent analysis completed."} ${outcome}`,
+        finishedAt: new Date().toISOString(),
+      });
+    }
+    if (idempotencyScope && decided.value) idempotentDecisions.set(idempotencyScope, decided.value);
+    return decided.value;
   });
 
   app.post("/forge", async (request, reply) => {
-    const parsed = z.object({ workspaceId: z.string().default(DEFAULT_WORKSPACE), prompt: z.string().min(8) }).safeParse(request.body);
+    if (runtime.mode === "remote" && !authFor(request).scopes.includes("eventforge:forge"))
+      return reply.status(403).send({ error: "eventforge:forge scope required." });
+    const parsed = z
+      .object({ workspaceId: z.string().default(DEFAULT_WORKSPACE), prompt: z.string().min(8) })
+      .safeParse(request.body);
     if (!parsed.success) return reply.status(400).send({ error: parsed.error.flatten() });
+    if (!ownsWorkspace(request, parsed.data.workspaceId))
+      return reply.status(403).send({ error: "Cannot forge in another workspace." });
     const job = store.addForge(createForgeDraft(parsed.data.workspaceId, parsed.data.prompt));
     store.audit(job.workspaceId, "forge", job.id, `Forge draft ${job.status}.`);
     return reply.status(job.status === "validated" ? 201 : 422).send(job);
   });
-  app.get("/forge", async (request) => store.forgeJobs((request.query as { workspaceId?: string }).workspaceId));
+  app.get("/forge", async (request) =>
+    store.forgeJobs(
+      scopedWorkspace(request, (request.query as { workspaceId?: string }).workspaceId),
+    ),
+  );
   app.post("/forge/:id/decision", async (request, reply) => {
-    const parsed = z.object({ approved: z.boolean(), reviewer: z.string().min(1) }).safeParse(request.body);
+    const actor = authFor(request);
+    if (
+      runtime.mode === "remote" &&
+      (actor.role !== "owner" || !actor.scopes.includes("eventforge:forge"))
+    ) {
+      return reply.status(403).send({ error: "Owner role and eventforge:forge scope required." });
+    }
+    const parsed = z.object({ approved: z.boolean() }).safeParse(request.body);
     if (!parsed.success) return reply.status(400).send({ error: parsed.error.flatten() });
-    const job = store.decideForge((request.params as { id: string }).id, parsed.data.approved, parsed.data.reviewer);
+    const forgeId = (request.params as { id: string }).id;
+    const existing = store.forgeById(forgeId);
+    if (existing && !ownsWorkspace(request, existing.workspaceId))
+      return reply.status(403).send({ error: "Cannot decide another workspace forge job." });
+    const job = store.decideForge(forgeId, parsed.data.approved, actor.actorId);
     if (!job) return reply.status(404).send({ error: "Forge job not found" });
     return job;
   });

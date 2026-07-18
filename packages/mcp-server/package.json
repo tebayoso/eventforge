@@ -1,24 +1,60 @@
 {
   "name": "@eventforge/mcp-server",
   "version": "0.1.0",
-  "private": true,
+  "description": "EventForge MCP server for policy-gated, event-driven Codex workflows.",
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./http": {
+      "types": "./dist/http.d.ts",
+      "import": "./dist/http.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "bin": {
-    "eventforge-mcp": "./src/index.ts"
+    "eventforge-mcp": "./dist/index.js",
+    "eventforge-mcp-http": "./dist/http.js"
+  },
+  "engines": {
+    "node": ">=20.11"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tebayoso/eventforge.git",
+    "directory": "packages/mcp-server"
   },
   "scripts": {
-    "build": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json",
+    "bundle:plugin": "esbuild src/index.ts --bundle --minify --platform=node --format=esm --target=node20 --legal-comments=none --outfile=../../plugins/eventforge/server/eventforge-mcp.mjs",
     "typecheck": "tsc --noEmit",
-    "lint": "tsc --noEmit",
+    "lint": "eslint src test scripts --max-warnings 0",
+    "pretest": "pnpm run build",
     "test": "vitest run",
-    "dev": "tsx src/index.ts"
+    "pretest:coverage": "pnpm run build",
+    "test:coverage": "vitest run --coverage",
+    "dev": "tsx src/index.ts",
+    "dev:http": "tsx src/http.ts",
+    "prepack": "pnpm run build",
+    "pack:check": "node scripts/pack-smoke.mjs"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.16.0",
-    "tsx": "^4.20.3",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "express": "^5.2.1",
     "zod": "^3.24.4"
   },
   "devDependencies": {
+    "@types/express": "^5.0.6",
+    "esbuild": "^0.28.1",
+    "tsx": "^4.20.3",
     "vitest": "^3.2.4"
   }
 }
