@@ -2,6 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import cors from "@fastify/cors";
 import rawBody from "fastify-raw-body";
 import Fastify, { type FastifyInstance } from "fastify";
+import { RateLimiterMemory, type RateLimiterRes } from "rate-limiter-flexible";
 import { z } from "zod";
 import {
   EventForgeStore,
@@ -113,7 +114,7 @@ export function createDefaultWorkflow(): WorkflowDefinition {
   };
 }
 
-export function createIssueReviewWorkflow(): WorkflowDefinition {
+function createIssueReviewWorkflow(): WorkflowDefinition {
   return {
     id: randomUUID(),
     workspaceId: DEFAULT_WORKSPACE,
@@ -136,7 +137,7 @@ export function createIssueReviewWorkflow(): WorkflowDefinition {
   };
 }
 
-export function createPullRequestReviewWorkflow(): WorkflowDefinition {
+function createPullRequestReviewWorkflow(): WorkflowDefinition {
   return {
     id: randomUUID(),
     workspaceId: DEFAULT_WORKSPACE,
@@ -179,7 +180,10 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
     options.persistAudit !== false && process.env.DATABASE_URL
       ? new PostgresAuditSink(process.env.DATABASE_URL)
       : undefined;
-  const requestLimiter = new FixedWindowLimiter(runtime.rateLimitPerMinute, 60_000);
+  const requestLimiter = new RateLimiterMemory({
+    points: runtime.rateLimitPerMinute,
+    duration: 60,
+  });
   const agentLimiter = new FixedWindowLimiter(runtime.agentRunsPerHour, 60 * 60_000);
   const authContexts = new WeakMap<object, AuthContext>();
   const idempotentDecisions = new Map<string, ActionProposal>();
@@ -214,12 +218,18 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
     ) {
       return reply.status(404).send({ error: "Not found." });
     }
-    const rate = requestLimiter.consume(request.ip);
-    if (!rate.allowed)
+    try {
+      await requestLimiter.consume(request.ip);
+    } catch (rate) {
+      const retryAfterSeconds = Math.max(
+        1,
+        Math.ceil(((rate as RateLimiterRes).msBeforeNext ?? 1_000) / 1_000),
+      );
       return reply
-        .header("retry-after", rate.retryAfterSeconds)
+        .header("retry-after", retryAfterSeconds)
         .status(429)
         .send({ error: "Request rate limit exceeded." });
+    }
     if (
       runtime.mode !== "remote" ||
       request.url === "/health" ||

@@ -2,6 +2,50 @@
 
 EventForge is a local-first, policy-first operations console for event-driven Codex workflows. It receives GitHub, Linear, and Sentry events, creates read-only agent investigations, keeps process-scoped project memory, and requires explicit approval for consequential actions. Remote production mode is intentionally disabled until its authentication and durable-storage milestones are complete.
 
+## Architecture
+
+```mermaid
+flowchart LR
+  providers["GitHub · Linear · Sentry"] -->|"signed webhook"| tunnel["Cloudflare Tunnel"]
+  provisioner["Authenticated EventForge provisioner"] -->|"tunnel + DNS"| cloudflare["Cloudflare API"]
+  provisioner -->|"scoped token"| tunnel
+  tunnel -->|"health + webhook paths only"| control["Local Fastify control plane"]
+  codex["Codex plugin"] --> mcp["EventForge MCP server"]
+  mcp -->|"loopback API"| control
+  console["React console · Electron"] -->|"loopback API / preload IPC"| control
+  control --> verify["Verify · dedupe · normalize"]
+  verify --> policy["Workflow + policy engine"]
+  policy --> agent["Read-only Codex SDK thread"]
+  agent --> memory["Scoped project memory"]
+  agent --> approval["Versioned approval queue"]
+  approval -->|"explicit reviewer decision"| artifact["Reviewed action or Forge artifact"]
+```
+
+The authenticated provisioner is an optional hosted component. The supported release runs the control plane, MCP server, Codex threads, and private memory locally; remote multi-workspace operation remains fail-closed until the Track B authentication and durability requirements are complete.
+
+## Included features
+
+| Area                | Included capability                                                                                                                                             |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Event ingestion     | GitHub, Linear, and Sentry adapters; raw-body HMAC verification; replay checks; process-lifetime delivery deduplication; payload redaction                      |
+| Managed local relay | MCP-triggered startup; Quick Tunnel and manual named-tunnel fallbacks; owner-scoped three-word managed hostnames; automatic GitHub webhook patching             |
+| Agent workflows     | Persistent Codex SDK thread IDs for the active process, structured investigations, issue and pull-request review, policy-bounded read-only analysis             |
+| Safety              | Default approval-required workflows, resource-aware policy decisions, immutable decision versions, public-ingress route restrictions, rate and Codex-run quotas |
+| MCP and plugin      | Compiled stdio and loopback Streamable HTTP transports, nine stable tools, native Codex plugin bundle, optional health-only lifecycle hook                      |
+| Operations console  | Live events, workflows, runs, approvals, Forge Studio, connector health, memory/audit search, responsive light/dark interface                                   |
+| Desktop and memory  | Packaged Electron main/preload/renderer boundary, private user-data daemon, SQLite store, explicit disabled vector-index status                                 |
+| Forge Studio        | Reviewable connector specification and generated files, requested scopes, static validation, explicit owner approval; no hot-loading                            |
+| Delivery            | Docker Compose, hardened non-root image, Helm chart, Cloudflare Worker deployment, package smoke tests, CodeQL, secret scanning, dependency audit               |
+
+## Recent production-hardening upgrades
+
+- Added per-user/workspace Cloudflare tunnel provisioning with deterministic three-word hostnames, idempotent DNS/configuration, tunnel-scoped credentials, protected token files, and failure/shutdown cleanup.
+- Made `listen_for_webhook` start the local relay on demand and return the active provider endpoint without exposing tunnel credentials.
+- Restricted public tunnel traffic to `/health` and exact signed webhook paths while keeping console, memory, workflow, and approval APIs loopback-only.
+- Replaced generic provider verification with provider-specific GitHub, Linear, and Sentry signature, replay, installation-scope, and deduplication contracts.
+- Added resource-aware policy checks, versioned approval transitions, structured Codex results, resumable thread support, durable PostgreSQL/queue foundations, and truthful local-memory status.
+- Compiled and package-tested the MCP server/plugin, packaged Electron with its preload boundary, added coverage gates, and added reproducible CI, deployment, audit, and secret-scan checks.
+
 ## Hackathon submission
 
 - **Code repository:** [github.com/tebayoso/eventforge](https://github.com/tebayoso/eventforge)

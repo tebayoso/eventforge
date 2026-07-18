@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { EventEnvelope, WorkflowDefinition } from "@eventforge/core";
 import { untrustedEventGuard } from "@eventforge/core";
 
-export type StructuredAgentResult = {
+type StructuredAgentResult = {
   summary: string;
   findings: string[];
   risk: "low" | "medium" | "high";
