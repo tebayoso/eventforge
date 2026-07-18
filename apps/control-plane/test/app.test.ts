@@ -381,6 +381,73 @@ describe("control plane", () => {
     await app.close();
   });
 
+  it("captures signed pull request updates as read-only reviews and resumes the thread", async () => {
+    const previousSecret = process.env.GITHUB_WEBHOOK_SECRET;
+    const previousRepository = process.env.EVENTFORGE_GITHUB_REPOSITORY;
+    const secret = "pull-request-webhook-secret";
+    process.env.GITHUB_WEBHOOK_SECRET = secret;
+    process.env.EVENTFORGE_GITHUB_REPOSITORY = "tebayoso/eventforge";
+    const suppliedThreadIds: Array<string | undefined> = [];
+    const pullRequestRunner: AgentRunner = {
+      investigate: async ({ threadId }) => {
+        suppliedThreadIds.push(threadId);
+        return {
+          threadId: threadId ?? "thread-pr-3",
+          summary: "Pull request reviewed without provider writes.",
+        };
+      },
+    };
+    const app = await createApp({
+      store: new EventForgeStore(),
+      runner: pullRequestRunner,
+      persistAudit: false,
+    });
+    const deliver = async (action: "opened" | "synchronize", deliveryId: string, sha: string) => {
+      const payload = JSON.stringify({
+        action,
+        number: 3,
+        pull_request: { number: 3, title: "Harden EventForge", head: { sha } },
+        repository: { full_name: "tebayoso/eventforge" },
+      });
+      return app.inject({
+        method: "POST",
+        url: "/webhooks/github",
+        payload,
+        headers: {
+          "content-type": "application/json",
+          "x-github-delivery": deliveryId,
+          "x-github-event": "pull_request",
+          "x-hub-signature-256": `sha256=${createHmac("sha256", secret).update(payload).digest("hex")}`,
+        },
+      });
+    };
+    try {
+      expect((await deliver("opened", "pr-opened-3", "sha-1")).statusCode).toBe(202);
+      await new Promise((resolve) => setImmediate(resolve));
+      expect((await app.inject({ method: "GET", url: "/events" })).json()[0]).toMatchObject({
+        topic: "pull_request",
+        signatureStatus: "verified",
+        repository: "tebayoso/eventforge",
+      });
+      expect((await app.inject({ method: "GET", url: "/runs" })).json()[0]).toMatchObject({
+        threadId: "thread-pr-3",
+        status: "completed",
+      });
+      expect((await app.inject({ method: "GET", url: "/actions" })).json()).toEqual([]);
+
+      expect((await deliver("synchronize", "pr-synchronize-3", "sha-2")).statusCode).toBe(202);
+      await new Promise((resolve) => setImmediate(resolve));
+      expect(suppliedThreadIds).toEqual([undefined, "thread-pr-3"]);
+      expect((await app.inject({ method: "GET", url: "/actions" })).json()).toEqual([]);
+    } finally {
+      if (previousSecret === undefined) delete process.env.GITHUB_WEBHOOK_SECRET;
+      else process.env.GITHUB_WEBHOOK_SECRET = previousSecret;
+      if (previousRepository === undefined) delete process.env.EVENTFORGE_GITHUB_REPOSITORY;
+      else process.env.EVENTFORGE_GITHUB_REPOSITORY = previousRepository;
+      await app.close();
+    }
+  });
+
   it("creates a reviewable forge artifact rather than installing it", async () => {
     const app = await createApp({ persistAudit: false });
     const response = await app.inject({

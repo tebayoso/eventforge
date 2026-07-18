@@ -23,7 +23,7 @@ export function matchesWorkflow(workflow: WorkflowDefinition, event: EventEnvelo
           value && typeof value === "object" ? (value as Record<string, unknown>)[key] : undefined,
         event.payload,
       );
-    return actual === expected;
+    return Array.isArray(expected) ? expected.includes(actual) : actual === expected;
   });
 }
 

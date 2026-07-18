@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   envValue,
   localWebhookStatePath,
+  namedTunnelArgs,
   publicWebhookUrl,
   quickTunnelArgs,
   quickTunnelUrl,
@@ -21,6 +22,9 @@ describe("local GitHub webhook bootstrap", () => {
       expect.arrayContaining([
         "events[]=check_run",
         "events[]=issues",
+        "events[]=pull_request",
+        "events[]=pull_request_review",
+        "events[]=issue_comment",
         "config[content_type]=json",
         "config[insecure_ssl]=0",
         "config[secret]=secret",
@@ -51,6 +55,18 @@ describe("local GitHub webhook bootstrap", () => {
       "tunnel",
       "--url",
       "http://127.0.0.1:4310",
+    ]);
+  });
+
+  it("runs named tunnels against the local origin without loading a default config", () => {
+    expect(namedTunnelArgs("http://127.0.0.1:4310", "eventforge-local", "/dev/null")).toEqual([
+      "--config",
+      "/dev/null",
+      "tunnel",
+      "--url",
+      "http://127.0.0.1:4310",
+      "run",
+      "eventforge-local",
     ]);
   });
 

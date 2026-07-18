@@ -9,8 +9,10 @@ import {
   WorkflowDefinitionSchema,
   createForgeDraft,
   demoEvents,
+  githubPullRequestNumber,
   isGitHubCiFailure,
   isGitHubIssueOpened,
+  isGitHubPullRequestReviewEvent,
   matchesWorkflow,
   normalizeEvent,
   evaluatePolicy,
@@ -116,6 +118,29 @@ export function createIssueReviewWorkflow(): WorkflowDefinition {
   };
 }
 
+export function createPullRequestReviewWorkflow(): WorkflowDefinition {
+  return {
+    id: randomUUID(),
+    workspaceId: DEFAULT_WORKSPACE,
+    projectId: DEFAULT_PROJECT,
+    name: "Review GitHub pull request updates",
+    enabled: true,
+    trigger: { provider: "github", topic: "pull_request" },
+    filters: { action: ["opened", "reopened", "synchronize"] },
+    agentProfile: "pull-request-reviewer",
+    memoryScope: "project",
+    policy: {
+      version: 1,
+      approvalMode: "approval_required",
+      allowedCapabilities: ["read"],
+      allowedRepositories: ["tebayoso/eventforge"],
+      allowedPaths: ["**"],
+      allowedDomains: [],
+      allowedProviders: ["github"],
+    },
+  };
+}
+
 function secretFor(provider: Provider): string | undefined {
   if (provider === "github") return process.env.GITHUB_WEBHOOK_SECRET;
   if (provider === "linear") return process.env.LINEAR_WEBHOOK_SECRET;
@@ -143,6 +168,7 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
   const allowedOrigins = configuredBrowserOrigins();
   store.addWorkflow(createDefaultWorkflow());
   store.addWorkflow(createIssueReviewWorkflow());
+  store.addWorkflow(createPullRequestReviewWorkflow());
 
   await app.register(cors, {
     origin: (origin, callback) =>
@@ -234,14 +260,18 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
     });
     store.audit(event.workspaceId, "agent_run", run.id, "Agent investigation started.");
     try {
-      const previousThreadId = store
-        .runs()
-        .find(
-          (candidate) =>
-            candidate.eventId === event.id &&
-            candidate.workflowId === workflow.id &&
-            candidate.id !== run.id,
-        )?.threadId;
+      const pullRequestNumber = githubPullRequestNumber(event);
+      const previousThreadId = store.runs().find((candidate) => {
+        if (candidate.workflowId !== workflow.id || candidate.id === run.id) return false;
+        if (candidate.eventId === event.id) return true;
+        if (pullRequestNumber === undefined) return false;
+        const priorEvent = store.eventById(candidate.eventId);
+        return (
+          priorEvent !== undefined &&
+          priorEvent?.repository === event.repository &&
+          githubPullRequestNumber(priorEvent) === pullRequestNumber
+        );
+      })?.threadId;
       const result = await runner.investigate({
         event,
         workflow,
@@ -254,7 +284,7 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
         text: result.summary,
         tags: [event.provider, event.topic, "agent-summary"],
       });
-      if (isGitHubIssueOpened(event)) {
+      if (isGitHubIssueOpened(event) || isGitHubPullRequestReviewEvent(event)) {
         store.updateRun(run.id, {
           threadId: result.threadId,
           summary: result.summary,
@@ -266,7 +296,7 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
           event.workspaceId,
           "agent_run",
           run.id,
-          "Read-only Codex issue review completed; no provider action was proposed.",
+          "Read-only Codex GitHub review completed; no provider action was proposed.",
         );
         return;
       }

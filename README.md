@@ -58,7 +58,7 @@ See the [Codex plugin installation](plugins/eventforge/README.md) and [Electron 
 
 ## Test a real GitHub webhook through Cloudflare locally
 
-GitHub cannot deliver a webhook directly to `localhost`, so EventForge starts a local Cloudflare Quick Tunnel. Starting GitHub mode creates a random local webhook secret in the ignored `.env`, creates (or reuses) exactly one webhook subscribed to `check_run` and `issues` through the authenticated `gh` CLI, and patches that webhook to the newly created `trycloudflare.com` URL on every launch. The tunnel forwards signed deliveries to the control plane, which acknowledges them before running Codex work in the background.
+GitHub cannot deliver a webhook directly to `localhost`, so EventForge starts a local Cloudflare Quick Tunnel. Starting GitHub mode creates a random local webhook secret in the ignored `.env`, creates (or reuses) exactly one webhook subscribed to `check_run`, `issues`, `pull_request`, `pull_request_review`, and `issue_comment` through the authenticated `gh` CLI, and patches that webhook to the newly created `trycloudflare.com` URL on every launch. The tunnel forwards signed deliveries to the control plane, which acknowledges them before running Codex work in the background.
 
 In the first terminal:
 
@@ -74,7 +74,9 @@ In a second terminal:
 pnpm dev:console
 ```
 
-`cloudflared` must be on your `PATH` (for macOS: `brew install cloudflared`). Set `EVENTFORGE_CLOUDFLARED_BIN` if it is installed elsewhere. EventForge intentionally starts Quick Tunnels with an empty Cloudflare configuration so unrelated named-tunnel files cannot alter the local webhook route; set `EVENTFORGE_CLOUDFLARED_CONFIG` only when you explicitly need a different config.
+`cloudflared` must be on your `PATH` (for macOS: `brew install cloudflared`). Set `EVENTFORGE_CLOUDFLARED_BIN` if it is installed elsewhere. EventForge intentionally starts Quick Tunnels with an empty Cloudflare configuration so unrelated named-tunnel files cannot alter the local webhook route; set `EVENTFORGE_CLOUDFLARED_CONFIG` only when you explicitly need a different config. If a Quick Tunnel publishes a hostname that never becomes healthy, EventForge closes it and retries with a fresh hostname before touching GitHub.
+
+For a stable local relay, create and route a named Cloudflare Tunnel, then set both `EVENTFORGE_CLOUDFLARED_TUNNEL` and `EVENTFORGE_CLOUDFLARED_PUBLIC_URL` in the ignored `.env`. The same `pnpm dev:github` command starts that tunnel, verifies its public `/health` endpoint, and patches the repository webhook on every launch. If either setting is missing, startup fails closed instead of silently using the wrong tunnel.
 
 Leave both processes running, then open `http://localhost:5173`. Use the **EventForge CI failure demo** GitHub Actions workflow's **Run workflow** button, or dispatch it from the terminal:
 
@@ -95,6 +97,19 @@ gh issue create --repo OWNER/REPOSITORY \
 ```
 
 `pnpm dev:github` runs the Codex-backed runner. Keep the process running until the issue appears in the dashboard as a completed run; the issue text is treated as untrusted input and the Codex thread is configured read-only. GitHub receives `202 Accepted` immediately, while the review continues in a thread whose ID is retained for the current process.
+
+## Review a pull request in Codex
+
+With `pnpm dev:github` running, opening a pull request starts one read-only Codex SDK review thread. Reopening the PR or pushing a new head commit resumes the retained thread for that PR. EventForge also records review and conversation deliveries for audit, but never follows instructions embedded in PR descriptions or comments and never performs a GitHub write automatically.
+
+The local acceptance signal is a GitHub `pull_request` delivery returning `202`, followed by a `verified` event and completed run with a `threadId`:
+
+```bash
+curl http://127.0.0.1:4310/events
+curl http://127.0.0.1:4310/runs
+```
+
+Delivery deduplication and thread retention in local mode last only for the current process. Production durability remains part of the remote control-plane milestone.
 
 ## Packages
 

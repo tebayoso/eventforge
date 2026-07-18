@@ -85,6 +85,20 @@ describe("agent runners", () => {
     expect(
       (await runner.investigate({ event: unknownIssue, workflow, memories: [] })).summary,
     ).toContain("issue #unknown: Untitled issue in the configured repository");
+    const pullRequest = normalizeEvent({
+      provider: "github",
+      workspaceId: "w",
+      projectId: "p",
+      payload: {
+        pull_request: { number: 3, title: "Harden EventForge" },
+        repository: { full_name: "owner/repo" },
+      },
+      signatureStatus: "demo",
+      topicHint: "pull_request",
+    });
+    expect(
+      (await runner.investigate({ event: pullRequest, workflow, memories: [] })).summary,
+    ).toContain("PR #3: Harden EventForge");
   });
 
   it("starts a read-only Codex thread with structured output", async () => {

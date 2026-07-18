@@ -274,6 +274,24 @@ export function isGitHubIssueOpened(event: EventEnvelope): boolean {
   );
 }
 
+const GITHUB_PULL_REQUEST_REVIEW_ACTIONS = new Set(["opened", "reopened", "synchronize"]);
+
+export function isGitHubPullRequestReviewEvent(event: EventEnvelope): boolean {
+  return (
+    event.provider === "github" &&
+    event.topic === "pull_request" &&
+    GITHUB_PULL_REQUEST_REVIEW_ACTIONS.has(String(event.payload.action ?? "")) &&
+    typeof event.payload.pull_request === "object"
+  );
+}
+
+export function githubPullRequestNumber(event: EventEnvelope): number | undefined {
+  if (event.provider !== "github" || event.topic !== "pull_request") return undefined;
+  const pullRequest = event.payload.pull_request as Record<string, unknown> | undefined;
+  const number = pullRequest?.number ?? event.payload.number;
+  return typeof number === "number" && Number.isInteger(number) ? number : undefined;
+}
+
 export const demoEvents = {
   githubCiFailure: {
     action: "check_run",
