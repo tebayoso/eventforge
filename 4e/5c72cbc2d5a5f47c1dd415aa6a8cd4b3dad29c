@@ -1,0 +1,19 @@
+apps/control-plane/src/app.ts
+  s_cb07b89c712fa5::t_e9852fb533e40c 233-234
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "4e5c72cbc2d5a5f47c1dd415aa6a8cd4b3dad29c",
+  "prompts": {},
+  "sessions": {
+    "s_cb07b89c712fa5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7187-4c4d-7273-9636-b2e90c713af2",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
