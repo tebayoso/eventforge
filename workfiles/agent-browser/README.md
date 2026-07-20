@@ -184,3 +184,13 @@ Reusable pattern: attach originless Worker custom domains through Wrangler, veri
 - Browser console output contained only Vite/React development notices. Evidence is stored at `workfiles/agent-browser/screenshots/fresh-installer-mobile.png`.
 
 Reusable pattern: validate installation from an empty remote clone, not an existing working tree; exercise enough polling and mutations to cross at least one refresh boundary; and distinguish a live API from a UI that has entered a rate-limited degraded state.
+
+## 2026-07-20 — Product landing and pricing expansion
+
+- Started the Vite console at `http://127.0.0.1:5173/` and opened the public landing page in the `eventforge-landing` agent-browser session.
+- Verified the desktop accessibility tree includes the operational-control-plane hero, Product, Pricing, Docs, GitHub, and console navigation, plus the live GitHub star/fork badge.
+- Verified the page now presents verified ingress, operational context, replay, bounded reactions, equal API/CLI/MCP/OpenTelemetry/Console surfaces, the gateway/operations/reactions roadmap, Free/Team/Pro/Business pricing, and the passwordless Codex install command.
+- Captured and visually inspected desktop, full-page, and iPhone 14 renders at `workfiles/agent-browser/screenshots/eventforge-landing-product-desktop.png`, `eventforge-landing-product-full.png`, and `eventforge-landing-product-mobile.png`.
+- Browser error inspection was empty. The GitHub stats request gracefully falls back to zero when the public API is unavailable.
+
+Reusable pattern: for marketing changes, validate both the accessibility hierarchy and a full-page visual at desktop and mobile widths; external proof badges must have a deterministic fallback and documentation links must target a real public URL.

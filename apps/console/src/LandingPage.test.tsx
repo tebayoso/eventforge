@@ -12,6 +12,17 @@ it("renders the public product story and working console entrypoint", () => {
   expect(container.querySelector<HTMLAnchorElement>('a[href="/console"]')).not.toBeNull();
   expect(container.textContent).toContain("EventForge");
   expect(container.textContent).toContain("Agents start with context");
+  expect(container.textContent).toContain("Verified ingress");
+  expect(container.textContent).toContain("Free to prove.");
+  expect(container.textContent).toContain("Install with Codex");
+  expect(
+    container.querySelector<HTMLAnchorElement>('a[href="https://github.com/tebayoso/eventforge"]'),
+  ).not.toBeNull();
+  expect(
+    container.querySelector<HTMLAnchorElement>(
+      'a[href="https://github.com/tebayoso/eventforge/blob/main/workfiles/CONFIGURATION.md"]',
+    ),
+  ).not.toBeNull();
   act(() => root.unmount());
   container.remove();
 });

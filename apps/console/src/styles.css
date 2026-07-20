@@ -1233,3 +1233,586 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+.ef-secondary-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  color: var(--paper);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+.ef-secondary-cta:hover {
+  border-color: var(--mint-deep);
+  background: rgba(185, 247, 208, 0.08);
+}
+.ef-github-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--paper);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.ef-github-link:hover {
+  color: var(--mint);
+}
+.ef-github-link--compact {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  font-size: 11px;
+}
+.ef-github-stat,
+.ef-github-forks {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--slate);
+  font-family: "Courier New", monospace;
+  font-size: 10px;
+  font-weight: 400;
+}
+.ef-github-stat {
+  color: var(--signal);
+}
+.ef-proof-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+  gap: 22px;
+  align-items: center;
+  width: min(1280px, calc(100% - 64px));
+  margin: 0 auto;
+  padding: 20px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.ef-proof-strip > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.ef-proof-strip strong {
+  color: var(--mint);
+  font-family: "Avenir Next", sans-serif;
+  font-size: 24px;
+  letter-spacing: -0.06em;
+}
+.ef-proof-strip span {
+  color: var(--slate);
+  font-family: "Courier New", monospace;
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.ef-capabilities {
+  padding: clamp(94px, 11vw, 160px) max(32px, calc((100vw - 1280px) / 2));
+  border-top: 1px solid var(--line);
+  background: #151d23;
+}
+.ef-capabilities-heading,
+.ef-pricing-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 50px;
+  align-items: end;
+}
+.ef-capabilities-heading h2,
+.ef-pricing-heading h2,
+.ef-install h2 {
+  margin: 20px 0 0;
+  font-family: "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  font-size: clamp(42px, 5vw, 72px);
+  font-weight: 650;
+  letter-spacing: -0.065em;
+  line-height: 0.96;
+}
+.ef-capabilities-heading h2 em,
+.ef-pricing-heading h2 em,
+.ef-install h2 em {
+  color: var(--mint);
+  font-style: normal;
+}
+.ef-capabilities-heading > p,
+.ef-pricing-heading > p {
+  max-width: 390px;
+  margin: 0;
+  color: var(--paper-muted);
+  font-size: 15px;
+  line-height: 1.65;
+}
+.ef-capability-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 70px;
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+.ef-capability {
+  min-height: 330px;
+  padding: 22px 22px 25px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.ef-capability-topline {
+  display: flex;
+  justify-content: space-between;
+  color: var(--slate);
+  font-family: "Courier New", monospace;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.ef-capability--mint .ef-capability-topline svg,
+.ef-capability--mint .ef-capability-status {
+  color: var(--mint);
+}
+.ef-capability--signal .ef-capability-topline svg,
+.ef-capability--signal .ef-capability-status {
+  color: var(--signal);
+}
+.ef-capability--violet .ef-capability-topline svg,
+.ef-capability--violet .ef-capability-status {
+  color: #c6b8ff;
+}
+.ef-capability--orange .ef-capability-topline svg,
+.ef-capability--orange .ef-capability-status {
+  color: #ffb18f;
+}
+.ef-capability h3 {
+  margin: 52px 0 0;
+  color: var(--paper);
+  font-size: 24px;
+  letter-spacing: -0.045em;
+}
+.ef-capability p {
+  margin: 14px 0 0;
+  color: var(--paper-muted);
+  font-size: 14px;
+  line-height: 1.62;
+}
+.ef-capability-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 22px;
+  font-family: "Courier New", monospace;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.ef-surface-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+  color: var(--slate);
+  font-family: "Courier New", monospace;
+  font-size: 9px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.ef-surface-row span {
+  margin-right: auto;
+}
+.ef-surface-row strong {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  color: var(--paper-muted);
+  font-weight: 400;
+}
+.ef-roadmap {
+  display: grid;
+  grid-template-columns: 0.72fr 1.28fr;
+  gap: clamp(48px, 10vw, 150px);
+  padding: clamp(100px, 13vw, 180px) max(32px, calc((100vw - 1280px) / 2));
+  background: var(--paper);
+  color: var(--ink);
+}
+.ef-roadmap .ef-eyebrow {
+  color: #33765f;
+}
+.ef-roadmap .ef-eyebrow svg {
+  color: var(--signal);
+}
+.ef-roadmap h2 {
+  margin: 23px 0 0;
+  font-size: clamp(44px, 5vw, 72px);
+  letter-spacing: -0.065em;
+  line-height: 0.96;
+}
+.ef-roadmap h2 em {
+  color: #2c7563;
+  font-style: normal;
+}
+.ef-roadmap-intro > p {
+  max-width: 360px;
+  margin-top: 25px;
+  color: #536066;
+  font-size: 15px;
+  line-height: 1.65;
+}
+.ef-roadmap-list {
+  border-top: 1px solid rgba(16, 21, 26, 0.25);
+}
+.ef-roadmap-item {
+  display: grid;
+  grid-template-columns: 35px 27px 1fr;
+  gap: 16px;
+  align-items: start;
+  padding: 24px 0;
+  border-bottom: 1px solid rgba(16, 21, 26, 0.25);
+}
+.ef-roadmap-item > svg {
+  color: #2c7563;
+}
+.ef-roadmap-index {
+  color: #697378;
+  font-family: "Courier New", monospace;
+  font-size: 11px;
+}
+.ef-roadmap-item div > span {
+  color: #697378;
+  font-family: "Courier New", monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.ef-roadmap-item h3 {
+  margin: 8px 0 0;
+  font-size: 24px;
+  letter-spacing: -0.045em;
+}
+.ef-roadmap-item p {
+  max-width: 550px;
+  margin: 9px 0 0;
+  color: #536066;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.ef-pricing {
+  padding: clamp(100px, 12vw, 165px) max(32px, calc((100vw - 1280px) / 2));
+  background: var(--ink);
+}
+.ef-pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 70px;
+}
+.ef-price-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 475px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  background: var(--ink-soft);
+}
+.ef-price-card--featured {
+  border-color: var(--mint-deep);
+  background: linear-gradient(160deg, rgba(185, 247, 208, 0.1), transparent 47%), var(--ink-soft);
+}
+.ef-price-badge {
+  position: absolute;
+  top: -12px;
+  right: 16px;
+  padding: 5px 8px;
+  background: var(--mint);
+  color: var(--ink);
+  font-family: "Courier New", monospace;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.ef-price-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: start;
+}
+.ef-price-card h3 {
+  margin: 0;
+  color: var(--paper);
+  font-size: 23px;
+  letter-spacing: -0.045em;
+}
+.ef-price-card-head > span {
+  color: var(--slate);
+  font-family: "Courier New", monospace;
+  font-size: 8px;
+  line-height: 1.35;
+  text-align: right;
+  text-transform: uppercase;
+}
+.ef-price {
+  display: flex;
+  gap: 7px;
+  align-items: baseline;
+  margin-top: 37px;
+}
+.ef-price strong {
+  color: var(--mint);
+  font-size: 43px;
+  letter-spacing: -0.07em;
+}
+.ef-price span {
+  color: var(--slate);
+  font-family: "Courier New", monospace;
+  font-size: 10px;
+}
+.ef-price-card > p {
+  min-height: 50px;
+  margin: 14px 0 0;
+  color: var(--paper-muted);
+  font-size: 13px;
+  line-height: 1.48;
+}
+.ef-price-card ul {
+  display: grid;
+  gap: 10px;
+  padding: 21px 0 0;
+  margin: 0;
+  border-top: 1px solid var(--line);
+  list-style: none;
+  color: var(--paper-muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+.ef-price-card li {
+  display: flex;
+  gap: 7px;
+  align-items: start;
+}
+.ef-price-card li svg {
+  flex: 0 0 auto;
+  color: var(--mint);
+  margin-top: 1px;
+}
+.ef-price-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 22px;
+  color: var(--paper-muted);
+  font-family: "Courier New", monospace;
+  font-size: 10px;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+.ef-price-cta:hover,
+.ef-price-cta--active {
+  color: var(--mint);
+}
+.ef-pricing-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  color: var(--slate);
+  font-family: "Courier New", monospace;
+  font-size: 10px;
+  line-height: 1.5;
+}
+.ef-pricing-note svg {
+  flex: 0 0 auto;
+  color: var(--signal);
+}
+.ef-install {
+  display: grid;
+  grid-template-columns: 1fr 0.9fr;
+  gap: clamp(42px, 10vw, 145px);
+  align-items: center;
+  padding: clamp(94px, 12vw, 155px) max(32px, calc((100vw - 1280px) / 2));
+  background: var(--mint);
+  color: var(--ink);
+}
+.ef-install .ef-eyebrow {
+  color: #33765f;
+}
+.ef-install .ef-eyebrow svg {
+  color: var(--signal);
+}
+.ef-install h2 em {
+  color: #2c7563;
+}
+.ef-install-copy > p {
+  max-width: 520px;
+  margin-top: 26px;
+  color: #456757;
+  font-size: 16px;
+  line-height: 1.62;
+}
+.ef-install-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  margin-top: 27px;
+}
+.ef-install-links > a:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.ef-install-links .ef-github-link {
+  color: var(--ink);
+  border-color: rgba(16, 21, 26, 0.28);
+}
+.ef-install-links .ef-github-stat {
+  color: #a34227;
+}
+.ef-code-card {
+  border: 1px solid rgba(16, 21, 26, 0.4);
+  background: #151c21;
+  box-shadow: 10px 10px 0 rgba(16, 21, 26, 0.18);
+}
+.ef-code-header,
+.ef-code-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 13px 16px;
+  color: var(--slate);
+  font-family: "Courier New", monospace;
+  font-size: 9px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.ef-code-header {
+  border-bottom: 1px solid var(--line);
+  color: var(--paper-muted);
+}
+.ef-code-header span:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.ef-code-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--mint);
+  box-shadow: 0 0 0 4px rgba(185, 247, 208, 0.12);
+}
+.ef-code-card pre {
+  overflow-x: auto;
+  padding: 27px 16px;
+  margin: 0;
+  color: var(--mint);
+  font-family: "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.ef-code-footer {
+  justify-content: start;
+  border-top: 1px solid var(--line);
+  color: var(--mint);
+  line-height: 1.4;
+  text-transform: none;
+}
+.ef-footer-links {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.ef-footer-links a {
+  color: var(--paper);
+  text-decoration: none;
+}
+.ef-footer-links a:hover {
+  color: var(--mint);
+}
+
+@media (max-width: 1050px) {
+  .ef-proof-strip {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .ef-proof-strip > .ef-github-link {
+    grid-column: 1 / -1;
+  }
+  .ef-capability-grid,
+  .ef-pricing-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ef-roadmap,
+  .ef-install {
+    grid-template-columns: 1fr;
+  }
+  .ef-install-copy {
+    max-width: 680px;
+  }
+  .ef-code-card {
+    max-width: 680px;
+    width: 100%;
+  }
+}
+@media (max-width: 620px) {
+  .ef-proof-strip {
+    width: min(100% - 40px, 1280px);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .ef-proof-strip > .ef-github-link {
+    grid-column: auto;
+  }
+  .ef-capabilities,
+  .ef-roadmap,
+  .ef-pricing,
+  .ef-install {
+    padding-inline: 20px;
+  }
+  .ef-capabilities-heading,
+  .ef-pricing-heading {
+    display: block;
+  }
+  .ef-capabilities-heading > p,
+  .ef-pricing-heading > p {
+    margin-top: 24px;
+  }
+  .ef-capability-grid,
+  .ef-pricing-grid {
+    grid-template-columns: 1fr;
+    margin-top: 45px;
+  }
+  .ef-capability {
+    min-height: auto;
+  }
+  .ef-surface-row {
+    align-items: start;
+  }
+  .ef-surface-row span {
+    flex-basis: 100%;
+  }
+  .ef-roadmap-item {
+    grid-template-columns: 25px 23px 1fr;
+    gap: 10px;
+  }
+  .ef-price-card {
+    min-height: 420px;
+  }
+  .ef-code-card {
+    box-shadow: 6px 6px 0 rgba(16, 21, 26, 0.18);
+  }
+  .ef-code-card pre {
+    font-size: 10px;
+  }
+  .ef-footer-links {
+    flex-wrap: wrap;
+  }
+}

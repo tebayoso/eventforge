@@ -5,14 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; connect-src 'self' http://127.0.0.1:4310 http://127.0.0.1:4311 https://api.eventforge.dev; img-src 'self' data:; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+      content="default-src 'self'; connect-src 'self' http://127.0.0.1:4310 http://127.0.0.1:4311 https://api.eventforge.dev https://api.github.com; img-src 'self' data:; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
     />
     <meta name="theme-color" content="#10151a" />
     <meta
       name="description"
-      content="Centralize webhooks, reduce operational noise, and turn important events into useful work."
+      content="The operational control plane for every hook. Ingest, route, observe, replay, and safely react from receipt to verified outcome."
     />
-    <title>EventForge — One place for every webhook</title>
+    <meta property="og:title" content="EventForge — The operational control plane for every hook" />
+    <meta
+      property="og:description"
+      content="Ingest, route, observe, replay, and safely react to webhook-driven work from receipt to verified outcome."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://eventforge.dev/" />
+    <meta name="twitter:card" content="summary" />
+    <meta
+      name="twitter:title"
+      content="EventForge — The operational control plane for every hook"
+    />
+    <meta
+      name="twitter:description"
+      content="A policy-first control plane for webhook delivery, context, replay, and bounded reactions."
+    />
+    <title>EventForge — The operational control plane for every hook</title>
   </head>
   <body>
     <div id="root"></div>
