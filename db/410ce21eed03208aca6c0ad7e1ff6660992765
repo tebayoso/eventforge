@@ -1,0 +1,19 @@
+workfiles/CONFIGURATION.md
+  s_d3746dabaeab5f::t_722878223f876e 75-79
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "db410ce21eed03208aca6c0ad7e1ff6660992765",
+  "prompts": {},
+  "sessions": {
+    "s_d3746dabaeab5f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7a89-a082-73c2-a270-f4d8527caa4c",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
