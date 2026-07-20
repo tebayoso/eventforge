@@ -1,6 +1,6 @@
 # Implementation status
 
-Updated: 2026-07-18
+Updated: 2026-07-20
 
 ## Supported now
 
@@ -15,6 +15,12 @@ Updated: 2026-07-18
 | Codex plugin                         | Manifest, skills, MCP registration, and health-only opt-in lifecycle hook                                                                                                 |
 | Electron                             | Compiled main/preload, constrained IPC, separate private user-data SQLite daemon, navigation controls, and package configuration                                          |
 | Quality                              | Format, lint, typecheck, tests with coverage, builds, package smoke, deployment validation, recognized global rate limiting, dependency audit, secret scan, and CodeQL CI |
+
+## Commercial platform roadmap implementation
+
+Phase 0 implementation has started with additive, tenant-scoped contracts for endpoints, routes, deliveries and attempts, issues, alert policies, incidents, bounded reaction policies and runs, evidence bundles, usage records, and entitlements. Migration `003_commercial_platform.sql` adds durable resource, entitlement, and idempotent usage-meter storage without enabling remote mode.
+
+These are persistence and interface foundations only. Hosted authentication, repository hydration, outbound delivery workers, billing export, monitoring, alert delivery, reactions, and public commercial APIs are not yet enabled or claimed as supported.
 
 ## Foundations present but not enabled remotely
 
