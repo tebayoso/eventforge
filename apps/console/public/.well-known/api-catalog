@@ -1,0 +1,18 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://api.eventforge.dev",
+      "service-desc": [{
+        "href": "https://api.eventforge.dev/openapi.json",
+        "type": "application/vnd.oai.openapi+json;version=3.1"
+      }],
+      "service-doc": [{
+        "href": "https://github.com/tebayoso/eventforge/blob/main/workfiles/CONFIGURATION.md",
+        "type": "text/markdown"
+      }],
+      "status": [{
+        "href": "https://api.eventforge.dev/health"
+      }]
+    }
+  ]
+}

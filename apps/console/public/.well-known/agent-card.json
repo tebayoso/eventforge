@@ -1,0 +1,22 @@
+{
+  "name": "EventForge",
+  "version": "0.1.0",
+  "description": "The operational control plane for every hook, from receipt to verified outcome.",
+  "supportedInterfaces": [
+    {
+      "url": "https://api.eventforge.dev/mcp",
+      "protocolBinding": "MCP"
+    }
+  ],
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false
+  },
+  "skills": [
+    {
+      "id": "eventforge-operations",
+      "name": "EventForge operations",
+      "description": "Inspect verified webhook events and operate incidents within policy."
+    }
+  ]
+}
