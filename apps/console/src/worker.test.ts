@@ -19,6 +19,6 @@ describe("hosted console route boundary", () => {
     expect(await markdown.text()).toContain("# EventForge");
 
     const homepage = await worker.fetch(new Request("https://eventforge.dev/"), { ASSETS: assets });
-    expect(homepage.headers.get("link")).toContain("rel=\"sitemap\"");
+    expect(homepage.headers.get("link")).toContain('rel="sitemap"');
   });
 });
