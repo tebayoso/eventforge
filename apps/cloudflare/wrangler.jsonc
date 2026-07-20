@@ -64,11 +64,13 @@
         {
           "binding": "CONTROL_DB",
           "database_name": "eventforge-control-production",
+          "database_id": "bce8c2a4-71e2-43b2-964a-a9a155cb2dc0",
           "migrations_dir": "migrations/control",
         },
         {
           "binding": "EVENTS_DB",
           "database_name": "eventforge-events-production",
+          "database_id": "200d73c9-e42f-4f61-ae8d-33452db00671",
           "migrations_dir": "migrations/events",
         },
       ],

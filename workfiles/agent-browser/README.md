@@ -152,3 +152,23 @@ Reusable pattern: deploy the console with its intended API origin, verify the la
 - Evidence is stored at `workfiles/agent-browser/screenshots/cloudflare-foundation-desktop.png`, `cloudflare-foundation-mobile.png`, `cloudflare-console-desktop.png`, `cloudflare-preview-health-mobile.png`, and `cloudflare-auth-gate.png`.
 
 Reusable pattern: keep hosted preview ingress disabled by default, temporarily enable only a disposable signed canary after secret rotation, reconcile R2, D1, outbox, audit, and Queue state, then redeploy the gate and independently verify it through both the health endpoint and an unauthenticated API request.
+
+## 2026-07-20 — Production console authentication audit
+
+- Opened `https://eventforge.dev/console` in a clean `eventforge-auth-audit` browser session. Outcome: the static operations shell returned `200` and rendered without any login, redirect, session cookie, or authentication challenge.
+- Network inspection showed the shell immediately attempted unauthenticated requests to `https://api.eventforge.dev/events`, `/actions`, `/runs`, `/audit`, `/memory`, `/connectors`, and `/forge`.
+- DNS inspection found no records for `api.eventforge.dev` or `hooks.eventforge.dev`. The only hosted backend deployment remains the isolated `eventforge-cloud-preview` Worker; its unauthenticated `/v1/events` endpoint returned structured `503 AUTH_GATED`.
+- Conclusion: the static console deployment completed, but the authenticated hosted product deployment did not. `/console` must not be represented as production-ready until Better Auth, session-aware route protection, tenant repositories, and the production API custom domain are deployed and pass an unauthenticated redirect/denial test.
+
+Reusable pattern: test protected application shells in a clean browser context, verify both the document response and downstream API calls, and require an explicit login redirect or denial before calling the frontend deployment complete.
+
+## 2026-07-20 — Production custom-domain remediation
+
+- Provisioned isolated production D1 control/event databases, private R2 payload storage, ingestion Queue, and DLQ; applied both initial migrations and installed production-only payload and canary secrets.
+- Deployed `eventforge-cloud-production` version `33e20d69-fa9b-4f09-8f4f-8c3d87641405` to Worker custom domains `api.eventforge.dev` and `hooks.eventforge.dev`. Cloudflare created their DNS and TLS without a Tunnel.
+- Verified both hostnames through Cloudflare, Google, and Quad9 public resolvers. TLS verification succeeded; production health reports `ingress: gated`. The API host returns `503 AUTH_GATED` for `/v1/events` and does not expose webhook routes; the hook host returns `404` for API routes and `503 INGRESS_GATED` for unsigned canary ingress.
+- Deployed `eventforge-console` version `5221b330-28be-4ba3-af3f-33b0bed4ca0a`. A Worker-first route now intercepts `/console` and returns a non-cacheable `503` authentication gate instead of the operations SPA.
+- A clean browser confirmed the new console gate and `hooks.eventforge.dev` production health. The local macOS/Chromium resolver still held the earlier negative answer for `api.eventforge.dev`; public DNS, an explicit-address TLS request, and a temporary Chromium host-resolver rule all reached the new API Worker successfully. The resolver override was used only for acceptance and was not saved to production configuration.
+- Evidence is stored at `workfiles/agent-browser/screenshots/production-console-auth-gate.png`, `production-api-health.png`, and `production-hooks-health.png`.
+
+Reusable pattern: attach originless Worker custom domains through Wrangler, verify at three public resolvers plus TLS, isolate API and hook routes by hostname, and treat a local negative-DNS cache separately from authoritative deployment state.

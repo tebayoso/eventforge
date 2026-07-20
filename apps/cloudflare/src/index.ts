@@ -1,6 +1,14 @@
 import { encryptPayload, sha256, verifyHmac } from "./crypto.js";
 
 type IngestMessage = { eventId: string; workspaceId: string; idempotencyKey: string };
+type Surface = "api" | "hooks" | "preview" | "unknown";
+
+export function surfaceFor(hostname: string, environment: string): Surface {
+  if (environment !== "production") return "preview";
+  if (hostname === "api.eventforge.dev") return "api";
+  if (hostname === "hooks.eventforge.dev") return "hooks";
+  return "unknown";
+}
 
 function problem(
   status: number,
@@ -121,7 +129,9 @@ async function ingestCanary(request: Request, env: Env): Promise<Response> {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    const surface = surfaceFor(url.hostname, env.ENVIRONMENT);
     try {
+      if (surface === "unknown") return problem(404, "NOT_FOUND", "Route not found.");
       if (request.method === "GET" && url.pathname === "/health")
         return Response.json({
           ok: true,
@@ -129,9 +139,16 @@ export default {
           environment: env.ENVIRONMENT,
           ingress: String(env.PUBLIC_INGRESS_ENABLED) === "true" ? "enabled" : "gated",
         });
-      if (request.method === "POST" && url.pathname === "/webhooks/canary")
+      if (
+        (surface === "hooks" || surface === "preview") &&
+        request.method === "POST" &&
+        url.pathname === "/webhooks/canary"
+      )
         return ingestCanary(request, env);
-      if (url.pathname.startsWith("/v1/") || url.pathname.startsWith("/api/auth/"))
+      if (
+        (surface === "api" || surface === "preview") &&
+        (url.pathname.startsWith("/v1/") || url.pathname.startsWith("/api/auth/"))
+      )
         return problem(
           503,
           "AUTH_GATED",
