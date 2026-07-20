@@ -204,3 +204,10 @@ Reusable pattern: for marketing changes, validate both the accessibility hierarc
 - Screenshot captured at `workfiles/agent-browser/screenshots/eventforge-production-landing-new.png`.
 
 Reusable pattern: when adding a third-party proof badge, update both the HTML CSP and the deployed Worker `_headers`; test the live response headers and the browser request, not only the local Vite page.
+
+## 2026-07-20 — Enterprise pricing follow-up
+
+- Added the Enterprise contracted-band tier and transparent Team/Pro overage notes to the pricing section.
+- Deployed the follow-up static Worker as Cloudflare version `e9df48a2-0095-48bc-8d06-b7e6fda207fc`.
+- Opened `https://eventforge.dev/?release=33330e0` to bypass the browser's prior asset cache and verified Free, Team, Pro, Business, and Enterprise headings, live GitHub stars, and no browser errors.
+- Screenshot captured at `workfiles/agent-browser/screenshots/eventforge-production-landing-enterprise.png`.
