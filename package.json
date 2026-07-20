@@ -16,7 +16,7 @@
     "plugin:check": "pnpm --filter @eventforge/mcp-server bundle:plugin && node packages/mcp-server/scripts/plugin-smoke.mjs",
     "quality": "pnpm format:check && pnpm lint && pnpm build && pnpm typecheck && pnpm test:coverage && pnpm pack:check && pnpm plugin:check",
     "test": "pnpm -r run test",
-    "test:coverage": "pnpm --filter @eventforge/core exec vitest run --coverage --coverage.reporter=text --coverage.reporter=json-summary && pnpm --filter @eventforge/control-plane exec vitest run --coverage --coverage.reporter=text --coverage.reporter=json-summary && pnpm --filter @eventforge/console exec vitest run --coverage --coverage.reporter=text --coverage.reporter=json-summary && pnpm --filter @eventforge/desktop exec vitest run --coverage --coverage.reporter=text --coverage.reporter=json-summary && pnpm --filter @eventforge/mcp-server test:coverage",
+    "test:coverage": "pnpm --filter @eventforge/core exec vitest run --coverage --coverage.reporter=text --coverage.reporter=json-summary && pnpm --filter @eventforge/cloudflare exec vitest run --coverage --coverage.reporter=text --coverage.reporter=json-summary && pnpm --filter @eventforge/control-plane exec vitest run --coverage --coverage.reporter=text --coverage.reporter=json-summary && pnpm --filter @eventforge/console exec vitest run --coverage --coverage.reporter=text --coverage.reporter=json-summary && pnpm --filter @eventforge/desktop exec vitest run --coverage --coverage.reporter=text --coverage.reporter=json-summary && pnpm --filter @eventforge/mcp-server test:coverage",
     "typecheck": "pnpm -r run typecheck",
     "lint": "eslint . --max-warnings 0"
   },

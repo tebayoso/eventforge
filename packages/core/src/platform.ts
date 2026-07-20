@@ -53,6 +53,29 @@ export const DeliverySchema = Scope.extend({
 });
 export type Delivery = z.infer<typeof DeliverySchema>;
 
+export const DeliveryCreateSchema = DeliverySchema.omit({ billable: true });
+export type DeliveryCreate = z.infer<typeof DeliveryCreateSchema>;
+
+export const ReplayPreviewSchema = Scope.extend({
+  eventCount: z.number().int().nonnegative(),
+  destinationCount: z.number().int().nonnegative(),
+  estimatedBillableDeliveries: z.number().int().nonnegative(),
+  concurrency: z.number().int().positive(),
+  canarySize: z.number().int().nonnegative(),
+});
+export type ReplayPreview = z.infer<typeof ReplayPreviewSchema>;
+
+export const UsageSummarySchema = z.object({
+  workspaceId: z.string().min(1),
+  meter: z.enum(["delivered_event", "smart_reaction"]),
+  included: z.number().int().nonnegative(),
+  consumed: z.number().int().nonnegative(),
+  forecast: z.number().int().nonnegative(),
+  warningThreshold: z.number().int().nonnegative(),
+  hardCap: z.number().int().nonnegative().optional(),
+});
+export type UsageSummary = z.infer<typeof UsageSummarySchema>;
+
 export const IssueSchema = Scope.extend({
   id: Id,
   fingerprint: z.string().min(1),

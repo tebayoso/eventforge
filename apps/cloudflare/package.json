@@ -1,0 +1,24 @@
+{
+  "name": "@eventforge/cloudflare",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "wrangler deploy --dry-run --env=\"\" --outdir dist",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "test": "vitest run",
+    "types": "wrangler types worker-configuration.d.ts",
+    "deploy:preview": "wrangler deploy --env=\"\"",
+    "deploy:production": "wrangler deploy --env production"
+  },
+  "dependencies": {
+    "@eventforge/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260719.1",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4",
+    "wrangler": "^4.112.0"
+  }
+}

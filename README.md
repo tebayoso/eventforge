@@ -1,27 +1,28 @@
 # EventForge
 
-EventForge is a local-first, policy-first operations console for event-driven Codex workflows. It receives GitHub, Linear, and Sentry events, creates read-only agent investigations, keeps process-scoped project memory, and requires explicit approval for consequential actions. Remote production mode is intentionally disabled until its authentication and durable-storage milestones are complete.
+EventForge is a local-first, policy-first operations console and an emerging Cloudflare-native control plane for event-driven Codex workflows. It receives signed events, creates read-only agent investigations, keeps scoped project memory, and requires explicit approval for consequential actions. Hosted production routing remains intentionally disabled until its authentication, tenancy, and reliability gates pass.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  providers["GitHub · Linear · Sentry"] -->|"signed webhook"| tunnel["Cloudflare Tunnel"]
-  provisioner["Authenticated EventForge provisioner"] -->|"tunnel + DNS"| cloudflare["Cloudflare API"]
-  provisioner -->|"scoped token"| tunnel
-  tunnel -->|"health + webhook paths only"| control["Local Fastify control plane"]
-  codex["Codex plugin"] --> mcp["EventForge MCP server"]
-  mcp -->|"loopback API"| control
-  console["React console · Electron"] -->|"loopback API / preload IPC"| control
-  control --> verify["Verify · dedupe · normalize"]
-  verify --> policy["Workflow + policy engine"]
-  policy --> agent["Read-only Codex SDK thread"]
-  agent --> memory["Scoped project memory"]
-  agent --> approval["Versioned approval queue"]
-  approval -->|"explicit reviewer decision"| artifact["Reviewed action or Forge artifact"]
+  providers["Providers"] -->|"signed webhook"| hooks["hooks.eventforge.dev Worker"]
+  operators["Console · API · MCP"] --> api["api.eventforge.dev Worker"]
+  hooks --> r2["Encrypted payloads · R2"]
+  hooks --> d1["Tenant metadata · D1"]
+  hooks --> queue["Cloudflare Queues"]
+  queue --> delivery["Idempotent delivery processing"]
+  api --> d1
+  api --> workflows["Workflows · approvals · replay"]
+  workflows --> sandbox["Short-lived investigations"]
+
+  codex["Codex plugin"] --> mcp["Local EventForge MCP"]
+  mcp -->|"loopback only"| local["Fastify · Electron · private edge"]
+  local -->|"optional local relay"| tunnel["Cloudflare Tunnel"]
+  local --> approval["Approval-gated actions"]
 ```
 
-The authenticated provisioner is an optional hosted component. The supported release runs the control plane, MCP server, Codex threads, and private memory locally; remote multi-workspace operation remains fail-closed until the Track B authentication and durability requirements are complete.
+The local/private-edge path keeps Fastify, Electron, MCP stdio, Cloudflare Tunnel, and the local Codex runner. The hosted path uses Worker custom domains, D1, private R2, Queues, and Workflows; it never depends on Tunnel-backed API DNS. The isolated preview foundation is deployed, while remote multi-workspace APIs and production ingress remain fail-closed.
 
 ## Included features
 
@@ -36,9 +37,12 @@ The authenticated provisioner is an optional hosted component. The supported rel
 | Desktop and memory  | Packaged Electron main/preload/renderer boundary, private user-data daemon, SQLite store, explicit disabled vector-index status                                 |
 | Forge Studio        | Reviewable connector specification and generated files, requested scopes, static validation, explicit owner approval; no hot-loading                            |
 | Delivery            | Docker Compose, hardened non-root image, Helm chart, Cloudflare Worker deployment, package smoke tests, CodeQL, secret scanning, dependency audit               |
+| Hosted foundation   | Split D1 control/event stores, encrypted private R2 payloads, Queue plus DLQ bindings, idempotent outbox ingestion, and gated signed-canary acceptance          |
 
 ## Recent production-hardening upgrades
 
+- Added the isolated Cloudflare-native preview Worker and provisioned preview D1, R2, Queue, and DLQ resources without changing the production domains.
+- Proved signed canary receipt through encrypted payload storage, durable metadata/outbox/audit writes, Queue publication, and consumer completion; preview ingress was gated again after the test.
 - Added per-user/workspace Cloudflare tunnel provisioning with deterministic three-word hostnames, idempotent DNS/configuration, tunnel-scoped credentials, protected token files, and failure/shutdown cleanup.
 - Made `listen_for_webhook` start the local relay on demand and return the active provider endpoint without exposing tunnel credentials.
 - Restricted public tunnel traffic to `/health` and exact signed webhook paths while keeping console, memory, workflow, and approval APIs loopback-only.
