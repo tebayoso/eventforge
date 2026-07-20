@@ -72,10 +72,11 @@ args = ["-y", "--package", "github:tebayoso/eventforge", "eventforge-mcp"]
 startup_timeout_sec = 20
 tool_timeout_sec = 60
 
-[mcp_servers.eventforge.env]
-EVENTFORGE_CODEX_WORKDIR = "/absolute/path/to/project"
-EVENTFORGE_DEMO_MODE = "true"
-EVENTFORGE_RUNNER = "demo"
+env = {
+  EVENTFORGE_CODEX_WORKDIR = "/absolute/path/to/project",
+  EVENTFORGE_DEMO_MODE = "true",
+  EVENTFORGE_RUNNER = "demo",
+}
 ```
 
 Do not put API keys, provider secrets, or tunnel tokens in this file. Use the
