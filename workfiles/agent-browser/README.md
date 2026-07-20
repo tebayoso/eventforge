@@ -141,3 +141,14 @@ Reusable pattern: keep `pnpm dev:github` running, require public health plus an 
 - Evidence is stored at `workfiles/agent-browser/screenshots/eventforge-production-2026-07-20.png` and `workfiles/agent-browser/screenshots/eventforge-production-console-2026-07-20.png`.
 
 Reusable pattern: deploy the console with its intended API origin, verify the landing and SPA routes independently, then treat an offline console as a backend readiness failure. Never make production DNS resolve by pointing it at a tunnel with no connectors or by bypassing EventForge's remote-mode safety gates.
+
+## 2026-07-20 — Cloudflare-native preview foundation acceptance
+
+- Opened `https://eventforge.dev/` at desktop and 390×844 mobile viewports. The production title, navigation, webhook-focused hero, value sections, and console links rendered; browser console and error inspection were empty.
+- Opened `https://eventforge.dev/console` at 1440×900. The operations shell rendered all primary controls and truthfully remained **Control plane offline** because the authenticated API is still gated.
+- Opened `https://eventforge-cloud-preview.jorge-b9f.workers.dev/health`. Outcome: HTTP-rendered JSON reported `environment: preview` and `ingress: gated` after the acceptance canary.
+- Opened `/v1/events` without an identity. Outcome: structured `503 AUTH_GATED`; no unauthenticated API surface was exposed while Better Auth and tenant repositories remain incomplete.
+- Before the browser pass, a disposable signed canary returned `202`, produced one encrypted R2 payload reference, one D1 event/outbox/audit chain, and reached `processed` through the Queue consumer. The Worker was redeployed with ingress disabled immediately afterward.
+- Evidence is stored at `workfiles/agent-browser/screenshots/cloudflare-foundation-desktop.png`, `cloudflare-foundation-mobile.png`, `cloudflare-console-desktop.png`, `cloudflare-preview-health-mobile.png`, and `cloudflare-auth-gate.png`.
+
+Reusable pattern: keep hosted preview ingress disabled by default, temporarily enable only a disposable signed canary after secret rotation, reconcile R2, D1, outbox, audit, and Queue state, then redeploy the gate and independently verify it through both the health endpoint and an unauthenticated API request.
