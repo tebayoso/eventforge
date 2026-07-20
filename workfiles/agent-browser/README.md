@@ -194,3 +194,13 @@ Reusable pattern: validate installation from an empty remote clone, not an exist
 - Browser error inspection was empty. The GitHub stats request gracefully falls back to zero when the public API is unavailable.
 
 Reusable pattern: for marketing changes, validate both the accessibility hierarchy and a full-page visual at desktop and mobile widths; external proof badges must have a deterministic fallback and documentation links must target a real public URL.
+
+## 2026-07-20 — Expanded landing page production deployment
+
+- Deployed the updated static console Worker to `https://eventforge.dev/` as Cloudflare version `9548169c-93a0-4a78-a0e5-55d86949b9ce`.
+- Reopened the production landing page at desktop width and verified the new hero, Product, Pricing, Docs, GitHub, roadmap, four pricing tiers, Codex install panel, and final console CTA in the accessibility tree.
+- Confirmed the live GitHub API badge resolves to `0 stars` and `0 forks` for `tebayoso/eventforge`; when the public GitHub API is unavailable the UI shows an em dash instead of inventing a count.
+- Verified the production CSP includes `https://api.github.com`, so the live star/fork request is allowed. Browser error inspection was empty.
+- Screenshot captured at `workfiles/agent-browser/screenshots/eventforge-production-landing-new.png`.
+
+Reusable pattern: when adding a third-party proof badge, update both the HTML CSP and the deployed Worker `_headers`; test the live response headers and the browser request, not only the local Vite page.
