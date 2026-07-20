@@ -19,6 +19,8 @@ try {
   for (const required of [
     "package/dist/index.js",
     "package/dist/index.d.ts",
+    "package/dist/standalone.cjs",
+    "package/dist/http-standalone.cjs",
     "package/package.json",
   ]) {
     if (!listing.includes(required)) throw new Error(`Packed MCP server is missing ${required}.`);
@@ -35,8 +37,11 @@ try {
       "utf8",
     ),
   );
-  if (packageJson.bin?.["eventforge-mcp"] !== "./dist/index.js") {
-    throw new Error("Packed MCP server does not expose the compiled eventforge-mcp binary.");
+  if (packageJson.bin?.["eventforge-mcp"] !== "./dist/standalone.cjs") {
+    throw new Error("Packed MCP server does not expose the self-installing eventforge-mcp binary.");
+  }
+  if (packageJson.bin?.["eventforge-mcp-http"] !== "./dist/http-standalone.cjs") {
+    throw new Error("Packed MCP server does not expose the standalone HTTP binary.");
   }
 
   const installedEntrypoint = join(
@@ -45,7 +50,7 @@ try {
     "@eventforge",
     "mcp-server",
     "dist",
-    "index.js",
+    "standalone.cjs",
   );
   const client = new Client({ name: "eventforge-pack-smoke", version: "1.0.0" });
   const transport = new StdioClientTransport({
@@ -54,6 +59,7 @@ try {
     env: {
       PATH: `${join(installRoot, "node_modules", ".bin")}${delimiter}${process.env.PATH ?? ""}`,
       EVENTFORGE_API_URL: "http://127.0.0.1:1",
+      EVENTFORGE_AUTO_START: "false",
     },
     stderr: "inherit",
   });

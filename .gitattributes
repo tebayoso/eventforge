@@ -1,0 +1,3 @@
+# Bundled runtime artifacts contain intentional whitespace inside serialized
+# dependency tables and generated template strings.
+plugins/eventforge/server/*.cjs -whitespace

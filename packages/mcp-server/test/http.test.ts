@@ -63,6 +63,28 @@ describe("EventForge Streamable HTTP transport", () => {
     expect(result.tools.map((tool) => tool.name).sort()).toEqual([...EVENTFORGE_TOOL_NAMES].sort());
   });
 
+  it("starts the local control plane when launched as the standalone HTTP package", async () => {
+    const apiPort = await availablePort();
+    const mcpPort = await availablePort();
+    const child = spawn(process.execPath, [resolve("dist/http-standalone.cjs")], {
+      env: {
+        ...process.env,
+        NODE_ENV: "development",
+        EVENTFORGE_API_URL: `http://127.0.0.1:${apiPort}`,
+        EVENTFORGE_AUTO_START: "true",
+        EVENTFORGE_MCP_HOST: "127.0.0.1",
+        EVENTFORGE_MCP_PORT: String(mcpPort),
+      },
+      stdio: ["ignore", "ignore", "pipe"],
+    });
+    children.push(child);
+
+    const client = await connectWithRetry(new URL(`http://127.0.0.1:${mcpPort}/mcp`));
+    const result = await client.listTools();
+
+    expect(result.tools.map((tool) => tool.name).sort()).toEqual([...EVENTFORGE_TOOL_NAMES].sort());
+  });
+
   it("fails closed for remote bindings even when a static bearer token is present", async () => {
     const child = spawn(process.execPath, [resolve("dist/http.js")], {
       env: {

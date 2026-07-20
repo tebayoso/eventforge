@@ -62,6 +62,38 @@ The product also uses the Codex SDK at runtime. A verified GitHub event can crea
 
 The complete Devpost-ready title, story, tags, installation method, and final-submission checklist are in [workfiles/devpost/SUBMISSION.md](workfiles/devpost/SUBMISSION.md).
 
+## Zero-checkout MCP setup
+
+The MCP package can start a credential-free local EventForge control plane automatically. A new user does not need an EventForge checkout for this path; Codex downloads the self-contained launcher from the public GitHub repository:
+
+```bash
+codex mcp add eventforge --env EVENTFORGE_CODEX_WORKDIR="$PWD" -- npx -y --package github:tebayoso/eventforge eventforge-mcp
+```
+
+Restart Codex, then use `/mcp` to confirm the `eventforge` server is connected. The launcher starts a local API on `http://127.0.0.1:4310`, uses the deterministic demo runner by default, and keeps the same approval-gated tools as the repository plugin. Set `EVENTFORGE_API_URL` to an already-running local API to disable automatic startup; set `EVENTFORGE_AUTO_START=false` when the MCP process must never launch a local control plane.
+
+For a package registry release, the equivalent configuration is:
+
+```toml
+[mcp_servers.eventforge]
+command = "npx"
+args = ["-y", "@eventforge/mcp-server"]
+env = { EVENTFORGE_CODEX_WORKDIR = "/absolute/path/to/project" }
+```
+
+The scoped npm package is publish-ready but is not yet present in the public registry. Until it is published, use the GitHub package spec above.
+
+For a remote Streamable HTTP host, configure Codex with the host URL and OAuth or a secret supplied by the host administrator:
+
+```toml
+[mcp_servers.eventforge]
+url = "https://mcp.example.com/mcp"
+auth = "oauth"
+default_tools_approval_mode = "writes"
+```
+
+The packaged HTTP launcher is `eventforge-mcp-http`. It binds to loopback by default and must sit behind the host's TLS and OAuth boundary before being exposed remotely. EventForge intentionally refuses direct non-loopback binding without its OAuth 2.1 authorization layer.
+
 ## Demo video
 
 [Watch the EventForge demo on YouTube](https://youtu.be/pht3rrl--pE) for the end-to-end operations-console, GitHub-event, Codex-review, and approval workflow.
