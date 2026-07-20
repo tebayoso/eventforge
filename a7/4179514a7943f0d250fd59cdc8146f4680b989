@@ -1,0 +1,43 @@
+apps/console/src/worker.ts
+  s_d3746dabaeab5f::t_58db8a58de6bd6 1-38
+workfiles/agent-browser/README.md
+  s_87e8be370edf1c::t_7f946574c292f9 155-174
+README.md
+  s_d3746dabaeab5f::t_d05df60476dcfd 25
+apps/cloudflare/src/index.ts
+  s_d3746dabaeab5f::t_9dae97f520d90f 4-11,132,134,142-146,148-151
+apps/cloudflare/test/routing.test.ts
+  s_d3746dabaeab5f::t_b7d889c3418095 1-11
+apps/cloudflare/wrangler.jsonc
+  s_d3746dabaeab5f::t_53819a7e1c3534 67,73
+apps/console/src/worker.test.ts
+  s_d3746dabaeab5f::t_dfdba01df3194d 1-11
+apps/console/wrangler.jsonc
+  s_d3746dabaeab5f::t_ff18962d63a0a6 4-5,9,11
+workfiles/STATUS.md
+  s_d3746dabaeab5f::t_f7ee5d86571ee5 25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "a74179514a7943f0d250fd59cdc8146f4680b989",
+  "prompts": {},
+  "sessions": {
+    "s_87e8be370edf1c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d61fd8d8-ac9d-4aa8-aba1-7af911b9cbec",
+        "model": "unknown"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    },
+    "s_d3746dabaeab5f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7a89-a082-73c2-a270-f4d8527caa4c",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
