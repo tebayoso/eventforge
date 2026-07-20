@@ -1,0 +1,30 @@
+apps/control-plane/migrations/003_commercial_platform.sql
+  s_d3746dabaeab5f::t_a024997f690bde 1-39
+workfiles/STATUS.md
+  s_d3746dabaeab5f::t_1996815bd12839 3,19-23
+  s_d3746dabaeab5f::t_40bcc3a5313e92 24
+packages/core/src/index.ts
+  s_d3746dabaeab5f::t_a024997f690bde 5
+packages/core/test/platform.test.ts
+  s_d3746dabaeab5f::t_85fd8f6b183093 2-7,11-21,26-35,39-52,56-62
+  s_d3746dabaeab5f::t_a024997f690bde 1,8-10,22-25,36-38,53-55,63-65
+packages/core/src/platform.ts
+  s_d3746dabaeab5f::t_a024997f690bde 1-89,99-111,121-155
+  s_d3746dabaeab5f::t_85fd8f6b183093 90-98,112-120
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "68340a52153f4993588c81a5ee87c38c8602ab8d",
+  "prompts": {},
+  "sessions": {
+    "s_d3746dabaeab5f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7a89-a082-73c2-a270-f4d8527caa4c",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
