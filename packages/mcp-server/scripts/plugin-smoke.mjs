@@ -18,6 +18,9 @@ try {
   if (manifest.mcpServers !== "./.mcp.json" || !configuredServer) {
     throw new Error("Installed EventForge plugin does not reference its MCP configuration.");
   }
+  if (!configuredServer.args?.some((argument) => argument.endsWith("eventforge-standalone.cjs"))) {
+    throw new Error("Installed EventForge plugin must use the self-starting MCP bundle.");
+  }
 
   const substitutePluginRoot = (value) => value.replaceAll("${PLUGIN_ROOT}", installedPlugin);
   const client = new Client({ name: "eventforge-plugin-smoke", version: "1.0.0" });

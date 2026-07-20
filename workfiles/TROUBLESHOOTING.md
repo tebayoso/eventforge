@@ -1,5 +1,9 @@
 # EventForge Troubleshooting
 
+Start with the [configuration guide](CONFIGURATION.md) to confirm that the
+selected MCP mode, URL, environment, and authentication boundary match the
+process you are actually running.
+
 ## Corepack is not installed
 
 The repository pins pnpm 11.5.1. Node.js 22–24 normally expose Corepack, while Node.js 25 and newer no longer bundle it. If `corepack enable` is unavailable, install the pinned package manager directly:
@@ -21,10 +25,19 @@ Continue only when `pnpm --version` reports `11.5.1`.
 
 ## EventForge MCP tools are missing
 
-1. Run `pnpm --filter @eventforge/mcp-server pack:check`.
-2. Run `pnpm plugin:check` to verify the bundled server starts without writing non-protocol data to stdout.
-3. Review the plugin's `.mcp.json` and `.codex-plugin/plugin.json` paths.
-4. Restart Codex after installing or changing a plugin. Plugin-bundled hooks require a separate trust review when their content changes.
+1. Run `codex mcp list` and confirm the server name and command/URL.
+2. For package mode, run `npx -y --package github:tebayoso/eventforge eventforge-mcp` from a terminal and confirm the embedded API starts on loopback.
+3. Run `pnpm --filter @eventforge/mcp-server pack:check` and `pnpm plugin:check` from a checkout.
+4. Review the plugin's `.mcp.json` and `.codex-plugin/plugin.json` paths.
+5. Restart Codex after installing or changing a plugin. Plugin-bundled hooks require a separate trust review when their content changes.
+
+## MCP HTTP connection fails
+
+- A local HTTP launcher must use `http://127.0.0.1:4312/mcp` by default.
+- A remote URL must be HTTPS and terminate at OAuth 2.1 or an OAuth-aware proxy.
+- `EVENTFORGE_MCP_HOST=0.0.0.0` and other non-loopback bindings intentionally fail closed.
+- `eventforge.dev`, `api.eventforge.dev`, and `hooks.eventforge.dev` are not automatically MCP endpoints; use the URL supplied by the MCP host administrator.
+- If Codex uses OAuth, run `codex mcp login <server-name>` and restart the connection.
 
 ## A live webhook is rejected
 

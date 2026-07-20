@@ -64,6 +64,10 @@ The complete Devpost-ready title, story, tags, installation method, and final-su
 
 ## Zero-checkout MCP setup
 
+For the complete mode selection, environment reference, Codex TOML examples,
+remote HTTP requirements, and verification checklist, see
+[the canonical configuration guide](workfiles/CONFIGURATION.md).
+
 The MCP package can start a credential-free local EventForge control plane automatically. A new user does not need an EventForge checkout for this path; Codex downloads the self-contained launcher from the public GitHub repository:
 
 ```bash
@@ -218,4 +222,4 @@ Incoming provider data is untrusted. EventForge verifies signatures, deduplicate
 
 Approval records state and reviewer identity but does not execute or hot-load generated code. Forge Studio currently generates and statically scans a reviewable draft; isolated execution, immutable artifact storage, remote MFA/OAuth, and full PostgreSQL restart recovery remain Track B work.
 
-See [architecture and trust boundaries](workfiles/ARCHITECTURE.md), [implementation status](workfiles/STATUS.md), [contribution guidance](workfiles/CONTRIBUTING.md), [security reporting](workfiles/SECURITY.md), [threat model](workfiles/THREAT_MODEL.md), [troubleshooting](workfiles/TROUBLESHOOTING.md), and the [Apache-2.0 license](LICENSE).
+See the [configuration guide](workfiles/CONFIGURATION.md), [architecture and trust boundaries](workfiles/ARCHITECTURE.md), [implementation status](workfiles/STATUS.md), [contribution guidance](workfiles/CONTRIBUTING.md), [security reporting](workfiles/SECURITY.md), [threat model](workfiles/THREAT_MODEL.md), [troubleshooting](workfiles/TROUBLESHOOTING.md), and the [Apache-2.0 license](LICENSE).

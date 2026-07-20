@@ -13,6 +13,11 @@ cp .env.example .env
 pnpm quality
 ```
 
+The supported MCP installation and all configuration modes are documented in
+[CONFIGURATION.md](CONFIGURATION.md). When changing a launcher variable,
+Codex registration, plugin manifest, or `.env.example`, update that guide and
+run the package/plugin smoke checks below.
+
 Run the control plane and console in separate terminals:
 
 ```bash
