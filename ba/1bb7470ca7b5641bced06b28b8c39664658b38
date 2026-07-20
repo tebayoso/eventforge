@@ -1,0 +1,19 @@
+apps/console/public/_headers
+  s_d3746dabaeab5f::t_28d6538d6f88e4 6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "ba1bb7470ca7b5641bced06b28b8c39664658b38",
+  "prompts": {},
+  "sessions": {
+    "s_d3746dabaeab5f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7a89-a082-73c2-a270-f4d8527caa4c",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
