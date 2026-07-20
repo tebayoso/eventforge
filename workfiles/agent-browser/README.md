@@ -221,3 +221,15 @@ Reusable pattern: when adding a third-party proof badge, update both the HTML CS
 - Browser error inspection was empty. Final score evidence is captured at `workfiles/agent-browser/screenshots/eventforge-agent-ready-final.png`.
 
 Reusable pattern: run the evaluator after deployment, inspect its JSON evidence rather than relying on the headline score, fix HTTP discovery contracts in the Worker, and treat DNS-AID as a separate authoritative-zone change that cannot be completed with a zone-read-only token.
+
+## 2026-07-21 — Landing page readability pass
+
+- Started the console Vite app at `http://127.0.0.1:5173/` and captured the landing page at 1440×1000 and 390×844 viewports.
+- Increased the responsive type ramp, body copy line-height, navigation/CTA sizing, card copy sizing, code sample readability, and section breathing room. Mobile actions now stack with comfortable touch targets instead of compressing the copy.
+- Desktop and mobile screenshots were visually inspected at `workfiles/agent-browser/screenshots/eventforge-readable-desktop.png` and `workfiles/agent-browser/screenshots/eventforge-readable-mobile.png`.
+- Browser error inspection was empty.
+
+Reusable pattern: treat monospace labels and card metadata as secondary—not a reason to shrink primary copy—and set mobile minimums explicitly so responsive interpolation cannot make the page unreadable.
+
+- Deployed the readability pass to `https://eventforge.dev/` as Cloudflare version `6e3ec32d-cdaf-48df-b4ea-1f7b40d6dc40`, then reopened it with a cache-busting query at desktop and mobile widths.
+- Production screenshots are stored at `workfiles/agent-browser/screenshots/eventforge-readable-production-desktop.png` and `workfiles/agent-browser/screenshots/eventforge-readable-production-mobile.png`; browser error inspection remained empty.

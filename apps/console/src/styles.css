@@ -1816,3 +1816,218 @@ body {
     flex-wrap: wrap;
   }
 }
+
+/* Responsive readability pass: keep the landing page legible before adding density. */
+.ef-landing {
+  font-size: 16px;
+  line-height: 1.6;
+}
+.ef-site-header nav {
+  gap: clamp(20px, 2.8vw, 42px);
+  font-size: clamp(13px, 0.9vw, 15px);
+}
+.ef-site-header .ef-nav-console {
+  padding: 11px 15px;
+}
+.ef-eyebrow {
+  font-size: clamp(11px, 0.75vw, 13px);
+  letter-spacing: 0.12em;
+}
+.ef-hero-intro {
+  margin-top: 32px;
+  font-size: clamp(18px, 1.35vw, 21px);
+  line-height: 1.65;
+}
+.ef-hero-actions {
+  gap: 30px;
+  margin-top: 42px;
+}
+.ef-primary-cta,
+.ef-text-cta {
+  font-size: clamp(14px, 1vw, 16px);
+}
+.ef-primary-cta {
+  padding: 16px 20px;
+}
+.ef-hero-footnote {
+  margin-top: 74px;
+  font-size: clamp(11px, 0.8vw, 13px);
+  line-height: 1.55;
+}
+.ef-section-label {
+  font-size: clamp(10px, 0.72vw, 12px);
+}
+.ef-manifesto-copy > p:last-child,
+.ef-capabilities-heading > p,
+.ef-pricing-heading > p,
+.ef-roadmap-intro > p {
+  font-size: clamp(16px, 1.15vw, 18px);
+  line-height: 1.72;
+}
+.ef-side-annotation {
+  font-size: clamp(10px, 0.75vw, 12px);
+}
+.ef-principle-head,
+.ef-capability-topline,
+.ef-price-card-head > span,
+.ef-roadmap-item div > span,
+.ef-surface-row,
+.ef-pricing-note {
+  font-size: clamp(10px, 0.72vw, 12px);
+}
+.ef-principle h3,
+.ef-capability h3,
+.ef-roadmap-item h3,
+.ef-price-card h3 {
+  font-size: clamp(25px, 1.8vw, 31px);
+  line-height: 1.12;
+}
+.ef-principle p,
+.ef-capability p,
+.ef-roadmap-item p {
+  font-size: clamp(15px, 1.05vw, 17px);
+  line-height: 1.7;
+}
+.ef-proof-strip strong {
+  font-size: clamp(26px, 2vw, 32px);
+}
+.ef-proof-strip span {
+  font-size: clamp(10px, 0.72vw, 12px);
+}
+.ef-capability-status,
+.ef-price-card-head > span,
+.ef-price span,
+.ef-price-cta {
+  font-size: clamp(10px, 0.72vw, 12px);
+}
+.ef-price strong {
+  font-size: clamp(44px, 3.4vw, 58px);
+}
+.ef-price-card > p,
+.ef-price-card ul {
+  font-size: clamp(14px, 0.95vw, 16px);
+  line-height: 1.55;
+}
+.ef-price-card ul {
+  gap: 13px;
+}
+.ef-install-copy > p {
+  font-size: clamp(17px, 1.2vw, 19px);
+  line-height: 1.7;
+}
+.ef-install-links > a:first-child {
+  font-size: clamp(14px, 1vw, 16px);
+}
+.ef-code-header,
+.ef-code-footer {
+  font-size: clamp(10px, 0.72vw, 12px);
+}
+.ef-code-card pre {
+  font-size: clamp(13px, 0.95vw, 15px);
+  line-height: 1.8;
+}
+
+@media (max-width: 900px) {
+  .ef-site-header,
+  .ef-hero,
+  .ef-manifesto,
+  .ef-proof,
+  .ef-footer {
+    width: min(100% - 48px, 1280px);
+  }
+  .ef-hero {
+    gap: 64px;
+    padding-top: clamp(82px, 12vw, 128px);
+  }
+  .ef-capabilities,
+  .ef-roadmap,
+  .ef-pricing,
+  .ef-install {
+    padding-inline: 32px;
+  }
+}
+
+@media (max-width: 620px) {
+  .ef-site-header,
+  .ef-hero,
+  .ef-manifesto,
+  .ef-proof,
+  .ef-footer {
+    width: min(100% - 32px, 1280px);
+  }
+  .ef-site-header {
+    padding: 22px 0;
+  }
+  .ef-brand {
+    font-size: 22px;
+  }
+  .ef-site-header .ef-nav-console {
+    padding: 11px 13px;
+  }
+  .ef-hero {
+    gap: 54px;
+    padding-top: 72px;
+    padding-bottom: 104px;
+  }
+  .ef-hero h1 {
+    font-size: clamp(54px, 15vw, 78px);
+    line-height: 0.98;
+  }
+  .ef-hero-intro {
+    font-size: clamp(17px, 4.8vw, 20px);
+  }
+  .ef-hero-actions {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .ef-primary-cta {
+    padding: 17px 20px;
+  }
+  .ef-hero-footnote {
+    align-items: flex-start;
+    margin-top: 50px;
+    font-size: 12px;
+  }
+  .ef-manifesto-copy > p:last-child {
+    margin-top: 30px;
+    font-size: 17px;
+  }
+  .ef-principles,
+  .ef-capabilities,
+  .ef-roadmap,
+  .ef-pricing,
+  .ef-install {
+    padding-inline: 20px;
+  }
+  .ef-section-heading h2,
+  .ef-capabilities-heading h2,
+  .ef-pricing-heading h2,
+  .ef-install h2 {
+    font-size: clamp(42px, 12vw, 62px);
+    line-height: 1;
+  }
+  .ef-capability,
+  .ef-price-card {
+    padding: 25px 22px 28px;
+  }
+  .ef-capability h3 {
+    margin-top: 40px;
+  }
+  .ef-capability p,
+  .ef-roadmap-item p,
+  .ef-price-card > p,
+  .ef-price-card ul {
+    font-size: 15px;
+  }
+  .ef-price-card h3 {
+    font-size: 28px;
+  }
+  .ef-price strong {
+    font-size: 50px;
+  }
+  .ef-code-card pre {
+    font-size: 12px;
+    line-height: 1.75;
+  }
+}
