@@ -130,3 +130,14 @@ Reusable pattern: after a new custom-domain attachment, distinguish public DNS p
 - Waited for the background read-only review. Outcome: run `1f374ffc-62e6-41ee-90f3-ea81f93335a3` completed in Codex thread `019f758c-2523-71d3-9b19-a8a89ddaae4d`; `/actions` remained empty. Opened the resulting task in the Codex desktop app.
 
 Reusable pattern: keep `pnpm dev:github` running, require public health plus an active matching GitHub hook before pushing, assert the provider delivery returns `202`, then correlate the delivery GUID to a verified local event and wait independently for the run's `threadId`. A PR review must remain read-only and leave `/actions` empty.
+
+## 2026-07-20 — Production console deployment and backend readiness check
+
+- Deployed the current static console with `VITE_EVENTFORGE_API_URL=https://api.eventforge.dev` to the `eventforge.dev` Worker custom domain as Cloudflare version `9ec9b09c-68ae-4e86-9052-12efb15126de`.
+- Opened `https://eventforge.dev/` in the `eventforge-e2e` agent-browser session. The production title, navigation, hero, console CTA, and demo link rendered successfully; browser console and error inspection were empty.
+- Followed **Open console** to `https://eventforge.dev/console`. The SPA fallback rendered the operations console, themes, refresh control, demo controls, event feed, connector health, approvals, run log, Forge Studio, and audit panel.
+- The console truthfully reported **Control plane offline**. Independent resolution checks confirmed `api.eventforge.dev` has no DNS record, and Cloudflare inventory confirmed the existing `eventforge-local` tunnel has no active connectors.
+- Did not create API or hook DNS records: Cloudflare documents that DNS pointing to an inactive tunnel produces error 1016, and the repository's remote entry point still rejects startup without a real authenticator while operational repositories remain process-local.
+- Evidence is stored at `workfiles/agent-browser/screenshots/eventforge-production-2026-07-20.png` and `workfiles/agent-browser/screenshots/eventforge-production-console-2026-07-20.png`.
+
+Reusable pattern: deploy the console with its intended API origin, verify the landing and SPA routes independently, then treat an offline console as a backend readiness failure. Never make production DNS resolve by pointing it at a tunnel with no connectors or by bypassing EventForge's remote-mode safety gates.
