@@ -1,11 +1,23 @@
 # EventForge Troubleshooting
 
+## Corepack is not installed
+
+The repository pins pnpm 11.5.1. Node.js 22–24 normally expose Corepack, while Node.js 25 and newer no longer bundle it. If `corepack enable` is unavailable, install the pinned package manager directly:
+
+```bash
+npm install --global pnpm@11.5.1
+pnpm --version
+```
+
+Continue only when `pnpm --version` reports `11.5.1`.
+
 ## Console reports offline or degraded
 
 1. Check `curl http://127.0.0.1:4310/health`.
 2. Start the control plane with `pnpm dev` and the console in a second terminal with `pnpm dev:console`.
 3. Confirm `VITE_EVENTFORGE_API_URL` points to the intended API and that `EVENTFORGE_ALLOWED_ORIGINS` includes the exact browser origin.
 4. A failed resource request must remain visible as degraded; do not interpret an empty panel as proof that no events or approvals exist.
+5. If the API reports `429`, check `EVENTFORGE_RATE_LIMIT_PER_MINUTE`. Local mode defaults high enough for dashboard polling; remote mode intentionally keeps the stricter default.
 
 ## EventForge MCP tools are missing
 

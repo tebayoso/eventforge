@@ -53,7 +53,9 @@ export function resolveRuntimeConfig(
   return {
     mode,
     bodyLimit: Number(environment.EVENTFORGE_BODY_LIMIT ?? 1_048_576),
-    rateLimitPerMinute: Number(environment.EVENTFORGE_RATE_LIMIT_PER_MINUTE ?? 120),
+    rateLimitPerMinute: Number(
+      environment.EVENTFORGE_RATE_LIMIT_PER_MINUTE ?? (mode === "local" ? 600 : 120),
+    ),
     agentRunsPerHour: Number(environment.EVENTFORGE_AGENT_RUNS_PER_HOUR ?? 20),
     bindHost: configuredHost,
   };
