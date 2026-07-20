@@ -1,11 +1,14 @@
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "eventforge-console",
-  "compatibility_date": "2026-07-17",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-07-20",
   "workers_dev": false,
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
     "not_found_handling": "single-page-application",
+    "run_worker_first": ["/console", "/console/*"],
   },
   "routes": [
     {

@@ -22,7 +22,7 @@ flowchart LR
   local --> approval["Approval-gated actions"]
 ```
 
-The local/private-edge path keeps Fastify, Electron, MCP stdio, Cloudflare Tunnel, and the local Codex runner. The hosted path uses Worker custom domains, D1, private R2, Queues, and Workflows; it never depends on Tunnel-backed API DNS. The isolated preview foundation is deployed, while remote multi-workspace APIs and production ingress remain fail-closed.
+The local/private-edge path keeps Fastify, Electron, MCP stdio, Cloudflare Tunnel, and the local Codex runner. The hosted path uses Worker custom domains, D1, private R2, Queues, and Workflows; it never depends on Tunnel-backed API DNS. `api.eventforge.dev` and `hooks.eventforge.dev` are attached to the production Worker with isolated production resources, while authenticated APIs, webhook ingress, and the hosted console remain fail-closed until their release gates pass.
 
 ## Included features
 
