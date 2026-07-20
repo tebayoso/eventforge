@@ -31,6 +31,7 @@ EventForge is the operational control plane for every hook, from receipt to veri
 - Source repository: https://github.com/tebayoso/eventforge
 - API catalog: https://eventforge.dev/.well-known/api-catalog
 - MCP server card: https://eventforge.dev/.well-known/mcp/server-card.json
+- Agent client manifest: https://eventforge.dev/.well-known/agent-client.json
 - Agent Skills index: https://eventforge.dev/.well-known/agent-skills/index.json
 
 ## Operating surfaces
@@ -39,7 +40,7 @@ EventForge provides a local, credential-free MCP server for development and a ho
 
 codex mcp add eventforge -- npx -y --package github:tebayoso/eventforge eventforge-mcp
 
-The hosted console is intentionally sign-in gated. Public pages and discovery metadata contain no customer payloads or secrets.
+The hosted console and remote MCP transport are intentionally sign-in gated. Public pages and discovery metadata contain no customer payloads or secrets.
 `;
 
 const robotsTxt = `User-agent: *

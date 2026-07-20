@@ -4,7 +4,15 @@ EventForge's public product documentation and discovery resources are available 
 
 ## Agent registration
 
-Use the hosted OAuth 2.1 discovery metadata at https://eventforge.dev/.well-known/openid-configuration when OAuth access is enabled for your workspace. For local development, use the credential-free MCP launcher documented in the [configuration guide](https://github.com/tebayoso/eventforge/blob/main/workfiles/CONFIGURATION.md).
+For hosted access, use the OAuth 2.1 discovery metadata at https://eventforge.dev/.well-known/openid-configuration when OAuth access is enabled for your workspace. The hosted remote MCP endpoint is currently gated while authentication and tenant isolation complete their release gates.
+
+For an immediately usable agent client, install the credential-free local MCP transport:
+
+```bash
+codex mcp add eventforge -- npx -y --package github:tebayoso/eventforge eventforge-mcp
+```
+
+The machine-readable client manifest is available at https://eventforge.dev/.well-known/agent-client.json. It includes the stdio command and the loopback Streamable HTTP alternative.
 
 The machine-readable registration contract is:
 
