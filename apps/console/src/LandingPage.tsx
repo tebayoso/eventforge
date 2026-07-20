@@ -121,6 +121,19 @@ const pricingPlans = [
       "Support SLA and operating guardrails",
     ],
   },
+  {
+    name: "Enterprise",
+    price: "Custom",
+    cadence: "annual",
+    description: "Regional, private, and compliance-ready operations.",
+    volume: "Contracted delivery bands",
+    features: [
+      "BYO storage and KMS",
+      "Residency · private networking · private edge",
+      "Custom retention and audit export",
+      "SLA, support, and usage entitlement APIs",
+    ],
+  },
 ];
 
 const roadmap = [
@@ -560,6 +573,7 @@ export default function LandingPage() {
         <div className="ef-pricing-note">
           <Braces size={16} /> One billable unit is the first external attempt for an
           event-destination pair. Retries, filters, alerts, and failed internal processing are free.
+          Team overage starts at $0.50 / 100k; Pro at $0.30 / 100k.
         </div>
       </section>
 
