@@ -10,7 +10,7 @@ Updated: 2026-07-20
 | Provider verification                | GitHub, Linear, and Sentry adapters with signatures, delivery IDs, replay checks where available, redaction, and injected mapping hooks                                   |
 | Policy and approvals                 | Resource-aware evaluator foundation; versioned approval/rejection/expiry; default approval required; execution worker not implemented                                     |
 | Codex runner                         | Read-only investigation, structured result, process-lifetime thread ID retention, and `resumeThread` support                                                              |
-| MCP package                          | Compiled stdio and Streamable HTTP server; npm pack and discovery smoke tests                                                                                             |
+| MCP package                          | Self-starting compiled stdio and loopback Streamable HTTP server; GitHub package install, npm pack, and discovery smoke tests                                             |
 | Local relay                          | On-demand MCP startup; Quick/manual named fallbacks; managed per-user tunnel client and hosted provisioner foundation                                                     |
 | Codex plugin                         | Manifest, skills, MCP registration, and health-only opt-in lifecycle hook                                                                                                 |
 | Electron                             | Compiled main/preload, constrained IPC, separate private user-data SQLite daemon, navigation controls, and package configuration                                          |
@@ -40,4 +40,9 @@ The Cloudflare-native hosted path now has isolated preview and production D1 con
 - Multi-workspace production operations and hardened owner-managed integration credentials.
 - Production D1, R2, Queue, Workflow, secret, WAF, custom-domain, synthetic-probe, staged-release, and rollback acceptance.
 
-Remote mode remains unavailable through the standard entry point while these items are incomplete. This is a security boundary, not a hidden configuration switch.
+Remote mode remains unavailable through the standard control-plane entry point
+while these items are incomplete. The local MCP package/plugin and a separately
+authenticated remote Streamable HTTP host are distinct surfaces; configuring a
+public URL does not enable unauthenticated remote mode. See
+[CONFIGURATION.md](CONFIGURATION.md) for the exact setup and verification
+paths. This is a security boundary, not a hidden configuration switch.

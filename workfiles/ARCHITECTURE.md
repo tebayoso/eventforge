@@ -19,7 +19,12 @@ flowchart LR
   relay -. "Track B wiring" .-> objectStorage["S3 artifacts + isolated Forge"]
 ```
 
-Local mode is the supported runnable mode. The API binds to loopback, local MCP uses stdio without credentials, Electron exposes a narrow preload bridge, and consequential proposals require a separate decision.
+Local mode is the supported runnable mode. The API binds to loopback, local MCP
+uses stdio without credentials, and the standalone package/plugin can embed that
+API automatically. The loopback HTTP MCP launcher is available for clients that
+cannot use stdio. Electron exposes a narrow preload bridge, and consequential
+proposals require a separate decision. See [CONFIGURATION.md](CONFIGURATION.md)
+for the supported launch modes and environment contract.
 
 Remote mode is intentionally fail-closed. Startup requires PostgreSQL, an encryption key, explicit browser origins, and an injected MFA-authenticated identity provider. The repository contains durable PostgreSQL schema and queue primitives, but the normal entry point does not enable remote mode until authentication and complete repository hydration are wired.
 

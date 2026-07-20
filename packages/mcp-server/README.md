@@ -2,6 +2,10 @@
 
 The EventForge MCP server exposes policy-gated event, memory, agent-run, approval, and connector-forging tools to Codex.
 
+See the repository's [canonical configuration guide](../../workfiles/CONFIGURATION.md)
+for zero-checkout stdio, Codex TOML, local HTTP, remote OAuth HTTP, environment
+variables, and verification steps.
+
 The package can self-start a credential-free local control plane when launched as `eventforge-mcp`. From Codex, use the public repository before the npm release:
 
 ```bash
