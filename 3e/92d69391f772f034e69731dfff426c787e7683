@@ -1,0 +1,29 @@
+apps/console/public/.well-known/mcp/server-card.json
+  s_d3746dabaeab5f::t_471e66b154b746 8-9,16-17
+apps/cloudflare/src/index.ts
+  s_d3746dabaeab5f::t_1f3255f681b9ea 205
+  s_d3746dabaeab5f::t_ae94a730c1ba04 6-22,27-29,32-43,46-52,56-58,64-66,75-76
+  s_d3746dabaeab5f::t_47f1abecf57779 23-26,30-31,44-45,53-55,59-63,67-74
+apps/console/public/.well-known/agent-client.json
+  s_d3746dabaeab5f::t_471e66b154b746 1-29
+apps/console/public/auth.md
+  s_d3746dabaeab5f::t_471e66b154b746 7-15
+apps/console/src/worker.ts
+  s_d3746dabaeab5f::t_471e66b154b746 34,43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "3e92d69391f772f034e69731dfff426c787e7683",
+  "prompts": {},
+  "sessions": {
+    "s_d3746dabaeab5f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7a89-a082-73c2-a270-f4d8527caa4c",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
