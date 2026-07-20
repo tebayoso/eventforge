@@ -3,6 +3,77 @@ import { encryptPayload, sha256, verifyHmac } from "./crypto.js";
 type IngestMessage = { eventId: string; workspaceId: string; idempotencyKey: string };
 type Surface = "api" | "hooks" | "preview" | "unknown";
 
+const MCP_TOOLS = [
+  "listen_for_webhook",
+  "emit_event",
+  "query_memory",
+  "spawn_subagent",
+  "approve_action",
+  "forge_mcp",
+  "approve_forge",
+  "list_events",
+  "list_workflows",
+].map((name) => ({
+  name,
+  description: `EventForge ${name.replaceAll("_", " ")} tool.`,
+  inputSchema: { type: "object", properties: {}, additionalProperties: true },
+}));
+
+function mcpJson(id: unknown, result: unknown): Response {
+  return Response.json(
+    { jsonrpc: "2.0", id, result },
+    { headers: { "mcp-session-id": "eventforge-demo" } },
+  );
+}
+
+async function mcp(request: Request): Promise<Response> {
+  if (request.method !== "POST")
+    return new Response(null, { status: 405, headers: { allow: "POST" } });
+  let message: { id?: unknown; method?: string; params?: Record<string, unknown> };
+  try {
+    message = (await request.json()) as typeof message;
+  } catch {
+    return problem(400, "INVALID_JSON", "MCP request must be valid JSON.");
+  }
+  if (message.method === "notifications/initialized") return new Response(null, { status: 202 });
+  if (message.method === "initialize") {
+    return mcpJson(message.id, {
+      protocolVersion: "2025-06-18",
+      capabilities: { tools: {} },
+      serverInfo: { name: "eventforge", version: "0.1.0" },
+      instructions:
+        "Read-only demo MCP surface. Authenticate before customer-scoped operations are enabled.",
+    });
+  }
+  if (message.method === "tools/list") return mcpJson(message.id, { tools: MCP_TOOLS });
+  if (message.method === "tools/call") {
+    const name = String(message.params?.name ?? "");
+    if (["query_memory", "list_events", "list_workflows"].includes(name)) {
+      return mcpJson(message.id, {
+        content: [
+          { type: "text", text: JSON.stringify({ workspaceId: "demo-workspace", items: [] }) },
+        ],
+      });
+    }
+    return Response.json(
+      {
+        jsonrpc: "2.0",
+        id: message.id ?? null,
+        error: { code: -32001, message: "Authentication required for this operation." },
+      },
+      { status: 401 },
+    );
+  }
+  return Response.json(
+    {
+      jsonrpc: "2.0",
+      id: message.id ?? null,
+      error: { code: -32601, message: "Method not found." },
+    },
+    { status: 404 },
+  );
+}
+
 export function surfaceFor(hostname: string, environment: string): Surface {
   if (environment !== "production") return "preview";
   if (hostname === "api.eventforge.dev") return "api";
@@ -131,6 +202,7 @@ export default {
     const url = new URL(request.url);
     const surface = surfaceFor(url.hostname, env.ENVIRONMENT);
     try {
+      if (url.pathname === "/mcp" && url.hostname === "api.eventforge.dev") return mcp(request);
       if (surface === "unknown") return problem(404, "NOT_FOUND", "Route not found.");
       if (request.method === "GET" && url.pathname === "/health")
         return Response.json({
