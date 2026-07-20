@@ -149,6 +149,13 @@ disable this check to expose a local process to the internet.
 For a hosted or private deployment, the MCP URL must be HTTPS and terminate at
 an OAuth-aware proxy or EventForge's OAuth 2.1 authorization layer:
 
+```bash
+codex mcp add eventforge-remote --url https://mcp.example.com/mcp
+codex mcp login eventforge-remote
+```
+
+The equivalent configuration is:
+
 ```toml
 [mcp_servers.eventforge_remote]
 url = "https://mcp.example.com/mcp"
