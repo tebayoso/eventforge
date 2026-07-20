@@ -24,7 +24,8 @@ function registerWebMcpTool() {
     description: "Return the public EventForge installation and operating-surface links.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
     execute: async () => ({
-      install: "codex mcp add eventforge -- npx -y --package github:tebayoso/eventforge eventforge-mcp",
+      install:
+        "codex mcp add eventforge -- npx -y --package github:tebayoso/eventforge eventforge-mcp",
       docs: "https://github.com/tebayoso/eventforge/blob/main/workfiles/CONFIGURATION.md",
       repository: "https://github.com/tebayoso/eventforge",
     }),

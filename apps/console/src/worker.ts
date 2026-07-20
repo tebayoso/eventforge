@@ -154,17 +154,29 @@ export default {
 
     if (url.pathname === "/robots.txt") {
       return new Response(robotsTxt, {
-        headers: { ...securityHeaders, "cache-control": "public, max-age=300", "content-type": "text/plain; charset=utf-8" },
+        headers: {
+          ...securityHeaders,
+          "cache-control": "public, max-age=300",
+          "content-type": "text/plain; charset=utf-8",
+        },
       });
     }
     if (["/sitemap.xml", "/sitemap-index.xml", "/sitemap_index.xml"].includes(url.pathname)) {
       return new Response(sitemapXml, {
-        headers: { ...securityHeaders, "cache-control": "public, max-age=300", "content-type": "application/xml; charset=utf-8" },
+        headers: {
+          ...securityHeaders,
+          "cache-control": "public, max-age=300",
+          "content-type": "application/xml; charset=utf-8",
+        },
       });
     }
     if (url.pathname === "/.well-known/oauth-authorization-server") {
       return new Response(oauthAuthorizationServer, {
-        headers: { ...securityHeaders, "cache-control": "public, max-age=300", "content-type": "application/json; charset=utf-8" },
+        headers: {
+          ...securityHeaders,
+          "cache-control": "public, max-age=300",
+          "content-type": "application/json; charset=utf-8",
+        },
       });
     }
 
@@ -197,6 +209,10 @@ export default {
     if (url.pathname === "/.well-known/oauth-authorization-server") {
       headers.set("content-type", "application/json; charset=utf-8");
     }
-    return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
   },
 };
