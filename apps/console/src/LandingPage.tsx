@@ -573,7 +573,8 @@ export default function LandingPage() {
         <div className="ef-pricing-note">
           <Braces size={16} /> One billable unit is the first external attempt for an
           event-destination pair. Retries, filters, alerts, and failed internal processing are free.
-          Team overage starts at $0.50 / 100k; Pro at $0.30 / 100k.
+          Team overage starts at $0.50 / 100k; Pro at $0.30 / 100k. Preview packaging; final prices
+          are validated with design partners before public billing.
         </div>
       </section>
 
