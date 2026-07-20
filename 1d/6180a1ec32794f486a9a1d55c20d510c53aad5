@@ -1,0 +1,23 @@
+apps/console/src/worker.ts
+  s_d3746dabaeab5f::t_6675252f20bc50 157-161,166-170,175-179,212-216
+apps/console/src/main.tsx
+  s_d3746dabaeab5f::t_6675252f20bc50 27-28
+apps/console/src/worker.test.ts
+  s_d3746dabaeab5f::t_6675252f20bc50 22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "1d6180a1ec32794f486a9a1d55c20d510c53aad5",
+  "prompts": {},
+  "sessions": {
+    "s_d3746dabaeab5f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7a89-a082-73c2-a270-f4d8527caa4c",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
