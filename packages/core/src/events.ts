@@ -133,6 +133,8 @@ export function normalizeEvent(input: {
     receivedAt: now,
     signatureStatus: input.signatureStatus,
     dedupeKey: dedupeFor(input.provider, input.payload, input.deliveryId),
+    providerDeliveryId: input.deliveryId,
+    payloadStorage: "inline",
     payload: redacted.value as Record<string, unknown>,
     redactions: redacted.paths,
   };

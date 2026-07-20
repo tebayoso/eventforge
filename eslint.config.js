@@ -15,6 +15,7 @@ export default tseslint.config(
       "**/release/**",
       "plugins/eventforge/server/**",
       "**/.wrangler/**",
+      "**/worker-configuration.d.ts",
       "**/workfiles/**",
     ],
   },

@@ -1,0 +1,89 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "eventforge-cloud-preview",
+  "account_id": "b9f5ebc6c05975fab56f056782461b77",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-20",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "preview_urls": false,
+  "upload_source_maps": true,
+  "observability": { "enabled": true, "head_sampling_rate": 1 },
+  "vars": {
+    "ENVIRONMENT": "preview",
+    "PUBLIC_INGRESS_ENABLED": "false",
+    "CANARY_WORKSPACE_ID": "eventforge-canary",
+    "CANARY_PROJECT_ID": "eventforge-canary",
+    "CANARY_ENVIRONMENT_ID": "00000000-0000-4000-8000-000000000001",
+  },
+  "secrets": { "required": ["CANARY_WEBHOOK_SECRET", "PAYLOAD_MASTER_KEY"] },
+  "d1_databases": [
+    {
+      "binding": "CONTROL_DB",
+      "database_name": "eventforge-control-preview",
+      "database_id": "1fab87e0-025d-4ada-a298-df78412b974e",
+      "migrations_dir": "migrations/control",
+    },
+    {
+      "binding": "EVENTS_DB",
+      "database_name": "eventforge-events-preview",
+      "database_id": "a119452c-879e-43db-a828-7a7e7a2fba76",
+      "migrations_dir": "migrations/events",
+    },
+  ],
+  "r2_buckets": [{ "binding": "PAYLOADS", "bucket_name": "eventforge-payloads-preview" }],
+  "queues": {
+    "producers": [{ "binding": "INGEST_QUEUE", "queue": "eventforge-ingest-preview" }],
+    "consumers": [
+      {
+        "queue": "eventforge-ingest-preview",
+        "max_batch_size": 10,
+        "max_retries": 5,
+        "dead_letter_queue": "eventforge-ingest-dlq-preview",
+      },
+    ],
+  },
+  "triggers": { "crons": ["*/5 * * * *"] },
+  "env": {
+    "production": {
+      "name": "eventforge-cloud-production",
+      "workers_dev": false,
+      "routes": [
+        { "pattern": "api.eventforge.dev", "custom_domain": true },
+        { "pattern": "hooks.eventforge.dev", "custom_domain": true },
+      ],
+      "vars": {
+        "ENVIRONMENT": "production",
+        "PUBLIC_INGRESS_ENABLED": "false",
+        "CANARY_WORKSPACE_ID": "eventforge-canary",
+        "CANARY_PROJECT_ID": "eventforge-canary",
+        "CANARY_ENVIRONMENT_ID": "00000000-0000-4000-8000-000000000001",
+      },
+      "secrets": { "required": ["CANARY_WEBHOOK_SECRET", "PAYLOAD_MASTER_KEY"] },
+      "d1_databases": [
+        {
+          "binding": "CONTROL_DB",
+          "database_name": "eventforge-control-production",
+          "migrations_dir": "migrations/control",
+        },
+        {
+          "binding": "EVENTS_DB",
+          "database_name": "eventforge-events-production",
+          "migrations_dir": "migrations/events",
+        },
+      ],
+      "r2_buckets": [{ "binding": "PAYLOADS", "bucket_name": "eventforge-payloads-production" }],
+      "queues": {
+        "producers": [{ "binding": "INGEST_QUEUE", "queue": "eventforge-ingest-production" }],
+        "consumers": [
+          {
+            "queue": "eventforge-ingest-production",
+            "max_batch_size": 10,
+            "max_retries": 5,
+            "dead_letter_queue": "eventforge-ingest-dlq-production",
+          },
+        ],
+      },
+    },
+  },
+}
