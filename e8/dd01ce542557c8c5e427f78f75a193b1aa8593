@@ -1,0 +1,45 @@
+.env.example
+  s_d3746dabaeab5f::t_82ee44f1c437d8 1-12
+workfiles/CONTRIBUTING.md
+  s_d3746dabaeab5f::t_c1922acb92aa04 16-20
+plugins/eventforge/.mcp.json
+  s_d3746dabaeab5f::t_625427ce0b66b9 5,7-8
+README.md
+  s_d3746dabaeab5f::t_49ac47d3d44ef2 225
+  s_d3746dabaeab5f::t_c1922acb92aa04 67-70
+packages/mcp-server/scripts/plugin-smoke.mjs
+  s_d3746dabaeab5f::t_8a9031ca06d6d9 21-23
+plugins/eventforge/README.md
+  s_d3746dabaeab5f::t_c1922acb92aa04 5-8,16
+packages/mcp-server/README.md
+  s_d3746dabaeab5f::t_c1922acb92aa04 5-8
+workfiles/STATUS.md
+  s_d3746dabaeab5f::t_49ac47d3d44ef2 13,43-48
+plugins/eventforge/server/eventforge-mcp-http.cjs
+  s_d3746dabaeab5f::t_fe0e1fb293719f 560
+plugins/eventforge/server/eventforge-standalone.cjs
+  s_d3746dabaeab5f::t_fe0e1fb293719f 513
+workfiles/CONFIGURATION.md
+  s_d3746dabaeab5f::t_c4fd538335864d 1-8,16-175,187-189,199-205,215-264
+  s_d3746dabaeab5f::t_7d71bdff3c3095 9-15,176-186,190-198,206-214
+workfiles/TROUBLESHOOTING.md
+  s_d3746dabaeab5f::t_c1922acb92aa04 3-6,28-40
+workfiles/ARCHITECTURE.md
+  s_d3746dabaeab5f::t_49ac47d3d44ef2 22-27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "e8dd01ce542557c8c5e427f78f75a193b1aa8593",
+  "prompts": {},
+  "sessions": {
+    "s_d3746dabaeab5f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7a89-a082-73c2-a270-f4d8527caa4c",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
