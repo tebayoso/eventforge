@@ -1,0 +1,15 @@
+{
+  "serverInfo": {
+    "name": "EventForge",
+    "version": "0.1.0",
+    "description": "Policy-gated webhook operations, investigations, approvals, and evidence for Codex and other agents."
+  },
+  "endpoint": "https://api.eventforge.dev/mcp",
+  "capabilities": {
+    "tools": true,
+    "resources": true,
+    "prompts": false
+  },
+  "documentation": "https://github.com/tebayoso/eventforge/blob/main/packages/mcp-server/README.md",
+  "localInstall": "codex mcp add eventforge -- npx -y --package github:tebayoso/eventforge eventforge-mcp"
+}

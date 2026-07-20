@@ -1,0 +1,6 @@
+{
+  "resource": "https://eventforge.dev",
+  "authorization_servers": ["https://eventforge.dev"],
+  "bearer_methods_supported": ["header"],
+  "scopes_supported": ["eventforge:read", "eventforge:operate", "eventforge:approve"]
+}

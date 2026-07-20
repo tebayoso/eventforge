@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
+  "skills": [
+    {
+      "name": "eventforge-operations",
+      "type": "skill-md",
+      "description": "Inspect verified EventForge events and operate webhook incidents within policy.",
+      "url": "https://eventforge.dev/.well-known/agent-skills/eventforge-operations/SKILL.md",
+      "digest": "sha256:15e53917ac06823d6b4b8db72b1f78f79ba1641858813cb38fcd02e3d00fec8f"
+    }
+  ]
+}

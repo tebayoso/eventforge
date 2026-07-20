@@ -211,3 +211,13 @@ Reusable pattern: when adding a third-party proof badge, update both the HTML CS
 - Deployed the follow-up static Worker as Cloudflare version `e9df48a2-0095-48bc-8d06-b7e6fda207fc`.
 - Opened `https://eventforge.dev/?release=33330e0` to bypass the browser's prior asset cache and verified Free, Team, Pro, Business, and Enterprise headings, live GitHub stars, and no browser errors.
 - Screenshot captured at `workfiles/agent-browser/screenshots/eventforge-production-landing-enterprise.png`.
+
+## 2026-07-20 — IsItAgentReady production audit
+
+- Opened `https://isitagentready.com/`, entered `https://eventforge.dev/`, and ran the public Cloudflare agent-readiness scan.
+- Final result: **Level 5 — Agent-Native**. Passing checks include robots.txt and AI rules, sitemap, Link headers, Markdown negotiation, Content Signals, API Catalog, OAuth/OIDC discovery, OAuth Protected Resource metadata, Auth.md registration metadata, MCP Server Card, A2A Agent Card, Agent Skills index, and WebMCP.
+- The only failing enabled check is DNS-AID. The authoritative zone has no `_index._agents.eventforge.dev`, `_mcp._agents.eventforge.dev`, or `_a2a._agents.eventforge.dev` SVCB/HTTPS/TXT entrypoint records. This requires Cloudflare DNS write access; the current Wrangler identity exposes zone read but not DNS edit permission.
+- Independent production checks confirmed `https://eventforge.dev/` returns Markdown when requested with `Accept: text/markdown`, publishes the machine-readable discovery documents, and includes agent-useful Link headers. `https://eventforge.dev/console` remains a deliberate `503` sign-in gate.
+- Browser error inspection was empty. Final score evidence is captured at `workfiles/agent-browser/screenshots/eventforge-agent-ready-final.png`.
+
+Reusable pattern: run the evaluator after deployment, inspect its JSON evidence rather than relying on the headline score, fix HTTP discovery contracts in the Worker, and treat DNS-AID as a separate authoritative-zone change that cannot be completed with a zone-read-only token.
