@@ -11,7 +11,11 @@ export async function runStdioServer(api = new EventForgeApi()): Promise<void> {
 }
 
 const entrypoint = process.argv[1];
-if (entrypoint && realpathSync(entrypoint) === realpathSync(fileURLToPath(import.meta.url))) {
+if (
+  entrypoint &&
+  import.meta.url &&
+  realpathSync(entrypoint) === realpathSync(fileURLToPath(import.meta.url))
+) {
   runStdioServer().catch((error: unknown) => {
     console.error("EventForge MCP server failed:", error);
     process.exitCode = 1;

@@ -20,21 +20,24 @@
     "README.md"
   ],
   "bin": {
-    "eventforge-mcp": "./dist/index.js",
-    "eventforge-mcp-http": "./dist/http.js"
+    "eventforge-mcp": "./dist/standalone.cjs",
+    "eventforge-mcp-http": "./dist/http-standalone.cjs"
   },
   "engines": {
     "node": ">=20.11"
   },
   "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/tebayoso/eventforge.git",
     "directory": "packages/mcp-server"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
-    "bundle:plugin": "esbuild src/index.ts --bundle --minify --platform=node --format=esm --target=node20 --legal-comments=none --outfile=../../plugins/eventforge/server/eventforge-mcp.mjs",
+    "build": "tsc -p tsconfig.build.json && node scripts/build-bundles.mjs package",
+    "bundle:plugin": "node scripts/build-bundles.mjs plugin",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src test scripts --max-warnings 0",
     "pretest": "pnpm run build",

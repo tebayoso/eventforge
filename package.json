@@ -3,6 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "bin": {
+    "eventforge-mcp": "./plugins/eventforge/server/eventforge-standalone.cjs",
+    "eventforge-mcp-http": "./plugins/eventforge/server/eventforge-mcp-http.cjs"
+  },
+  "files": [
+    "plugins/eventforge/server/eventforge-standalone.cjs",
+    "plugins/eventforge/server/eventforge-mcp-http.cjs",
+    "README.md",
+    "LICENSE"
+  ],
   "packageManager": "pnpm@11.5.1",
   "scripts": {
     "build": "pnpm -r run build",
