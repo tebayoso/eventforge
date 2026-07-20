@@ -2,10 +2,12 @@
 
 ## Development setup
 
-Use Node.js 22.17 or newer and the Corepack-managed pnpm version declared in the root package. CI validates Node.js 22 and 24. From a clean checkout:
+Use Node.js 22.17 or newer and pnpm 11.5.1 as declared in the root package. CI validates Node.js 22 and 24. Enable the pinned pnpm version with Corepack when available; Node.js 25 and newer can install it directly with `npm install --global pnpm@11.5.1`.
+
+From a clean checkout:
 
 ```bash
-corepack enable
+corepack enable && corepack prepare pnpm@11.5.1 --activate # skip when using the npm fallback
 pnpm install --frozen-lockfile
 cp .env.example .env
 pnpm quality

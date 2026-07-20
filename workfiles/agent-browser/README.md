@@ -172,3 +172,15 @@ Reusable pattern: test protected application shells in a clean browser context, 
 - Evidence is stored at `workfiles/agent-browser/screenshots/production-console-auth-gate.png`, `production-api-health.png`, and `production-hooks-health.png`.
 
 Reusable pattern: attach originless Worker custom domains through Wrangler, verify at three public resolvers plus TLS, isolate API and hook routes by hostname, and treat a local negative-DNS cache separately from authoritative deployment state.
+
+## 2026-07-20 — Fresh-clone local acceptance
+
+- Cloned `origin/main` at `a741795` into an empty temporary directory, copied only `.env.example`, installed with the frozen lockfile, and passed the complete `pnpm quality` release gate.
+- Started the default credential-free control plane and console from that clone. Opened `http://localhost:5173/`, followed **Open console**, and confirmed the console initially reported **Control plane online** with no browser errors.
+- Ran **Run GitHub CI demo**, opened the pending remediation proposal, and selected **Approve action**. Outcome: the run completed and the console confirmed the decision was recorded without executing a write.
+- Created and reviewed a Forge Studio draft, inspected the generated artifact dialog, and approved it. Outcome: the console explicitly kept installation as a separate action; no connector was executed or hot-loaded.
+- Reloaded `/console` under an iPhone 14 viewport. The API remained alive, but the console became offline because the seven-resource polling cycle and normal interactions exhausted the shared 120-request/minute limiter. Raised only the loopback-local default to 600 requests/minute and retained the 120-request remote default; added a regression test for this boundary.
+- Repeated the mobile reload after the fix, sent 160 additional loopback requests inside one minute, and waited through another polling cycle. All 160 requests returned `200` and the console remained **Control plane online**.
+- Browser console output contained only Vite/React development notices. Evidence is stored at `workfiles/agent-browser/screenshots/fresh-installer-mobile.png`.
+
+Reusable pattern: validate installation from an empty remote clone, not an existing working tree; exercise enough polling and mutations to cross at least one refresh boundary; and distinguish a live API from a UI that has entered a rate-limited degraded state.

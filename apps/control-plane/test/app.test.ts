@@ -584,6 +584,23 @@ describe("control plane", () => {
     expect(limiter.consume("actor", 2_000)).toMatchObject({ allowed: true });
   });
 
+  it("keeps local dashboard polling below the default request limit without weakening remote", () => {
+    expect(resolveRuntimeConfig({ EVENTFORGE_HOST: "localhost" }, false).rateLimitPerMinute).toBe(
+      600,
+    );
+    expect(
+      resolveRuntimeConfig(
+        {
+          EVENTFORGE_RUNTIME_MODE: "remote",
+          DATABASE_URL: "postgres://example",
+          EVENTFORGE_ENCRYPTION_KEY: "secret",
+          EVENTFORGE_ALLOWED_ORIGINS: "https://eventforge.dev",
+        },
+        true,
+      ).rateLimitPerMinute,
+    ).toBe(120);
+  });
+
   it("returns explicit failures for malformed and missing route resources", async () => {
     const store = new EventForgeStore();
     const app = await createApp({ store, runner, persistAudit: false });

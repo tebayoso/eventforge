@@ -68,7 +68,15 @@ The complete Devpost-ready title, story, tags, installation method, and final-su
 
 ## Quick start
 
-Prerequisites: Node.js 22.17 or newer, Corepack, and pnpm 11.5.1. Docker is optional for PostgreSQL/MinIO. The live GitHub flow additionally needs authenticated `gh` and Codex CLIs, `cloudflared`, and repository webhook-administration permission.
+Prerequisites: Node.js 22.17 or newer and pnpm 11.5.1. Docker is optional for PostgreSQL/MinIO. The live GitHub flow additionally needs authenticated `gh` and Codex CLIs, `cloudflared`, and repository webhook-administration permission.
+
+Use the repository-pinned pnpm version. Node.js 22–24 normally provide Corepack; Node.js 25 and newer require a separate package-manager install:
+
+```bash
+corepack enable && corepack prepare pnpm@11.5.1 --activate
+# If `corepack` is not installed:
+npm install --global pnpm@11.5.1
+```
 
 Install and start the credential-free demo control plane:
 
