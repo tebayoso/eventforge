@@ -195,15 +195,60 @@ MCP endpoint. The URL must point to a server exposing the MCP `/mcp` route.
 
 ### Local control plane and console
 
-| Variable                     | Meaning                                                      |
-| ---------------------------- | ------------------------------------------------------------ |
-| `PORT`                       | Fastify API port; normally `4310`                            |
-| `EVENTFORGE_RUNTIME_MODE`    | `local` for the supported local path                         |
-| `EVENTFORGE_PUBLIC_URL`      | Public/base URL used by local integrations                   |
-| `EVENTFORGE_ALLOWED_ORIGINS` | Exact comma-separated browser origins                        |
-| `EVENTFORGE_ENCRYPTION_KEY`  | Local secret used for protected state; keep it outside Git   |
-| `DATABASE_URL`               | Optional PostgreSQL connection for local/private deployments |
-| `VITE_EVENTFORGE_API_URL`    | Console build-time API URL                                   |
+| Variable                     | Meaning                                                                                         |
+| ---------------------------- | ----------------------------------------------------------------------------------------------- |
+| `PORT`                       | Fastify API port; normally `4310`                                                               |
+| `EVENTFORGE_RUNTIME_MODE`    | `local` for the supported local path                                                            |
+| `EVENTFORGE_PUBLIC_URL`      | Public/base URL used by local integrations                                                      |
+| `EVENTFORGE_ALLOWED_ORIGINS` | Exact comma-separated browser origins                                                           |
+| `EVENTFORGE_ENCRYPTION_KEY`  | Local secret used for protected state; keep it outside Git                                      |
+| `DATABASE_URL`               | Optional PostgreSQL connection for local/private deployments                                    |
+| `VITE_EVENTFORGE_API_URL`    | Console build-time API URL                                                                      |
+| `VITE_WAITLIST_API_URL`      | Optional waitlist API override; production defaults to `https://api.eventforge.dev/v1/waitlist` |
+| `VITE_POSTHOG_KEY`           | Public PostHog project API key for anonymous product events                                     |
+| `VITE_POSTHOG_HOST`          | PostHog capture host; default `https://us.i.posthog.com`                                        |
+| `VITE_GA_MEASUREMENT_ID`     | GA4 web stream Measurement ID, normally `G-XXXXXXXXXX`                                          |
+
+### Concealed waitlist and analytics
+
+The public landing page does not advertise the waitlist in its navigation. The
+direct route is:
+
+```text
+https://eventforge.dev/waitlist
+```
+
+The form posts only a normalized email, source, and consent timestamp to the
+public Cloudflare API surface at `/v1/waitlist`. It uses a honeypot,
+exact-origin CORS, D1 uniqueness, and a five-submissions-per-IP-per-hour
+limit. Emails are stored in the production `eventforge-control` D1 database;
+payloads are never accepted by this route.
+
+For production analytics, set the public project identifiers before building
+the console (these are not secret credentials):
+
+```bash
+export VITE_POSTHOG_KEY="phc_..."
+export VITE_POSTHOG_HOST="https://us.i.posthog.com"
+export VITE_GA_MEASUREMENT_ID="G-XXXXXXXXXX"
+pnpm --filter @eventforge/console deploy:cloudflare
+```
+
+EventBridge emits anonymous `page_view`, `waitlist_submit_started`,
+`waitlist_submitted`, and `waitlist_submit_failed` events. Email addresses and
+form payloads are never sent to PostHog or Google Analytics. Create the
+PostHog project and GA4 web stream in their respective accounts, then provide
+the resulting public IDs through the build environment; do not commit them to
+source control.
+
+The API worker's D1 migration and rate-limit secret are provisioned with:
+
+```bash
+npx wrangler d1 migrations apply eventforge-control-production --remote \
+  --config apps/cloudflare/wrangler.jsonc --env production
+openssl rand -base64 32 | npx wrangler secret put WAITLIST_RATE_LIMIT_SECRET \
+  --config apps/cloudflare/wrangler.jsonc --env production
+```
 
 ### Provider and relay settings
 

@@ -244,3 +244,15 @@ Reusable pattern: treat monospace labels and card metadata as secondary—not a 
 - Screenshots are stored at `workfiles/agent-browser/screenshots/eventbridge-brand-production-desktop.png` and `workfiles/agent-browser/screenshots/eventbridge-brand-production-mobile.png`.
 
 Reusable pattern: separate visible product branding from stable protocol/package identifiers, and verify the actual deployed favicon, metadata, responsive mark, and browser console rather than only checking source files.
+
+## 2026-07-21 — Concealed waitlist and production analytics hooks
+
+- Added a direct, non-indexed waitlist route at `https://eventforge.dev/waitlist`; it is intentionally absent from primary navigation and sitemap.
+- Verified the live page at 1440×1000 and 390×844 with agent-browser. The final dark-theme layout is readable, responsive, and keeps the honeypot out of the accessibility tree. Browser error inspection was empty.
+- Screenshots are stored at `workfiles/agent-browser/screenshots/eventforge-waitlist-production-desktop-v2.png` and `workfiles/agent-browser/screenshots/eventforge-waitlist-production-mobile-v2.png`.
+- Verified `x-robots-tag: noindex, nofollow, noarchive` and `cache-control: no-store` on the concealed route.
+- Verified the production API waitlist contract: allowed-origin preflight returns `204`, invalid email returns structured `400`, honeypot submissions return a non-persisting `202`, a valid test signup persists once in D1, duplicates return `alreadyRegistered: true`, and the test row was removed after acceptance.
+- Added optional anonymous PostHog capture and GA4 `gtag` instrumentation through build-time public IDs. No PostHog project key or GA4 Measurement ID exists in the current local/Cloudflare configuration, so production is safely opt-in until those account values are supplied.
+- API Worker deployed as `414c367b-2768-4bd1-9b3f-06c2b7d6c390`; console Worker deployed as `f2cc68cc-3f7e-47e9-b2d6-24e88d795994`.
+
+Reusable pattern: keep a marketing capture route out of discovery, enforce origin/consent/honeypot/rate limits at the edge, and test persistence plus duplicate behavior rather than treating a successful browser response as proof of storage.

@@ -191,12 +191,17 @@ export default {
       url.pathname !== "/.well-known/api-catalog" &&
       url.pathname !== "/.well-known/openid-configuration" &&
       url.pathname !== "/.well-known/oauth-authorization-server" &&
-      url.pathname !== "/.well-known/oauth-protected-resource"
+      url.pathname !== "/.well-known/oauth-protected-resource" &&
+      url.pathname !== "/waitlist"
     ) {
       return response;
     }
 
     const headers = new Headers(response.headers);
+    if (url.pathname === "/waitlist") {
+      headers.set("x-robots-tag", "noindex, nofollow, noarchive");
+      headers.set("cache-control", "no-store");
+    }
     if (url.pathname === "/") headers.set("link", homepageLinks);
     if (url.pathname === "/.well-known/api-catalog") {
       headers.set("content-type", "application/linkset+json; charset=utf-8");
