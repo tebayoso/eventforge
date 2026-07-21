@@ -1,0 +1,52 @@
+apps/console/src/App.tsx
+  s_d3746dabaeab5f::t_2f87e0562fddfa 138,301
+apps/console/public/auth.md
+  s_d3746dabaeab5f::t_2f87e0562fddfa 1,3
+apps/console/public/.well-known/mcp/server-card.json
+  s_d3746dabaeab5f::t_2f87e0562fddfa 3,5
+apps/console/src/LandingPage.test.tsx
+  s_d3746dabaeab5f::t_2f87e0562fddfa 13
+apps/console/public/.well-known/agent-skills/index.json
+  s_d3746dabaeab5f::t_2f87e0562fddfa 7
+apps/console/src/styles.css
+  s_d3746dabaeab5f::t_2f87e0562fddfa 541,548-551
+apps/console/public/.well-known/agent-card.json
+  s_d3746dabaeab5f::t_2f87e0562fddfa 2,18
+apps/console/src/worker.ts
+  s_d3746dabaeab5f::t_2f87e0562fddfa 23,25,39,143
+apps/console/index.html
+  s_d3746dabaeab5f::t_2f87e0562fddfa 11
+  s_d3746dabaeab5f::t_c7cdc8db03ebda 16,26,32
+apps/console/src/main.tsx
+  s_d3746dabaeab5f::t_2f87e0562fddfa 24
+apps/console/src/api.ts
+  s_d3746dabaeab5f::t_2f87e0562fddfa 87
+apps/console/public/.well-known/agent-skills/eventforge-operations/SKILL.md
+  s_d3746dabaeab5f::t_2f87e0562fddfa 3,6,8
+apps/console/src/worker.test.ts
+  s_d3746dabaeab5f::t_2f87e0562fddfa 19
+workfiles/agent-browser/README.md
+  s_d3746dabaeab5f::t_430ff1500e4819 236-246
+apps/console/public/.well-known/agent-client.json
+  s_d3746dabaeab5f::t_2f87e0562fddfa 2,5
+apps/console/public/eventbridge-mark.svg
+  s_d3746dabaeab5f::t_7802963117805c 1-9
+apps/console/src/LandingPage.tsx
+  s_d3746dabaeab5f::t_ebd39fe576c9c5 230,235,276,278,317,319,348,375,404,408,496,558,586,627,648,665
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "a7be0168e0d44da9867c430065de4c9e2b090705",
+  "prompts": {},
+  "sessions": {
+    "s_d3746dabaeab5f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7a89-a082-73c2-a270-f4d8527caa4c",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
