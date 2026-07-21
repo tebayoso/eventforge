@@ -233,3 +233,14 @@ Reusable pattern: treat monospace labels and card metadata as secondary—not a 
 
 - Deployed the readability pass to `https://eventforge.dev/` as Cloudflare version `6e3ec32d-cdaf-48df-b4ea-1f7b40d6dc40`, then reopened it with a cache-busting query at desktop and mobile widths.
 - Production screenshots are stored at `workfiles/agent-browser/screenshots/eventforge-readable-production-desktop.png` and `workfiles/agent-browser/screenshots/eventforge-readable-production-mobile.png`; browser error inspection remained empty.
+
+## 2026-07-21 — EventBridge brand deployment
+
+- Rebranded the public product experience to **EventBridge** with a new accessible SVG bridge/signal mark at `/eventbridge-mark.svg`.
+- Wired the mark into the landing-page header and favicon, updated the console header, page title, social metadata, agent markdown, Auth.md, MCP server card, A2A card, agent-client manifest, and agent-skill descriptions.
+- Preserved `eventforge.dev`, the `eventforge` package/CLI command, API hostnames, and discovery identifiers that existing clients rely on. The public brand is EventBridge; EventForge remains the compatibility namespace.
+- Deployed `eventforge-console` as Cloudflare version `68df6e51-cbfa-4d0d-916f-b7ef3b28a33a`.
+- Opened `https://eventforge.dev/?brand=eventbridge` with agent-browser at 1440×1000 and 390×844. The live title is `EventBridge — The operational control plane for every hook`, the bridge mark is visible in both layouts, and browser error inspection was empty.
+- Screenshots are stored at `workfiles/agent-browser/screenshots/eventbridge-brand-production-desktop.png` and `workfiles/agent-browser/screenshots/eventbridge-brand-production-mobile.png`.
+
+Reusable pattern: separate visible product branding from stable protocol/package identifiers, and verify the actual deployed favicon, metadata, responsive mark, and browser console rather than only checking source files.

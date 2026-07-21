@@ -1,8 +1,8 @@
 {
   "serverInfo": {
-    "name": "EventForge",
+    "name": "EventBridge",
     "version": "0.1.0",
-    "description": "Policy-gated webhook operations, investigations, approvals, and evidence for Codex and other agents."
+    "description": "EventBridge provides policy-gated webhook operations, investigations, approvals, and evidence for Codex and other agents."
   },
   "endpoint": "https://api.eventforge.dev/mcp",
   "status": "hosted-gated",

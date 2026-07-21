@@ -135,7 +135,7 @@ export default function App() {
             <Activity size={21} />
           </div>
           <div>
-            <h1 className="font-semibold tracking-tight">EventForge</h1>
+            <h1 className="font-semibold tracking-tight">EventBridge</h1>
             <p className="brand-subtitle text-xs">Autonomous engineering operations</p>
           </div>
         </div>
@@ -298,7 +298,7 @@ export default function App() {
           >
             <ResourceBoundary
               resource={resources.actions}
-              empty="No pending writes. EventForge will never auto-approve a new workflow."
+              empty="No pending writes. EventBridge will never auto-approve a new workflow."
             >
               <div className="space-y-3">
                 {pending.map((action) => (

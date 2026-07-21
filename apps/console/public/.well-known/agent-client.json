@@ -1,8 +1,8 @@
 {
-  "name": "EventForge",
+  "name": "EventBridge",
   "version": "0.1.0",
   "status": "local-ready-hosted-gated",
-  "description": "Client bootstrap manifest for EventForge's policy-gated MCP tools.",
+  "description": "Client bootstrap manifest for EventBridge's policy-gated MCP tools. The EventForge package and command remain stable for compatibility.",
   "transports": [
     {
       "type": "stdio",
