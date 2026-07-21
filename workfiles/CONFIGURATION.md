@@ -224,8 +224,10 @@ exact-origin CORS, D1 uniqueness, and a five-submissions-per-IP-per-hour
 limit. Emails are stored in the production `eventforge-control` D1 database;
 payloads are never accepted by this route.
 
-For production analytics, set the public project identifiers before building
-the console (these are not secret credentials):
+Production is configured through the public runtime file
+`apps/console/public/analytics-config.json` (these are not secret credentials).
+For a different project or preview environment, override the values at build
+time:
 
 ```bash
 export VITE_POSTHOG_KEY="phc_..."
@@ -237,9 +239,8 @@ pnpm --filter @eventforge/console deploy:cloudflare
 EventBridge emits anonymous `page_view`, `waitlist_submit_started`,
 `waitlist_submitted`, and `waitlist_submit_failed` events. Email addresses and
 form payloads are never sent to PostHog or Google Analytics. Create the
-PostHog project and GA4 web stream in their respective accounts, then provide
-the resulting public IDs through the build environment; do not commit them to
-source control.
+PostHog project and GA4 web stream in their respective accounts, then update
+the public runtime IDs; do not put private credentials in the bundle.
 
 The API worker's D1 migration and rate-limit secret are provisioned with:
 

@@ -256,3 +256,12 @@ Reusable pattern: separate visible product branding from stable protocol/package
 - API Worker deployed as `414c367b-2768-4bd1-9b3f-06c2b7d6c390`; console Worker deployed as `f2cc68cc-3f7e-47e9-b2d6-24e88d795994`.
 
 Reusable pattern: keep a marketing capture route out of discovery, enforce origin/consent/honeypot/rate limits at the edge, and test persistence plus duplicate behavior rather than treating a successful browser response as proof of storage.
+
+## 2026-07-21 — 1.0-rc analytics configuration
+
+- Added the public runtime analytics manifest at `/analytics-config.json` with the supplied PostHog project key, US capture host, and GA4 Measurement ID.
+- Deployed the `1.0-rc` console build as Cloudflare version `0d560b3e-c956-4dbc-9415-e90a8ae1b1e4`.
+- Verified the live manifest returns `200 application/json` and the production CSP allows the PostHog capture hosts, Google Analytics endpoints, and Google Tag Manager script.
+- Opened `https://eventforge.dev/waitlist?release=1.0-rc` in agent-browser, waited for network idle plus analytics initialization, and confirmed the EventBridge title with no browser errors.
+
+Reusable pattern: keep client analytics identifiers in a public runtime manifest so deployments are reproducible without putting private credentials in build logs or shell history.
