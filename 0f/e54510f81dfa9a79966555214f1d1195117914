@@ -1,0 +1,62 @@
+apps/cloudflare/src/index.ts
+  s_d3746dabaeab5f::t_22c9e473dc973f 134-140,149-155,171,173-179,197-198
+  s_d3746dabaeab5f::t_309f08cb0d389b 123
+  s_d3746dabaeab5f::t_955a65f42e11a7 5-10,95,99-122,124-133,141-148,156-170,172,180-196,199-206,321-322
+.env.example
+  s_d3746dabaeab5f::t_0c42a14786908e 23
+  s_d3746dabaeab5f::t_d291f028f05a0c 27-32
+apps/cloudflare/migrations/control/0002_waitlist.sql
+  s_d3746dabaeab5f::t_d291f028f05a0c 1-10
+apps/console/src/analytics.ts
+  s_d3746dabaeab5f::t_a607b8cbe1e90d 1-8,12-75
+  s_d3746dabaeab5f::t_22c9e473dc973f 9-11
+apps/console/index.html
+  s_d3746dabaeab5f::t_1297611221c6f8 8
+  s_d3746dabaeab5f::t_22c9e473dc973f 16-19
+workfiles/CONFIGURATION.md
+  s_d3746dabaeab5f::t_2e9c9cef4425ca 207,211-221,223-251
+  s_d3746dabaeab5f::t_0c42a14786908e 222
+  s_d3746dabaeab5f::t_22c9e473dc973f 198-206,208-210
+apps/console/src/main.tsx
+  s_d3746dabaeab5f::t_22c9e473dc973f 26-27,49-51
+  s_d3746dabaeab5f::t_a607b8cbe1e90d 5-6,43,45
+apps/console/public/_headers
+  s_d3746dabaeab5f::t_1297611221c6f8 6
+apps/console/src/WaitlistPage.tsx
+  s_d3746dabaeab5f::t_22c9e473dc973f 34-35,46-48,109-114
+  s_d3746dabaeab5f::t_a607b8cbe1e90d 2-33,36-45,49-108,115-120
+  s_d3746dabaeab5f::t_2f9054696a9ce8 1
+apps/console/src/worker.ts
+  s_d3746dabaeab5f::t_a607b8cbe1e90d 201-204
+  s_d3746dabaeab5f::t_51e8f21a406ce3 194-195
+apps/console/src/styles.css
+  s_d3746dabaeab5f::t_febd6df6917126 1211-1220
+  s_d3746dabaeab5f::t_1297611221c6f8 1210,1221-1386
+apps/cloudflare/test/routing.test.ts
+  s_d3746dabaeab5f::t_309f08cb0d389b 2,11-15
+  s_d3746dabaeab5f::t_4c5707b2eece61 16
+workfiles/agent-browser/README.md
+  s_d3746dabaeab5f::t_376c8516b8d53c 247-258
+apps/cloudflare/wrangler.jsonc
+  s_d3746dabaeab5f::t_22c9e473dc973f 20,65
+  s_d3746dabaeab5f::t_d291f028f05a0c 19,21,64
+  s_d3746dabaeab5f::t_045aea99d83af1 66
+apps/cloudflare/worker-configuration.d.ts
+  s_d3746dabaeab5f::t_e8365e9d2a5392 2,5-16,19-36,40,43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "0fe54510f81dfa9a79966555214f1d1195117914",
+  "prompts": {},
+  "sessions": {
+    "s_d3746dabaeab5f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7a89-a082-73c2-a270-f4d8527caa4c",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
