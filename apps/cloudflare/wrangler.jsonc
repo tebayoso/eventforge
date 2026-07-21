@@ -16,7 +16,9 @@
     "CANARY_PROJECT_ID": "eventforge-canary",
     "CANARY_ENVIRONMENT_ID": "00000000-0000-4000-8000-000000000001",
   },
-  "secrets": { "required": ["CANARY_WEBHOOK_SECRET", "PAYLOAD_MASTER_KEY"] },
+  "secrets": {
+    "required": ["CANARY_WEBHOOK_SECRET", "PAYLOAD_MASTER_KEY", "WAITLIST_RATE_LIMIT_SECRET"],
+  },
   "d1_databases": [
     {
       "binding": "CONTROL_DB",
@@ -59,7 +61,9 @@
         "CANARY_PROJECT_ID": "eventforge-canary",
         "CANARY_ENVIRONMENT_ID": "00000000-0000-4000-8000-000000000001",
       },
-      "secrets": { "required": ["CANARY_WEBHOOK_SECRET", "PAYLOAD_MASTER_KEY"] },
+      "secrets": {
+        "required": ["CANARY_WEBHOOK_SECRET", "PAYLOAD_MASTER_KEY", "WAITLIST_RATE_LIMIT_SECRET"],
+      },
       "d1_databases": [
         {
           "binding": "CONTROL_DB",

@@ -2,6 +2,12 @@ import { encryptPayload, sha256, verifyHmac } from "./crypto.js";
 
 type IngestMessage = { eventId: string; workspaceId: string; idempotencyKey: string };
 type Surface = "api" | "hooks" | "preview" | "unknown";
+type WaitlistPayload = {
+  email?: unknown;
+  source?: unknown;
+  consent?: unknown;
+  website?: unknown;
+};
 
 const MCP_TOOLS = [
   "listen_for_webhook",
@@ -86,10 +92,118 @@ function problem(
   code: string,
   detail: string,
   requestId = crypto.randomUUID(),
+  extraHeaders?: HeadersInit,
 ): Response {
   return Response.json(
     { type: "about:blank", title: code, status, code, retryable: status >= 500, detail, requestId },
-    { status, headers: { "content-type": "application/problem+json" } },
+    {
+      status,
+      headers: { "content-type": "application/problem+json", ...extraHeaders },
+    },
+  );
+}
+
+const WAITLIST_ORIGINS = new Set([
+  "https://eventforge.dev",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+]);
+
+function waitlistCors(origin: string | null): HeadersInit {
+  const headers: HeadersInit = { vary: "Origin" };
+  if (origin && WAITLIST_ORIGINS.has(origin)) {
+    headers["access-control-allow-origin"] = origin;
+    headers["access-control-allow-methods"] = "POST, OPTIONS";
+    headers["access-control-allow-headers"] = "content-type";
+    headers["access-control-max-age"] = "86400";
+  }
+  return headers;
+}
+
+export function normalizeWaitlistEmail(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const email = value.trim().toLowerCase();
+  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null;
+  return email;
+}
+
+async function joinWaitlist(request: Request, env: Env): Promise<Response> {
+  const origin = request.headers.get("origin");
+  const cors = waitlistCors(origin);
+  if (origin && !WAITLIST_ORIGINS.has(origin))
+    return problem(
+      403,
+      "ORIGIN_NOT_ALLOWED",
+      "Waitlist submissions must originate from EventForge.",
+      undefined,
+      cors,
+    );
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
+  if (request.method !== "POST")
+    return problem(405, "METHOD_NOT_ALLOWED", "Use POST to join the waitlist.", undefined, {
+      ...cors,
+      allow: "POST, OPTIONS",
+    });
+  const contentLength = Number(request.headers.get("content-length") ?? 0);
+  if (contentLength > 8192)
+    return problem(
+      413,
+      "PAYLOAD_TOO_LARGE",
+      "Waitlist submissions must be smaller than 8 KB.",
+      undefined,
+      cors,
+    );
+
+  let payload: WaitlistPayload;
+  try {
+    const raw = await request.text();
+    if (raw.length > 8192) throw new Error("payload too large");
+    payload = JSON.parse(raw) as WaitlistPayload;
+  } catch {
+    return problem(400, "INVALID_JSON", "Waitlist submission must be valid JSON.", undefined, cors);
+  }
+
+  // Honeypot: pretend bot submissions succeeded without persisting them.
+  if (typeof payload.website === "string" && payload.website.trim())
+    return Response.json({ accepted: true }, { status: 202, headers: cors });
+
+  const email = normalizeWaitlistEmail(payload.email);
+  if (!email) return problem(400, "INVALID_EMAIL", "Enter a valid email address.", undefined, cors);
+  if (payload.consent !== true)
+    return problem(
+      400,
+      "CONSENT_REQUIRED",
+      "Consent is required to join the waitlist.",
+      undefined,
+      cors,
+    );
+
+  const ip = request.headers.get("cf-connecting-ip") ?? "unknown";
+  const rateLimitSecret = env.WAITLIST_RATE_LIMIT_SECRET || `local-${env.ENVIRONMENT}`;
+  const ipHash = await sha256(`${rateLimitSecret}:${ip}`);
+  const threshold = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const recent = await env.CONTROL_DB.prepare(
+    "select count(*) as count from waitlist_signups where ip_hash = ? and created_at > ?",
+  )
+    .bind(ipHash, threshold)
+    .first<{ count: number }>();
+  if (Number(recent?.count ?? 0) >= 5)
+    return problem(429, "RATE_LIMITED", "Please try again later.", undefined, {
+      ...cors,
+      "retry-after": "3600",
+    });
+
+  const now = new Date().toISOString();
+  const source =
+    typeof payload.source === "string" ? payload.source.trim().slice(0, 64) || "direct" : "direct";
+  const result = await env.CONTROL_DB.prepare(
+    "insert into waitlist_signups (id,email,source,consent_at,ip_hash,created_at) values (?,?,?,?,?,?) on conflict(email) do nothing",
+  )
+    .bind(crypto.randomUUID(), email, source, now, ipHash, now)
+    .run();
+  return Response.json(
+    { accepted: true, alreadyRegistered: Number(result.meta.changes ?? 0) === 0 },
+    { status: 202, headers: cors },
   );
 }
 
@@ -204,6 +318,8 @@ export default {
     try {
       if (url.pathname === "/mcp" && url.hostname === "api.eventforge.dev") return mcp(request);
       if (surface === "unknown") return problem(404, "NOT_FOUND", "Route not found.");
+      if ((surface === "api" || surface === "preview") && url.pathname === "/v1/waitlist")
+        return joinWaitlist(request, env);
       if (request.method === "GET" && url.pathname === "/health")
         return Response.json({
           ok: true,

@@ -1207,6 +1207,183 @@ body {
   }
 }
 
+.ef-waitlist-page {
+  --ink: #10151a;
+  --ink-soft: #1a2229;
+  --paper: #e9e5d7;
+  --paper-muted: #b8b6ac;
+  --mint: #b9f7d0;
+  --mint-deep: #6bbf9a;
+  --signal: #ff7d51;
+  --line: rgba(233, 229, 215, 0.16);
+  --line-strong: rgba(233, 229, 215, 0.32);
+  --panel: #182128;
+  min-height: 100vh;
+  padding: 0 32px 72px;
+  background: var(--ink);
+  color: var(--paper);
+}
+.ef-waitlist-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  padding: 28px 0;
+  border-bottom: 1px solid var(--line);
+}
+.ef-waitlist-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--paper-muted);
+  font-size: 14px;
+  text-decoration: none;
+}
+.ef-waitlist-card {
+  width: min(100%, 680px);
+  margin: clamp(68px, 12vw, 150px) auto 0;
+  padding: clamp(28px, 6vw, 72px);
+  border: 1px solid var(--line-strong);
+  background: color-mix(in srgb, var(--panel) 94%, transparent);
+  box-shadow: 14px 14px 0 color-mix(in srgb, var(--signal) 18%, transparent);
+}
+.ef-waitlist-card h1 {
+  margin: 22px 0 20px;
+  font-size: clamp(46px, 8vw, 86px);
+  line-height: 0.98;
+  letter-spacing: -0.065em;
+}
+.ef-waitlist-card h1 em {
+  color: var(--signal);
+  font-style: italic;
+}
+.ef-waitlist-card > p {
+  max-width: 560px;
+  margin: 0;
+  color: var(--paper-muted);
+  font-size: clamp(17px, 2vw, 21px);
+  line-height: 1.65;
+}
+.ef-waitlist-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 34px;
+}
+.ef-waitlist-form > label:first-child {
+  color: var(--paper-muted);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.ef-waitlist-form input[type="email"] {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 16px 17px;
+  border: 1px solid var(--line-strong);
+  border-radius: 0;
+  outline: 0;
+  background: var(--ink);
+  color: var(--paper);
+  font: inherit;
+  font-size: 17px;
+}
+.ef-waitlist-form input[type="email"]:focus {
+  border-color: var(--mint);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mint) 22%, transparent);
+}
+.ef-waitlist-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--paper-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.ef-waitlist-consent input {
+  width: 17px;
+  height: 17px;
+  margin-top: 2px;
+  accent-color: var(--signal);
+}
+.ef-waitlist-form button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: max-content;
+  margin-top: 6px;
+  padding: 15px 19px;
+  border: 0;
+  background: var(--signal);
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+}
+.ef-waitlist-form button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+.ef-waitlist-message {
+  min-height: 24px;
+  margin: 0;
+  color: var(--paper-muted);
+  font-size: 14px;
+}
+.ef-waitlist-message--success {
+  color: var(--mint);
+}
+.ef-waitlist-message--error {
+  color: var(--signal);
+}
+.ef-waitlist-trust,
+.ef-waitlist-local {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 28px;
+  color: var(--paper-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.ef-waitlist-local {
+  display: flex;
+  width: max-content;
+  color: var(--mint);
+  text-decoration: none;
+}
+.ef-honeypot {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+@media (max-width: 620px) {
+  .ef-waitlist-page {
+    padding: 0 16px 48px;
+  }
+  .ef-waitlist-header {
+    padding: 22px 0;
+  }
+  .ef-waitlist-back {
+    font-size: 12px;
+  }
+  .ef-waitlist-card {
+    margin-top: 52px;
+    padding: 28px 22px 34px;
+  }
+  .ef-waitlist-card h1 {
+    font-size: clamp(43px, 13vw, 64px);
+  }
+  .ef-waitlist-form button {
+    width: 100%;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ef-landing *,
   .ef-landing *::before,
