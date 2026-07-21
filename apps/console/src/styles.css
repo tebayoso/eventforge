@@ -538,33 +538,17 @@ body {
   align-items: center;
   gap: 11px;
   font-family: "Arial Narrow", "Avenir Next Condensed", sans-serif;
-  font-size: 20px;
+  font-size: clamp(18px, 1.3vw, 22px);
   font-weight: 700;
   letter-spacing: -0.05em;
   text-decoration: none;
 }
 .ef-mark {
-  display: inline-flex;
-  align-items: end;
-  gap: 2px;
-  width: 21px;
-  height: 19px;
-}
-.ef-mark i {
   display: block;
-  width: 5px;
-  background: var(--mint);
-  transform: skewX(-17deg);
-}
-.ef-mark i:nth-child(1) {
-  height: 10px;
-}
-.ef-mark i:nth-child(2) {
-  height: 19px;
-  background: var(--signal);
-}
-.ef-mark i:nth-child(3) {
-  height: 14px;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 24px;
+  object-fit: contain;
 }
 .ef-site-header nav {
   display: flex;

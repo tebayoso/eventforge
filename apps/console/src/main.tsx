@@ -21,7 +21,7 @@ function registerWebMcpTool() {
 
   modelContext.registerTool({
     name: "eventforge_get_started",
-    description: "Return the public EventForge installation and operating-surface links.",
+    description: "Return the public EventBridge installation and operating-surface links. The EventForge package name remains stable for compatibility.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
     execute: async () => ({
       install:
