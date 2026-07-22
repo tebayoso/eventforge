@@ -179,6 +179,10 @@ MCP endpoint. The URL must point to a server exposing the MCP `/mcp` route.
 
 ## Environment variable reference
 
+## Operational readiness (foundation)
+
+`apps/control-plane/src/operational-readiness.ts` contains deterministic adapters and defaults, rather than an enabled hosted monitor. Probes are specified every five minutes against non-sensitive synthetic tenants. Customer-impacting failures target ten-minute routing; authentication, tenancy, unsigned ingress, kill-switch bypass, and data-integrity failures target immediate routing. Poison work routes no later than five minutes after retry exhaustion and alert-provider outage requires an independent fallback signal. See `workfiles/OPERATIONAL_READINESS.md` for runbooks and the explicit evidence boundary.
+
 ### MCP client and launcher
 
 | Variable                      | Default                       | Meaning                                                  |
