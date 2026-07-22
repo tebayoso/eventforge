@@ -41,7 +41,7 @@ const LOCAL_CONSOLE_ORIGIN = "http://localhost:5173";
 
 type IntegrationBinding = {
   provider: Exclude<Provider, "custom">;
-  installationKey?: string;
+  installationKey: string;
   repository?: string;
   workspaceId: string;
   projectId: string;
@@ -590,8 +590,7 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
         .send({ error: verification.reason ?? "Invalid or missing webhook signature." });
     const binding = options.integrations?.find(
       (item) =>
-        item.provider === provider.data &&
-        (!item.installationKey || item.installationKey === verification.installationKey),
+        item.provider === provider.data && item.installationKey === verification.installationKey,
     );
     if (runtime.mode === "remote" && !binding)
       return reply
