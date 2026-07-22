@@ -1,0 +1,21 @@
+workfiles/ARCHITECTURE.md
+  s_adaa872cd3b4f8::t_67b81f7d9d5c61 87-108
+workfiles/SECURITY.md
+  s_adaa872cd3b4f8::t_67b81f7d9d5c61 31-33,54-58
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "9d0ddc28c0b7e91809f2dce92b77cbc396ea3d19",
+  "prompts": {},
+  "sessions": {
+    "s_adaa872cd3b4f8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8a74-a3a1-7813-9be6-37b6956eed2a",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
