@@ -34,6 +34,7 @@ import {
 } from "./runtime.js";
 import type { RelayController } from "./local-relay.js";
 import type { TunnelProvisioner } from "./managed-tunnel.js";
+import { GitHubInstallationRegistry } from "./github-app.js";
 
 const DEFAULT_WORKSPACE = "demo-workspace";
 const DEFAULT_PROJECT = "eventforge-demo-service";
@@ -54,6 +55,7 @@ export type AppOptions = {
   integrations?: IntegrationBinding[];
   relayController?: RelayController;
   tunnelProvisioner?: TunnelProvisioner;
+  githubInstallations?: GitHubInstallationRegistry;
 };
 
 declare module "fastify" {
@@ -337,6 +339,19 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
         );
         return;
       }
+      // A hosted GitHub App is investigation-only. Untrusted GitHub evidence must
+      // never reach the generic write-proposal path, even after downstream changes.
+      if (runtime.mode === "remote" && event.provider === "github") {
+        store.updateRun(run.id, {
+          threadId: result.threadId,
+          summary: result.summary,
+          structuredResult: result.structured,
+          status: "completed",
+          finishedAt: new Date().toISOString(),
+        });
+        store.audit(event.workspaceId, "agent_run", run.id, "Hosted GitHub investigation completed read-only.");
+        return;
+      }
       const capabilities = ["write_files", "git_commit", "provider_write"];
       const repository = event.repository;
       const decision = evaluatePolicy(workflow.policy, {
@@ -593,7 +608,16 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
         item.provider === provider.data &&
         (!item.installationKey || item.installationKey === verification.installationKey),
     );
-    if (runtime.mode === "remote" && !binding)
+    const githubRepository =
+      ((payload.repository as Record<string, unknown> | undefined)?.full_name as string | undefined) ??
+      undefined;
+    const githubInstallation =
+      provider.data === "github" && verification.installationKey && githubRepository
+        ? options.githubInstallations?.resolve(verification.installationKey, githubRepository)
+        : undefined;
+    if (runtime.mode === "remote" && provider.data === "github" && !githubInstallation)
+      return reply.status(403).send({ error: "Webhook installation is not an active attested repository mapping." });
+    if (runtime.mode === "remote" && provider.data !== "github" && !binding)
       return reply
         .status(403)
         .send({ error: "Webhook installation is not mapped to a workspace." });
@@ -601,11 +625,11 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
       signatureStatus: "verified",
       deliveryId: verification.deliveryId,
       topicHint: verification.topic,
-      workspaceId: binding?.workspaceId,
+      workspaceId: githubInstallation?.workspaceId ?? binding?.workspaceId,
       projectId: binding?.projectId,
       repository:
         runtime.mode === "remote"
-          ? binding?.repository
+          ? githubInstallation ? githubRepository : binding?.repository
           : provider.data === "github"
             ? process.env.EVENTFORGE_GITHUB_REPOSITORY
             : undefined,

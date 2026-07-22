@@ -36,6 +36,9 @@ export function resolveRuntimeConfig(
       "DATABASE_URL",
       "EVENTFORGE_ENCRYPTION_KEY",
       "EVENTFORGE_ALLOWED_ORIGINS",
+      "GITHUB_APP_ID",
+      "GITHUB_APP_PRIVATE_KEY",
+      "GITHUB_WEBHOOK_SECRET",
     ].filter((name) => !environment[name]);
     if (missing.length) throw new Error(`Remote mode requires ${missing.join(", ")}.`);
     if (!hasAuthenticator)

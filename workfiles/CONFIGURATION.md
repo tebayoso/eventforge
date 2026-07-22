@@ -19,6 +19,19 @@ demo runner, and listen only on loopback. Production or hosted operation must
 provide authentication, TLS, workspace scoping, and a separately managed
 provider secret boundary.
 
+## Hosted GitHub App boundary
+
+Hosted GitHub App ingress is disabled unless `GITHUB_APP_ID`,
+`GITHUB_APP_PRIVATE_KEY`, and `GITHUB_WEBHOOK_SECRET` are configured alongside
+the existing remote-mode requirements. EventForge accepts only signed GitHub
+Cloud `check_run`, `issues`, and `pull_request` deliveries for a server-side,
+attested installation mapping. Installations require an Owner/Admin MFA session,
+a ten-minute single-use state nonce, explicit confirmation, and exact read-only
+Checks, Issues, and Pull requests permissions. GitHub payload fields never map a
+tenant. Suspended, removed, unconfirmed, out-of-scope, or archived repositories
+are acknowledged safely without creating an investigation. Local GitHub relay
+operation remains credential-free and unchanged.
+
 ## Zero-checkout stdio (recommended)
 
 Requirements: Node.js 20.11 or newer and a Codex CLI with MCP support.
