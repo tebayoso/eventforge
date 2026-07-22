@@ -36,6 +36,11 @@ The Cloudflare-native hosted path now has isolated preview and production D1 con
 - MCP OAuth 2.1 Authorization Code with PKCE, resource metadata, scoped short-lived tokens, rotating refresh tokens, and audience checks.
 - Complete D1 tenant repositories, durable Queue/DLQ delivery state, Workflow orchestration, retention, backup, and usage reconciliation.
 - S3-compatible immutable Forge artifacts, disposable sandbox validation, dependency/source scanning, and out-of-process connector installation.
+
+## Connector trust layer (issue #8)
+
+The core package now contains an in-memory, fail-closed trust-manifest and approval foundation: canonical JCS manifests, SHA-256 subjects, DSSE-style Ed25519 envelopes, signer revocation/expiry checks, exact-digest Owner-plus-recent-MFA approval binding, critical-finding blocks, and a deterministic denial sandbox fixture. It does not provide production artifact storage, managed signing keys, a credential vault, durable audit, scanner/SBOM tools, or a sandbox provider. Consequently validation and installation stay closed; no production connector install path is enabled.
+
 - pgvector embedding/index/query integration. Local vector search is reported as disabled until an acceptance test passes.
 - Multi-workspace production operations and hardened owner-managed integration credentials.
 - Production D1, R2, Queue, Workflow, secret, WAF, custom-domain, synthetic-probe, staged-release, and rollback acceptance.

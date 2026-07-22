@@ -1,4 +1,5 @@
 export * from "./contracts.js";
+export * from "./connector-trust.js";
 export * from "./events.js";
 export * from "./forge.js";
 export * from "./memory.js";
