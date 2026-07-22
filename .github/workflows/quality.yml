@@ -69,6 +69,12 @@ jobs:
       - run: docker compose --profile cloudflare-tunnel config --quiet
       - run: helm lint deploy/helm/eventforge
       - run: helm template eventforge deploy/helm/eventforge > /dev/null
+      - name: Verify private-edge remains fail-closed without portable adapters
+        run: |
+          helm template eventforge deploy/helm/eventforge --set privateEdge.enabled=true 2>&1 | grep -q 'privateEdge.enabled is blocked'
+          pnpm private-edge:test
+      - name: Render default-deny policy reference
+        run: helm template eventforge deploy/helm/eventforge --set networkPolicy.enabled=true | grep -q 'kind: NetworkPolicy'
       - name: Render immutable control-plane image variant
         run: helm template eventforge deploy/helm/eventforge --set-string image.digest=sha256:0000000000000000000000000000000000000000000000000000000000000000 | grep -q 'ghcr.io/tebayoso/eventforge-control-plane@sha256:'
       - name: Build non-root production image

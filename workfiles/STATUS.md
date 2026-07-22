@@ -26,6 +26,8 @@ The Cloudflare-native hosted path now has isolated preview and production D1 con
 
 ## Local/private-edge foundations
 
+Issue #9 adds a versioned Helm security reference and executable fail-closed preflight. It does **not** make private edge available: Cloudflare Worker D1/R2/Queue/cron and hosted identity contracts lack exercised portable adapters. Capacity is unavailable until repeatable load fixtures measure it. Security/install/node-loss/queue/backup-restore/key/upgrade/rollback drills and two design partners remain required release evidence.
+
 - PostgreSQL schema and primitives remain available only for local/private deployment; they are no longer the hosted production target.
 - Runtime authentication injection point, roles, MFA requirement, scopes, loopback enforcement, body/rate limits, and run quotas.
 - Repository interfaces for events, workflows, actions, and audit; broader run/job/memory/artifact interfaces remain Track B work.
