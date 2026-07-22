@@ -37,6 +37,10 @@ governance audit records. It does not authorize a request by itself. Every hoste
 request must first validate its opaque session identifier against a per-user,
 SQLite-backed Durable Object. That object is the strongly consistent authority
 for active sessions and revocation epochs; an unavailable authority denies access.
+There is exactly one object per canonical user identifier, selected with a
+deterministic object name. It contains every session for that user and is never
+split by workspace, device, or region, so a single epoch change invalidates all
+affected sessions without cross-shard propagation.
 The Fastify control plane receives only the resulting current identity,
 workspace membership, role, scopes, session identifier, and MFA time through its
 existing injected authenticator boundary.
@@ -50,9 +54,10 @@ later-viewable encrypted backup-code store.
 
 WebAuthn uses RP ID `eventforge.dev` and production origin
 `https://eventforge.dev`. Enrollment requires a verified session, user
-verification and resident credentials. The server validates the challenge,
-origin, RP ID, credential/account binding, and signature counter, and records
-credential properties, backup state, and AAGUID. Unsupported required
+verification, and resident credentials for Owner and Admin factors. Lower roles
+may use a resident-preferred credential for sign-in. The server validates the
+challenge, origin, RP ID, credential/account binding, and signature counter, and
+records credential properties, backup state, and AAGUID. Unsupported required
 capabilities fail explicitly.
 
 Email verification proves control of one normalized address through a
@@ -63,10 +68,24 @@ changes and account closure are serialized with optimistic versions and storage
 transactions. The last owner cannot leave, be removed, be downgraded, or close
 their account. There is no support impersonation or factor bypass.
 
-Revocation is defined at a commit boundary: once the session-authority write
-commits, every new request is denied; already-running requests are not
-retroactively cancelled. The 60-second value is an operational alerting SLO, not
-an eventual-consistency or cache promise.
+Membership removal and downgrade use a revoke-first transition. The user object
+first blocks new sessions and increments its revocation epoch, D1 then commits the
+membership version, and only then may the object allow sessions with the new
+version. Failure after the first step leaves the user blocked rather than
+over-authorized. Success is not returned until both stores commit.
+
+Revocation is defined at that authority commit boundary: every new request after
+the commit is denied; already-running requests are not retroactively cancelled.
+The end-to-end SLO from accepting an authorized revocation request to that commit
+remains 60 seconds. A breach alerts operations and is not hidden by a cache or
+eventually consistent token. Because all hosted requests consult the authority,
+an authority outage fails closed for reads as well as writes.
+
+P0 deliberately has no artificial keepalive. Normal traffic keeps active user
+objects warm; cold starts are accepted and measured rather than multiplying cost
+and load with scheduled pings. The release gate measures warm and cold p95/p99
+session-validation latency and blocks rollout if the approved auth budget is
+exceeded.
 
 ## Trust boundaries
 
