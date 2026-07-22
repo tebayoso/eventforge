@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  AuditStreamEventSchema,
+  authorizeEnterpriseScope,
+  BreakGlassGrantSchema,
   DeliverySchema,
   EntitlementSchema,
   ReactionPolicySchema,
@@ -61,5 +64,20 @@ describe("commercial platform contracts", () => {
       effectiveAt: new Date().toISOString(),
     });
     expect(entitlement.deliveredEventsIncluded).toBe(25_000);
+  });
+
+  it("uses only the authenticated server enterprise scope", () => {
+    const enterpriseOrgId = crypto.randomUUID();
+    expect(() => authorizeEnterpriseScope({ enterpriseOrgId, workspaceId: "w", actorId: "a", roles: ["identity_admin"] }, { enterpriseOrgId })).toThrow();
+    expect(authorizeEnterpriseScope({ enterpriseOrgId, workspaceId: "w", actorId: "a", roles: ["identity_admin"] }, { workspaceId: "w" })).toEqual({ enterpriseOrgId, workspaceId: "w" });
+  });
+
+  it("requires distinct custodians and bounded break-glass", () => {
+    const createdAt = new Date().toISOString();
+    expect(() => BreakGlassGrantSchema.parse({ id: crypto.randomUUID(), enterpriseOrgId: crypto.randomUUID(), trigger: "idp_outage", custodianIds: ["same", "same"], scope: "identity_recovery", createdAt, expiresAt: new Date(Date.now() + 61 * 60_000).toISOString() })).toThrow();
+  });
+
+  it("requires ordered per-workspace enterprise audit events", () => {
+    expect(() => AuditStreamEventSchema.parse({ id: crypto.randomUUID(), enterpriseOrgId: crypto.randomUUID(), workspaceId: "w", sequence: 0, eventType: "hold_released", actorId: "a", authMethod: "passkey", targetHash: "hash", result: "success", previousHash: "hash", createdAt: new Date().toISOString() })).toThrow();
   });
 });
