@@ -16,7 +16,7 @@ let anonymousId: string | undefined;
 function getAnonymousId(): string {
   if (anonymousId) return anonymousId;
   try {
-    const key = "eventbridge-anonymous-id";
+    const key = "eventforge-anonymous-id";
     anonymousId = window.localStorage.getItem(key) ?? crypto.randomUUID();
     window.localStorage.setItem(key, anonymousId);
   } catch {
@@ -26,7 +26,7 @@ function getAnonymousId(): string {
 }
 
 function initializeGoogleAnalytics(): void {
-  if (!GA_MEASUREMENT_ID || document.querySelector("script[data-eventbridge-ga]")) return;
+  if (!GA_MEASUREMENT_ID || document.querySelector("script[data-eventforge-ga]")) return;
   const analyticsWindow = window as AnalyticsWindow;
   analyticsWindow.dataLayer = analyticsWindow.dataLayer || [];
   analyticsWindow.gtag = function gtag() {
@@ -43,7 +43,7 @@ function initializeGoogleAnalytics(): void {
   });
   const script = document.createElement("script");
   script.async = true;
-  script.dataset.eventbridgeGa = "true";
+  script.dataset.eventforgeGa = "true";
   script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(GA_MEASUREMENT_ID)}`;
   document.head.append(script);
 }
@@ -57,7 +57,7 @@ export function captureEvent(event: string, properties: AnalyticsProperties = {}
       ...properties,
       $current_url: window.location.href,
       $host: window.location.host,
-      product: "eventbridge",
+      product: "eventforge",
     },
   };
   if (POSTHOG_KEY) {

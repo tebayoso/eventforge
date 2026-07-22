@@ -227,12 +227,12 @@ const principles = [
 ];
 
 function Mark() {
-  return <img className="ef-mark" src="/eventbridge-mark.svg" alt="" aria-hidden="true" />;
+  return <img className="ef-mark" src="/eventforge-mark.svg" alt="" aria-hidden="true" />;
 }
 
 function TraceBoard() {
   return (
-    <div className="ef-trace-board" aria-label="A sample EventBridge event inbox">
+    <div className="ef-trace-board" aria-label="A sample EventForge event inbox">
       <div className="ef-trace-header">
         <span>One event inbox</span>
         <span>What deserves attention</span>
@@ -273,9 +273,9 @@ function TraceBoard() {
 
 function DecisionLedger() {
   return (
-    <div className="ef-ledger" aria-label="EventBridge value summary">
+    <div className="ef-ledger" aria-label="EventForge value summary">
       <div className="ef-ledger-topline">
-        <span>What EventBridge gives you</span>
+        <span>What EventForge gives you</span>
         <span>One useful view</span>
       </div>
       <div className="ef-ledger-row">
@@ -314,9 +314,9 @@ export default function LandingPage() {
     <main className="ef-landing">
       <div className="ef-grain" aria-hidden="true" />
       <header className="ef-site-header">
-        <a className="ef-brand" href="/" aria-label="EventBridge home">
+        <a className="ef-brand" href="/" aria-label="EventForge home">
           <Mark />
-          <span>EventBridge</span>
+          <span>EventForge</span>
         </a>
         <nav aria-label="Primary navigation">
           <a href="#product">Product</a>
@@ -345,7 +345,7 @@ export default function LandingPage() {
           </h1>
           <p className="ef-hero-intro">
             Ingest, route, observe, replay, and safely react to webhook-driven work from receipt to
-            outcome. EventBridge gives developer and platform teams one place to see what happened,
+            outcome. EventForge gives developer and platform teams one place to see what happened,
             why it matters, and what is safe to do next.
           </p>
           <div className="ef-hero-actions">
@@ -372,7 +372,7 @@ export default function LandingPage() {
         <TraceBoard />
       </section>
 
-      <section className="ef-proof-strip" aria-label="EventBridge product facts">
+      <section className="ef-proof-strip" aria-label="EventForge product facts">
         <div>
           <strong>9</strong>
           <span>stable MCP tools</span>
@@ -401,11 +401,11 @@ export default function LandingPage() {
           <p className="ef-manifesto-lead">
             Your tools are talking.
             <br />
-            <i>EventBridge helps you hear the right things.</i>
+            <i>EventForge helps you hear the right things.</i>
           </p>
           <p>
             GitHub alerts, Linear updates, Sentry issues, and custom webhooks create a constant
-            stream of activity. EventBridge collects that stream, applies your rules, and gives your
+            stream of activity. EventForge collects that stream, applies your rules, and gives your
             team a calmer queue of events that are actually worth acting on.
           </p>
         </div>
@@ -493,8 +493,8 @@ export default function LandingPage() {
             <em>Earn autonomy.</em>
           </h2>
           <p>
-            EventBridge integrates with durable runtimes instead of replacing them. The control
-            plane grows in three deliberate layers.
+            EventForge integrates with durable runtimes instead of replacing them. The control plane
+            grows in three deliberate layers.
           </p>
         </div>
         <div className="ef-roadmap-list">
@@ -555,7 +555,7 @@ export default function LandingPage() {
                 className={featured ? "ef-price-cta ef-price-cta--active" : "ef-price-cta"}
               >
                 {name === "Enterprise"
-                  ? "Talk to EventBridge"
+                  ? "Talk to EventForge"
                   : name === "Free"
                     ? "Start free"
                     : "Join the beta"}
@@ -583,7 +583,7 @@ export default function LandingPage() {
             <em>is five minutes away.</em>
           </h2>
           <p>
-            EventBridge starts locally with no account, no password, and no cloud setup. Connect a
+            EventForge starts locally with no account, no password, and no cloud setup. Connect a
             remote OAuth host later without changing the operating surface.
           </p>
           <div className="ef-install-links">
@@ -624,8 +624,8 @@ export default function LandingPage() {
             Make it <em>quieter.</em>
           </h2>
           <p>
-            EventBridge sits above the tools and automations you already run. It gives their events
-            a shared inbox, a common set of rules, and agents that can take the first pass when
+            EventForge sits above the tools and automations you already run. It gives their events a
+            shared inbox, a common set of rules, and agents that can take the first pass when
             something deserves attention.
           </p>
           <ul>
@@ -645,7 +645,7 @@ export default function LandingPage() {
 
       <section className="ef-close">
         <div className="ef-close-meta">
-          <span>EventBridge</span>
+          <span>EventForge</span>
           <span>Bring your event stream under one roof.</span>
         </div>
         <h2>
@@ -662,7 +662,7 @@ export default function LandingPage() {
       <footer className="ef-footer">
         <a className="ef-brand" href="/">
           <Mark />
-          <span>EventBridge</span>
+          <span>EventForge</span>
         </a>
         <span>Policy-first operations for event-driven teams.</span>
         <div className="ef-footer-links">

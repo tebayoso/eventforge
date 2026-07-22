@@ -8,7 +8,7 @@ type AnalyticsWindow = Window & {
 afterEach(() => {
   vi.unstubAllEnvs();
   vi.resetModules();
-  document.querySelectorAll("script[data-eventbridge-ga]").forEach((script) => script.remove());
+  document.querySelectorAll("script[data-eventforge-ga]").forEach((script) => script.remove());
   delete (window as AnalyticsWindow).dataLayer;
   delete (window as AnalyticsWindow).gtag;
 });
@@ -21,7 +21,7 @@ describe("Google Analytics initialization", () => {
     initializeAnalytics();
 
     const analyticsWindow = window as AnalyticsWindow;
-    const script = document.querySelector<HTMLScriptElement>("script[data-eventbridge-ga]");
+    const script = document.querySelector<HTMLScriptElement>("script[data-eventforge-ga]");
     expect(script?.src).toBe("https://www.googletagmanager.com/gtag/js?id=G-TEST123456");
     expect(analyticsWindow.dataLayer).toHaveLength(3);
     expect(Object.prototype.toString.call(analyticsWindow.dataLayer?.[0])).toBe(
