@@ -182,6 +182,9 @@ importers:
         specifier: ^3.24.4
         version: 3.25.76
     devDependencies:
+      '@eventforge/core':
+        specifier: workspace:*
+        version: link:../core
       '@types/express':
         specifier: ^5.0.6
         version: 5.0.6
