@@ -22,6 +22,8 @@ Phase 0 implementation has started with additive, tenant-scoped contracts for en
 
 These are persistence and interface foundations only. Hosted authentication, repository hydration, outbound delivery workers, billing export, monitoring, alert delivery, reactions, and public commercial APIs are not yet enabled or claimed as supported.
 
+Phase 2 correlation now has versioned configuration and immutable event/membership contracts, launch-bounded deterministic rule evaluation, and tenant/project filtering before candidate comparison. The additive `004_incident_correlation.sql` migration persists versioned configs and 90-day membership metadata. This is observe-only foundation only: authenticated incident APIs, canonical-event impact/investigation persistence, alias storage, manual merge/split, redacted timeline/export, backfill, review metrics, and suppression remain unavailable. Hosted mode remains fail-closed.
+
 The Cloudflare-native hosted path now has isolated preview and production D1 control/event databases, private R2 payload storage, ingestion Queues and DLQs, and applied initial migrations. `api.eventforge.dev` and `hooks.eventforge.dev` are Worker custom domains with Cloudflare-managed DNS/TLS and host-isolated route surfaces. A deployed preview signed canary returned `202` and reconciled to one processed event, one published outbox item, and one audit entry. Production webhook ingress and authenticated `/v1` APIs remain deliberately gated until Better Auth and tenant repositories are implemented. The static Worker intercepts `/console` and returns a non-cacheable `503` instead of exposing the operations shell before authentication exists.
 
 ## Local/private-edge foundations
