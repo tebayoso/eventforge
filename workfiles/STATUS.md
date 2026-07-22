@@ -18,6 +18,8 @@ Updated: 2026-07-20
 
 ## Commercial platform roadmap implementation
 
+Enterprise governance has an additive, forward-only contract and migration foundation for enterprise organization scope, federation/SCIM resources, break-glass, holds, customer key references, ordered audit stream events, and measured-SLO records. It does not enable hosted enterprise capability: identity, key, hold, audit-sink, outage/recovery, and legal/support gates remain closed pending end-to-end evidence.
+
 Phase 0 implementation has started with additive, tenant-scoped contracts for endpoints, routes, deliveries and attempts, issues, alert policies, incidents, bounded reaction policies and runs, evidence bundles, usage records, and entitlements. Migration `003_commercial_platform.sql` adds durable resource, entitlement, and idempotent usage-meter storage without enabling remote mode.
 
 These are persistence and interface foundations only. Hosted authentication, repository hydration, outbound delivery workers, billing export, monitoring, alert delivery, reactions, and public commercial APIs are not yet enabled or claimed as supported.

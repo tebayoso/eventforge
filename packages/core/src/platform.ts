@@ -4,6 +4,107 @@ const Id = z.string().uuid();
 const Timestamp = z.string().datetime();
 const Scope = z.object({ workspaceId: z.string().min(1), projectId: z.string().min(1) });
 
+const EnterpriseScope = z.object({
+  enterpriseOrgId: z.string().uuid(),
+  workspaceId: z.string().min(1).optional(),
+});
+
+export const EnterpriseRoleSchema = z.enum([
+  "enterprise_owner",
+  "identity_admin",
+  "security_admin",
+  "compliance_admin",
+  "auditor",
+]);
+export type EnterpriseRole = z.infer<typeof EnterpriseRoleSchema>;
+
+export const EnterpriseServerScopeSchema = EnterpriseScope.extend({
+  actorId: z.string().min(1),
+  roles: z.array(EnterpriseRoleSchema).min(1),
+  recentMfaAt: z.string().datetime().optional(),
+});
+export type EnterpriseServerScope = z.infer<typeof EnterpriseServerScopeSchema>;
+
+// Payloads deliberately cannot supply tenant, role, or MFA claims. Those arrive only
+// through the authenticated server context above.
+export const EnterpriseRequestSchema = z.object({ workspaceId: z.string().min(1).optional() }).strict();
+export function authorizeEnterpriseScope(serverScope: EnterpriseServerScope, payload: unknown) {
+  const request = EnterpriseRequestSchema.parse(payload);
+  if (request.workspaceId && request.workspaceId !== serverScope.workspaceId) {
+    throw new Error("workspace is not authorized for this enterprise context");
+  }
+  return { enterpriseOrgId: serverScope.enterpriseOrgId, workspaceId: serverScope.workspaceId };
+}
+
+export const FederationConfigSchema = EnterpriseScope.extend({
+  id: Id,
+  protocol: z.enum(["oidc", "saml"]),
+  issuer: z.string().min(1),
+  audience: z.string().min(1),
+  redirectUris: z.array(z.string().url()).min(1),
+  mode: z.enum(["test", "enforced"]),
+  identityBindingId: Id,
+  createdAt: Timestamp,
+});
+export const ScimResourceSchema = EnterpriseScope.extend({
+  id: Id,
+  resourceType: z.enum(["user", "group"]),
+  externalId: z.string().min(1),
+  version: z.string().min(1),
+  receivedAt: Timestamp,
+  disabledAt: Timestamp.optional(),
+});
+export const BreakGlassGrantSchema = EnterpriseScope.extend({
+  id: Id,
+  trigger: z.enum(["idp_outage", "federation_lockout"]),
+  custodianIds: z.array(z.string().min(1)).length(2),
+  scope: z.literal("identity_recovery"),
+  expiresAt: Timestamp,
+  createdAt: Timestamp,
+}).superRefine((value, ctx) => {
+  if (value.custodianIds[0] === value.custodianIds[1]) ctx.addIssue({ code: "custom", message: "two distinct custodians required" });
+  if (Date.parse(value.expiresAt) - Date.parse(value.createdAt) > 60 * 60 * 1000) ctx.addIssue({ code: "custom", message: "break-glass grants last at most 60 minutes" });
+});
+export const LegalHoldSchema = EnterpriseScope.extend({
+  id: Id,
+  version: z.number().int().positive(),
+  authority: z.string().min(1),
+  reasonReference: z.string().min(1),
+  jurisdiction: z.string().min(1),
+  querySnapshot: z.record(z.unknown()),
+  status: z.enum(["active", "release_pending", "released"]),
+  createdAt: Timestamp,
+  expiresAt: Timestamp.optional(),
+});
+export const CustomerKeyReferenceSchema = EnterpriseScope.extend({
+  id: Id,
+  kmsKeyReference: z.string().min(1),
+  status: z.enum(["active", "rotating", "disabled", "lost"]),
+  dualReadUntil: Timestamp.optional(),
+  createdAt: Timestamp,
+});
+export const AuditStreamEventSchema = EnterpriseScope.extend({
+  id: Id,
+  sequence: z.number().int().positive(),
+  eventType: z.string().min(1),
+  actorId: z.string().min(1),
+  authMethod: z.string().min(1),
+  targetHash: z.string().min(1),
+  result: z.enum(["success", "denied", "failure"]),
+  previousHash: z.string().min(1),
+  createdAt: Timestamp,
+});
+export const SlaMeasurementSchema = EnterpriseScope.extend({
+  id: Id,
+  component: z.enum(["console", "api", "signed_ingress", "processing", "remote_mcp"]),
+  target: z.string().min(1),
+  source: z.string().min(1),
+  achieved: z.number().min(0).max(1).nullable(),
+  windowStart: Timestamp,
+  windowEnd: Timestamp,
+  exclusions: z.array(z.string()),
+});
+
 export const EndpointSchema = Scope.extend({
   id: Id,
   environmentId: Id,
