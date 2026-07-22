@@ -1,0 +1,25 @@
+packages/core/src/notifications.ts
+  s_1751d9edd0bd98::t_cfc1d1260fcc19 1-112
+workfiles/NOTIFICATION_SINKS.md
+  s_1751d9edd0bd98::t_cfc1d1260fcc19 1-7
+packages/core/test/notifications.test.ts
+  s_1751d9edd0bd98::t_cfc1d1260fcc19 1-35
+packages/core/src/index.ts
+  s_1751d9edd0bd98::t_cfc1d1260fcc19 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "b3b7fb837c35e53a7682f95904ac7b80e24fc0cf",
+  "prompts": {},
+  "sessions": {
+    "s_1751d9edd0bd98": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8af2-f941-74b2-8fa1-97520301fb75",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
