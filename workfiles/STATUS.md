@@ -32,6 +32,10 @@ The Cloudflare-native hosted path now has isolated preview and production D1 con
 
 ## Track B — required before remote production use
 
+### Issue #11 graduated-autonomy foundation
+
+`packages/core/src/autonomy.ts` now defines the fail-closed, immutable grant and shadow-evidence eligibility contract for the launch-only GitHub informational-label class. It is not a provider execution worker: approval-required remains the default and remote autonomy remains disabled. A future worker must still provide transactional aggregate budgets, signed kill-switch epochs, fresh independent provider verification, and independently verified rollback before it can consume an eligible grant.
+
 - Better Auth account lifecycle, mandatory passkey/TOTP MFA, invitations, recovery, revocation, CSRF, and enterprise SSO.
 - MCP OAuth 2.1 Authorization Code with PKCE, resource metadata, scoped short-lived tokens, rotating refresh tokens, and audience checks.
 - Complete D1 tenant repositories, durable Queue/DLQ delivery state, Workflow orchestration, retention, backup, and usage reconciliation.
