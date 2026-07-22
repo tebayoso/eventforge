@@ -1,0 +1,31 @@
+packages/core/src/timeline.ts
+  s_58e89657f88023::t_9c6c89f7150433 1-8,18-32,42-47,52-61,64-76,79,83-84,90,100-107,114-116,121-122
+  s_58e89657f88023::t_41a0851285c956 9-17,33-41,48-51,62-63,77-78,80-82,85-89,91-99,108-113,117-120
+packages/core/test/timeline.test.ts
+  s_58e89657f88023::t_41a0851285c956 2-9,11-20,26-38,43-45,47-48
+  s_58e89657f88023::t_9c6c89f7150433 1,10,21-25,39-42,46,49
+workfiles/ARCHITECTURE.md
+  s_58e89657f88023::t_9c6c89f7150433 43-46
+packages/core/src/index.ts
+  s_58e89657f88023::t_9c6c89f7150433 6
+apps/control-plane/migrations/003_commercial_platform.sql
+  s_58e89657f88023::t_9c6c89f7150433 40-55
+workfiles/STATUS.md
+  s_58e89657f88023::t_9c6c89f7150433 5-8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "36e18738912c55aaa5cdc14d68d858958867812e",
+  "prompts": {},
+  "sessions": {
+    "s_58e89657f88023": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8aee-6f3e-7460-8525-e869ae32e1ce",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
