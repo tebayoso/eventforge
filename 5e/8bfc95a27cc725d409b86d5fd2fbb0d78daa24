@@ -1,0 +1,31 @@
+apps/control-plane/src/runtime.ts
+  s_660ac8227576fb::t_78a21d171ba123 39-41
+apps/control-plane/migrations/003_commercial_platform.sql
+  s_660ac8227576fb::t_78a21d171ba123 40-54
+workfiles/CONFIGURATION.md
+  s_660ac8227576fb::t_60cabea722fe05 22-34
+apps/control-plane/src/github-app.ts
+  s_660ac8227576fb::t_85afbd109f9036 1,119-122
+  s_660ac8227576fb::t_78a21d171ba123 2-118,123-137
+apps/control-plane/src/app.ts
+  s_660ac8227576fb::t_17c55f9cc17eeb 37,58,342-354,611-620,628,632
+apps/control-plane/src/github-app.test.ts
+  s_660ac8227576fb::t_78a21d171ba123 1-18,50-70
+  s_660ac8227576fb::t_85afbd109f9036 19-49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "5e8bfc95a27cc725d409b86d5fd2fbb0d78daa24",
+  "prompts": {},
+  "sessions": {
+    "s_660ac8227576fb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8aea-dc83-7191-a595-55f8224e43c5",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
