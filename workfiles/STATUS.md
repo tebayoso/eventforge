@@ -33,7 +33,11 @@ The Cloudflare-native hosted path now has isolated preview and production D1 con
 ## Track B — required before remote production use
 
 - Better Auth account lifecycle, mandatory passkey/TOTP MFA, invitations, recovery, revocation, CSRF, and enterprise SSO.
-- MCP OAuth 2.1 Authorization Code with PKCE, resource metadata, scoped short-lived tokens, rotating refresh tokens, and audience checks.
+- MCP OAuth 2.1 Authorization Code + S256 PKCE domain foundations: static first-party
+  clients, protected-resource metadata, opaque 15-minute access tokens, seven-day
+  rotating refresh families, audience/workspace/scope checks, and per-request identity
+  authority port. This remains non-production until durable grants, live authority,
+  security testing, configuration, and the external penetration-test gate are complete.
 - Complete D1 tenant repositories, durable Queue/DLQ delivery state, Workflow orchestration, retention, backup, and usage reconciliation.
 - S3-compatible immutable Forge artifacts, disposable sandbox validation, dependency/source scanning, and out-of-process connector installation.
 - pgvector embedding/index/query integration. Local vector search is reported as disabled until an acceptance test passes.
