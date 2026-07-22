@@ -1,0 +1,25 @@
+packages/core/test/replay-audit.test.ts
+  s_13bade7d484779::t_77f9d52d67e4c2 1-15
+packages/core/src/index.ts
+  s_13bade7d484779::t_77f9d52d67e4c2 6
+packages/core/src/replay-audit.ts
+  s_13bade7d484779::t_77f9d52d67e4c2 1-56
+workfiles/STATUS.md
+  s_13bade7d484779::t_77f9d52d67e4c2 5-8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "646d5870320ef5602ef1b6db1b6b37f25eb62bb3",
+  "prompts": {},
+  "sessions": {
+    "s_13bade7d484779": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8ae8-86ca-7943-a006-f60da574fcc6",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
