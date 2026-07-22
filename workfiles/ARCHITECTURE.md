@@ -40,3 +40,9 @@ Remote mode is intentionally fail-closed. Startup requires PostgreSQL, an encryp
 ## Stable contracts
 
 The runtime contracts live in `packages/core/src/contracts.ts`: `RuntimeMode`, `AuthContext`, `ProviderAdapter`, `PolicyDecision`, `EventEnvelope`, `WorkflowDefinition`, `ActionProposal`, `ForgeJob`, repository interfaces, and MCP scopes.
+
+## OpenTelemetry export (not yet enabled)
+
+`packages/core/src/telemetry.ts` publishes schema `1.0.0`: nine fixed lifecycle names and a deny-by-default attribute dictionary. Each destination gets an HMAC-SHA256 `vN:` workspace pseudonym truncated to 128 bits; raw workspace, provider, event, user, resource, payload, prompts, errors, URLs, credentials, and derived hashes are excluded. Trace and span IDs are random internal identifiers.
+
+The future exporter is opt-in OTLP/HTTP JSON only, asynchronous from a lifecycle projection, and must retain per-destination queues, DNS/rebinding checks, immutable MFA-authorized configuration versions, credential encryption, synthetic-only health/tests, and bounded retries. Remote mode remains fail-closed until those persistence and worker controls exist; local mode does not export.
