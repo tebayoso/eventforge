@@ -11,8 +11,26 @@ service:
   port: 4310
 ingress:
   enabled: false
-  className: ""
+  className: nginx
   host: eventforge.example.com
+  tlsSecretName: eventforge-tls
+  clusterIssuer: ""
+privateEdge:
+  enabled: false
+  supportedKubernetesMinor: "1.33"
+  namespace: eventforge
+  externalSecrets:
+    enabled: false
+    secretStoreRef: ""
+  dependencies:
+    postgres: ""
+    objectStore: ""
+    queue: ""
+    oidcIssuer: ""
+    kmsKeyReference: ""
+networkPolicy:
+  # Enable only after preflight validates DNS and external dependency egress CIDRs.
+  enabled: false
 postgres:
   existingSecret: eventforge-postgres
   databaseUrlKey: database-url
