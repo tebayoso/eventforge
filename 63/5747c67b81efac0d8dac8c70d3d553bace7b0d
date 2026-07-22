@@ -1,0 +1,65 @@
+apps/console/.env.production
+  s_3944757a172de5::t_7c1b3c755aaf3a 1
+apps/console/src/WaitlistPage.tsx
+  s_3944757a172de5::t_7c1b3c755aaf3a 57-59,75
+apps/console/public/.well-known/agent-skills/eventforge-operations/SKILL.md
+  s_3944757a172de5::t_7c1b3c755aaf3a 3,6,8
+workfiles/agent-browser/README.md
+  s_3944757a172de5::t_d9e5c6ed6eb837 281-285,287-291
+  s_3944757a172de5::t_efc6ed1fa15e18 286
+apps/console/public/auth.md
+  s_3944757a172de5::t_7c1b3c755aaf3a 1,3
+apps/console/src/App.tsx
+  s_3944757a172de5::t_7c1b3c755aaf3a 135,138,301
+apps/console/public/.well-known/mcp/server-card.json
+  s_3944757a172de5::t_7c1b3c755aaf3a 3,5
+apps/console/public/.well-known/agent-card.json
+  s_3944757a172de5::t_7c1b3c755aaf3a 2,18
+apps/console/index.html
+  s_3944757a172de5::t_01d5db652518ce 17
+  s_3944757a172de5::t_7c1b3c755aaf3a 11,27,33
+apps/console/src/LandingPage.tsx
+  s_3944757a172de5::t_7c1b3c755aaf3a 230,235,276,278,317,319,348,375,404,408,558,586,648,665
+  s_3944757a172de5::t_01d5db652518ce 496-497,627-628
+apps/console/src/worker.test.ts
+  s_3944757a172de5::t_7c1b3c755aaf3a 19
+apps/console/src/worker.ts
+  s_3944757a172de5::t_7c1b3c755aaf3a 23,25,39,143
+apps/console/src/main.tsx
+  s_3944757a172de5::t_01d5db652518ce 26
+apps/console/public/eventforge-mark.svg
+  s_3944757a172de5::t_d645f6896b818f 6
+  s_3944757a172de5::t_fa0ed228965695 4
+  s_3944757a172de5::t_7c1b3c755aaf3a 2-3,5
+apps/console/src/LandingPage.test.tsx
+  s_3944757a172de5::t_01d5db652518ce 14-16
+  s_3944757a172de5::t_7c1b3c755aaf3a 13
+apps/console/public/.well-known/agent-client.json
+  s_3944757a172de5::t_7c1b3c755aaf3a 2,5
+apps/console/public/.well-known/agent-skills/index.json
+  s_3944757a172de5::t_7c1b3c755aaf3a 7
+workfiles/CONFIGURATION.md
+  s_3944757a172de5::t_7c1b3c755aaf3a 227,239
+apps/console/src/analytics.test.ts
+  s_3944757a172de5::t_7c1b3c755aaf3a 11,24
+apps/console/src/analytics.ts
+  s_3944757a172de5::t_7c1b3c755aaf3a 19,29,46,60
+apps/console/src/api.ts
+  s_3944757a172de5::t_7c1b3c755aaf3a 87
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "635747c67b81efac0d8dac8c70d3d553bace7b0d",
+  "prompts": {},
+  "sessions": {
+    "s_3944757a172de5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8a43-bd9b-7532-a4a9-4690c7a84ad0",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
