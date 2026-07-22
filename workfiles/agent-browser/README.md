@@ -265,3 +265,8 @@ Reusable pattern: keep a marketing capture route out of discovery, enforce origi
 - Opened `https://eventforge.dev/waitlist?release=1.0-rc` in agent-browser, waited for network idle plus analytics initialization, and confirmed the EventBridge title with no browser errors.
 
 Reusable pattern: keep client analytics identifiers in a public runtime manifest so deployments are reproducible without putting private credentials in build logs or shell history.
+# GitHub publish check — 2026-07-22
+
+- URL: `https://github.com/tebayoso/eventforge/compare/1.0-rc...codex%2Fissue-8-forge-connectors?expand=1`
+- Outcome: the branch comparison resolved to commit `5190f02`, but the browser was logged out (`Sign in` shown). GitHub CLI also reported its active token invalid, so no draft PR or review comment was created.
+- Reusable pattern: confirm the exact base/head comparison URL before publishing; authenticated GitHub browser or CLI state is required for PR creation and comments.
