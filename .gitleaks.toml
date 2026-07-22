@@ -1,0 +1,14 @@
+# Extend the default gitleaks ruleset, but exclude the generated, minified
+# plugin bundles (esbuild output committed for the plugin-bundle verification
+# gate). Minifier tokens false-positive on the generic-api-key rule; these are
+# build artifacts, not source. Source files are still scanned normally.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Generated minified plugin bundles (esbuild output, not source)"
+paths = [
+  'plugins/eventforge/server/eventforge-standalone\.cjs',
+  'plugins/eventforge/server/eventforge-mcp-http\.cjs',
+  'plugins/eventforge/server/eventforge-mcp\.mjs',
+]
