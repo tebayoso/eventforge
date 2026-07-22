@@ -40,3 +40,20 @@ Remote mode is intentionally fail-closed. Startup requires PostgreSQL, an encryp
 ## Stable contracts
 
 The runtime contracts live in `packages/core/src/contracts.ts`: `RuntimeMode`, `AuthContext`, `ProviderAdapter`, `PolicyDecision`, `EventEnvelope`, `WorkflowDefinition`, `ActionProposal`, `ForgeJob`, repository interfaces, and MCP scopes.
+
+## SDK and marketplace foundation (issue #14)
+
+`@eventforge/core/sdk` is the public v1 connector boundary. It accepts only
+`source.ingest.v1`, `context.read.v1`, and `notification.send.v1`; it does not
+grant raw host, environment, filesystem, shell, arbitrary HTTP, admin, deploy,
+or self-modifying access. Implementations receive tenant-bound contexts with a
+deadline, idempotency key, abort signal, and capability logger, and return
+typed outcomes rather than secrets or host errors.
+
+Installation is fail-closed until issue #8 artifact trust is available. A
+reviewed, unexpired publisher review, exact-digest Owner recent-MFA approval,
+valid signature, non-revoked artifact, and compatible core/capability set are
+all required. Marketplace listings are not authority: during an outage only an
+existing exact installation with a valid signed revocation snapshot no older
+than 15 minutes may run. Full production certification remains closed pending
+the real signer/revocation services and recovery drills.
