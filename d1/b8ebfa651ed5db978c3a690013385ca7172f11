@@ -1,0 +1,34 @@
+workfiles/ARCHITECTURE.md
+  s_9facdf84e840e5::t_2603128b93fcb9 43-48
+packages/core/src/index.ts
+  s_9facdf84e840e5::t_2603128b93fcb9 7
+packages/core/src/telemetry.ts
+  s_9facdf84e840e5::t_2603128b93fcb9 1-60
+packages/core/test/core.test.ts
+  s_9facdf84e840e5::t_2603128b93fcb9 22-25,28-49
+  s_8060d3d04858cc::t_22c4906116908c 50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "d1b8ebfa651ed5db978c3a690013385ca7172f11",
+  "prompts": {},
+  "sessions": {
+    "s_8060d3d04858cc": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8af2-fbda-7ff0-82d7-7d88b98b28ef",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    },
+    "s_9facdf84e840e5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8af2-fe73-7472-aa74-a723df5561fe",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
