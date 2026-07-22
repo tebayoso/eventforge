@@ -256,3 +256,14 @@ Reusable pattern: separate visible product branding from stable protocol/package
 - API Worker deployed as `414c367b-2768-4bd1-9b3f-06c2b7d6c390`; console Worker deployed as `f2cc68cc-3f7e-47e9-b2d6-24e88d795994`.
 
 Reusable pattern: keep a marketing capture route out of discovery, enforce origin/consent/honeypot/rate limits at the edge, and test persistence plus duplicate behavior rather than treating a successful browser response as proof of storage.
+
+## 2026-07-22 — GA4 production tag deployment
+
+- Built the console from `main` with the production GA4 Measurement ID in `apps/console/.env.production`; the emitted asset contained `G-2E80P0BMCR`.
+- Deployed the rebased `main` console to `https://eventforge.dev/` as Cloudflare version `882caed1-8936-470d-bedc-40af3f2ff6f3`.
+- Opened the production landing page in fresh `eventforge-ga4-*` agent-browser sessions. The page rendered correctly, `window.dataLayer` contained the GA4 `config` command with privacy flags, and `https://www.googletagmanager.com/gtag/js?id=G-2E80P0BMCR` returned `200`.
+- Browser error and console inspection were empty. The automated browser did not expose a separate Google Analytics collection beacon, so authoritative ingestion confirmation remains the GA4 Realtime/DebugView report.
+- Reopened `https://eventforge.dev/console`; it retained the intentional `503` sign-in gate after deployment.
+- Visually inspected the full production landing page captured at `workfiles/agent-browser/screenshots/eventbridge-ga4-production-2026-07-22.png`.
+
+Reusable pattern: verify analytics releases at four layers—compiled identifier, live bundle, third-party loader plus queued configuration, and the provider's realtime report—without treating a successful script download alone as proof of event ingestion.
