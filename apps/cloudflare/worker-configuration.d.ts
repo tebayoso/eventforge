@@ -8,6 +8,8 @@ interface __BaseEnv_Env {
 	INGEST_QUEUE: Queue;
 	ENVIRONMENT: "production" | "preview";
 	PUBLIC_INGRESS_ENABLED: "false";
+	DURABLE_DELIVERY_ENABLED: "false";
+	MONITORING_ENABLED: "false";
 	CANARY_WORKSPACE_ID: "eventforge-canary";
 	CANARY_PROJECT_ID: "eventforge-canary";
 	CANARY_ENVIRONMENT_ID: "00000000-0000-4000-8000-000000000001";
@@ -26,6 +28,8 @@ declare namespace Cloudflare {
 		INGEST_QUEUE: Queue;
 		ENVIRONMENT: "production";
 		PUBLIC_INGRESS_ENABLED: "false";
+		DURABLE_DELIVERY_ENABLED: "false";
+		MONITORING_ENABLED: "false";
 		CANARY_WORKSPACE_ID: "eventforge-canary";
 		CANARY_PROJECT_ID: "eventforge-canary";
 		CANARY_ENVIRONMENT_ID: "00000000-0000-4000-8000-000000000001";
@@ -40,7 +44,7 @@ type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
 declare namespace NodeJS {
-	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "ENVIRONMENT" | "PUBLIC_INGRESS_ENABLED" | "CANARY_WORKSPACE_ID" | "CANARY_PROJECT_ID" | "CANARY_ENVIRONMENT_ID" | "CANARY_WEBHOOK_SECRET" | "PAYLOAD_MASTER_KEY" | "WAITLIST_RATE_LIMIT_SECRET">> {}
+interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "ENVIRONMENT" | "PUBLIC_INGRESS_ENABLED" | "DURABLE_DELIVERY_ENABLED" | "MONITORING_ENABLED" | "CANARY_WORKSPACE_ID" | "CANARY_PROJECT_ID" | "CANARY_ENVIRONMENT_ID" | "CANARY_WEBHOOK_SECRET" | "PAYLOAD_MASTER_KEY" | "WAITLIST_RATE_LIMIT_SECRET">> {}
 }
 
 // Begin runtime types

@@ -12,6 +12,8 @@
   "vars": {
     "ENVIRONMENT": "preview",
     "PUBLIC_INGRESS_ENABLED": "false",
+    "DURABLE_DELIVERY_ENABLED": "false",
+    "MONITORING_ENABLED": "false",
     "CANARY_WORKSPACE_ID": "eventforge-canary",
     "CANARY_PROJECT_ID": "eventforge-canary",
     "CANARY_ENVIRONMENT_ID": "00000000-0000-4000-8000-000000000001",
@@ -57,6 +59,8 @@
       "vars": {
         "ENVIRONMENT": "production",
         "PUBLIC_INGRESS_ENABLED": "false",
+        "DURABLE_DELIVERY_ENABLED": "false",
+        "MONITORING_ENABLED": "false",
         "CANARY_WORKSPACE_ID": "eventforge-canary",
         "CANARY_PROJECT_ID": "eventforge-canary",
         "CANARY_ENVIRONMENT_ID": "00000000-0000-4000-8000-000000000001",
