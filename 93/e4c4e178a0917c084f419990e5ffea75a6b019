@@ -1,0 +1,29 @@
+packages/core/src/sdk.ts
+  s_717f8c81e65bfb::t_3bf259cf349745 14-15,23-28,30-47,49-52,55-127,131-138,140,142-157,159-167,169-249,251-285,287-290,292-297,301-309,312-317,321,325-331,339,341-355
+  s_717f8c81e65bfb::t_fada6121eb997f 141,286,291,298-300,311,318-320,322-324
+  s_717f8c81e65bfb::t_2ca9a003f3d593 16-22,29,250,310,332-336,338,340
+  s_717f8c81e65bfb::t_c6117ce8442737 13,337
+packages/core/test/sdk.test.ts
+  s_717f8c81e65bfb::t_fda255e2f25b28 94-99,231-237,391-394,398-399,401,407,413,418-419
+  s_717f8c81e65bfb::t_9f71f83aa92ebd 2-13,15-16,18-77,79-92,100-140,142-171,174-230,238-385,387-390,395-397,400,402-406,408-412,414-417
+  s_717f8c81e65bfb::t_fada6121eb997f 78,141,172-173
+  s_717f8c81e65bfb::t_c6117ce8442737 93
+workfiles/ARCHITECTURE.md
+  s_717f8c81e65bfb::t_8167a81a9de035 56-68
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "93e4c4e178a0917c084f419990e5ffea75a6b019",
+  "prompts": {},
+  "sessions": {
+    "s_717f8c81e65bfb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8b1f-96ff-7571-ba96-89256223a480",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
