@@ -1,0 +1,36 @@
+apps/control-plane/test/app.test.ts
+  s_ba5ab9025020e8::t_6815a01d888605 321-325,327-353
+  s_ba5ab9025020e8::t_888676a90a3a94 51,318-320,326,354-356
+  s_ba5ab9025020e8::t_5d3a119afab4e7 357-359
+packages/core/src/provider-installations.ts
+  s_ba5ab9025020e8::t_888676a90a3a94 1-48,67-70
+  s_ba5ab9025020e8::t_6815a01d888605 49-66
+packages/core/src/index.ts
+  s_ba5ab9025020e8::t_888676a90a3a94 6
+packages/core/test/provider-installations.test.ts
+  s_ba5ab9025020e8::t_6815a01d888605 5-13,18-26,30-52
+  s_ba5ab9025020e8::t_888676a90a3a94 1-4,14-17,27-29,53-54
+workfiles/STATUS.md
+  s_ba5ab9025020e8::t_888676a90a3a94 21-24
+apps/control-plane/migrations/004_provider_installations.sql
+  s_ba5ab9025020e8::t_888676a90a3a94 1-22
+apps/control-plane/src/app.ts
+  s_ba5ab9025020e8::t_6815a01d888605 593
+  s_ba5ab9025020e8::t_888676a90a3a94 44
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "3c15c0f363dcaf8640fe02f330d38eadcbff417b",
+  "prompts": {},
+  "sessions": {
+    "s_ba5ab9025020e8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8aee-7107-72b1-971b-99102f9d5263",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
