@@ -18,6 +18,10 @@ Updated: 2026-07-20
 
 ## Commercial platform roadmap implementation
 
+## Demand-validated source foundations (issue #10)
+
+GitLab Cloud, Jira Cloud, and Datadog have isolated `v1` event matrices and closed readiness records. The records hold only availability, approval reference, matrix version, and gate evidence; partner commitments remain external business evidence. No provider is shipped or enabled: hosted ingress remains fail-closed. GitLab self-managed, Jira Data Center, writes, and Datadog streams/metrics/logs/traces/synthetics are excluded. Mapping requires server-side provider attestation and Owner confirmation, and conflicts block a resource from mapping to a second workspace. Datadog only permits a narrow, redacted monitor transition shape. Further authentication, replay, lifecycle, deletion, health, and durable ingress work remains closed pending individual provider evidence and security design.
+
 Phase 0 implementation has started with additive, tenant-scoped contracts for endpoints, routes, deliveries and attempts, issues, alert policies, incidents, bounded reaction policies and runs, evidence bundles, usage records, and entitlements. Migration `003_commercial_platform.sql` adds durable resource, entitlement, and idempotent usage-meter storage without enabling remote mode.
 
 These are persistence and interface foundations only. Hosted authentication, repository hydration, outbound delivery workers, billing export, monitoring, alert delivery, reactions, and public commercial APIs are not yet enabled or claimed as supported.
