@@ -493,8 +493,8 @@ export default function LandingPage() {
             <em>Earn autonomy.</em>
           </h2>
           <p>
-            EventBridge integrates with durable runtimes instead of replacing them. The control plane
-            grows in three deliberate layers.
+            EventBridge integrates with durable runtimes instead of replacing them. The control
+            plane grows in three deliberate layers.
           </p>
         </div>
         <div className="ef-roadmap-list">
@@ -624,8 +624,8 @@ export default function LandingPage() {
             Make it <em>quieter.</em>
           </h2>
           <p>
-            EventBridge sits above the tools and automations you already run. It gives their events a
-            shared inbox, a common set of rules, and agents that can take the first pass when
+            EventBridge sits above the tools and automations you already run. It gives their events
+            a shared inbox, a common set of rules, and agents that can take the first pass when
             something deserves attention.
           </p>
           <ul>
