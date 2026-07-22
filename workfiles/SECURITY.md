@@ -28,6 +28,9 @@ The repository's local demo mode is the currently supported evaluation surface. 
 - WebAuthn registration and authentication are bound to the production origin,
   RP ID, current account, server challenge, and signature counter. User
   verification is required and credential backup state is retained for review.
+  A lower role may fall back to a non-resident passkey when its device lacks
+  resident-key support; Owner and Admin access still requires either a resident
+  passkey or TOTP.
 - Recovery codes are generated with a cryptographically secure random source,
   displayed once, stored only as individually salted slow hashes, and consumed
   atomically. Regeneration invalidates every earlier code.
@@ -48,3 +51,8 @@ The repository's local demo mode is the currently supported evaluation surface. 
   append-only through the application interface. Issue #17 remains responsible
   for tamper evidence, retention, export, and the immutable-evidence lifecycle;
   issue #7 does not claim those stronger guarantees early.
+- A session-authority restore never restores usable sessions. Recovery occurs
+  with ingress blocked, rotates the revocation epoch, deletes all session and
+  request-token state, and requires independent factor authentication. A request
+  already executing when revocation commits may finish; clients must treat a
+  revocation acknowledgement as applying to requests that begin afterward.
