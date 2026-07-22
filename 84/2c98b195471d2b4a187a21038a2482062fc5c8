@@ -1,0 +1,27 @@
+packages/core/test/sdk.test.ts
+  s_dfa810d4c04be4::t_6d8f3a623b1712 1-18
+packages/core/src/sdk.ts
+  s_dfa810d4c04be4::t_6d8f3a623b1712 1-66
+packages/core/package.json
+  s_dfa810d4c04be4::t_6d8f3a623b1712 20-23
+packages/core/src/index.ts
+  s_dfa810d4c04be4::t_6d8f3a623b1712 6
+workfiles/ARCHITECTURE.md
+  s_dfa810d4c04be4::t_ea0f46383c2dec 43-59
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "842c98b195471d2b4a187a21038a2482062fc5c8",
+  "prompts": {},
+  "sessions": {
+    "s_dfa810d4c04be4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8afa-a8d5-7501-93e2-051ea0b04079",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
