@@ -1,0 +1,27 @@
+apps/control-plane/migrations/004_incident_correlation.sql
+  s_a2f973a651654a::t_8a691f64929027 1-30
+packages/core/test/correlation.test.ts
+  s_a2f973a651654a::t_8a691f64929027 1-26
+packages/core/src/platform.ts
+  s_a2f973a651654a::t_a48250c0c81da1 142-151,171,177-180,184-200,203-204,208-214
+  s_a2f973a651654a::t_2ed9f439c09d92 165-169,183
+  s_a2f973a651654a::t_8a691f64929027 110-141,152-164,170,172-176,181-182,201-202,205-207,215-216
+workfiles/STATUS.md
+  s_a2f973a651654a::t_a48250c0c81da1 25-26
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "80630756831ec04d68b56becacdefe378c0b9444",
+  "prompts": {},
+  "sessions": {
+    "s_a2f973a651654a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8af6-7e22-7841-a655-c5ac637b786a",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
