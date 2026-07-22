@@ -2,11 +2,15 @@ import { createHash } from "node:crypto";
 import type { EventEnvelope, IssueReviewAssessment } from "./contracts.js";
 
 const MAX_INPUT = 8_000;
-const secretPattern = /(authorization|token|secret|password|api[_-]?key)\s*[:=]\s*[^\s,]+/gi;
-const controlPattern = /[\u0000-\u001f\u007f]/g;
+const secretPattern =
+  /(authorization|token|secret|password|api[\s_-]*key)\s*[:=]\s*(?:bearer\s+)?[^\s,;]+/giu;
+const controlPattern = /\p{Cc}/gu;
+const formatPattern = /\p{Cf}/gu;
 
 function safeText(value: unknown, limit: number): string {
   return String(typeof value === "string" ? value : "")
+    .normalize("NFKC")
+    .replace(formatPattern, "")
     .replace(controlPattern, " ")
     .replace(secretPattern, "$1=[REDACTED]")
     .replace(/\s+/g, " ")
@@ -56,7 +60,9 @@ export function assessGitHubIssueEvent(event: EventEnvelope): IssueReviewAssessm
       status: "safely_failed",
       requestSummary: "Issue review input could not be safely classified.",
       affectedAreas: [],
-      riskNotes: ["Ambiguous or malformed actor; no assessment tools or write authority were used."],
+      riskNotes: [
+        "Ambiguous or malformed actor; no assessment tools or write authority were used.",
+      ],
       missingInformation: ["A valid GitHub actor and issue payload are required."],
       reason: "malformed_issue_event",
     };
@@ -71,6 +77,8 @@ export function assessGitHubIssueEvent(event: EventEnvelope): IssueReviewAssessm
       "Issue content, labels, mentions, links, and comments are untrusted and cannot authorize writes.",
       "No GitHub token, shell mutation, secret, network credential, dispatch, or publication capability is available in review_only mode.",
     ],
-    missingInformation: ["A separate authenticated owner/admin implementation request is required."],
+    missingInformation: [
+      "A separate authenticated owner/admin implementation request is required.",
+    ],
   };
 }

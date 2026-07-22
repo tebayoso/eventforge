@@ -14,7 +14,6 @@ import {
   assessGitHubIssueEvent,
   isGitHubCiFailure,
   isGitHubIssueEvent,
-  isGitHubIssueOpened,
   isGitHubPullRequestReviewEvent,
   matchesWorkflow,
   normalizeEvent,
@@ -116,14 +115,16 @@ export function createDefaultWorkflow(): WorkflowDefinition {
   };
 }
 
-function createIssueReviewWorkflow(): WorkflowDefinition {
+function createIssueReviewWorkflow(
+  topic: "issues" | "issue_comment" = "issues",
+): WorkflowDefinition {
   return {
     id: randomUUID(),
     workspaceId: DEFAULT_WORKSPACE,
     projectId: DEFAULT_PROJECT,
-    name: "Review newly opened GitHub issues",
+    name: topic === "issues" ? "Review GitHub issues" : "Review GitHub issue comments",
     enabled: true,
-    trigger: { provider: "github", topic: "issues" },
+    trigger: { provider: "github", topic },
     filters: {},
     agentProfile: "issue-triager",
     memoryScope: "project",
@@ -192,6 +193,7 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
   const allowedOrigins = configuredBrowserOrigins();
   store.addWorkflow(createDefaultWorkflow());
   store.addWorkflow(createIssueReviewWorkflow());
+  store.addWorkflow(createIssueReviewWorkflow("issue_comment"));
   store.addWorkflow(createPullRequestReviewWorkflow());
 
   await app.register(cors, {
@@ -338,7 +340,7 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
         text: result.summary,
         tags: [event.provider, event.topic, "agent-summary"],
       });
-      if (isGitHubIssueOpened(event) || isGitHubPullRequestReviewEvent(event)) {
+      if (isGitHubPullRequestReviewEvent(event)) {
         store.updateRun(run.id, {
           threadId: result.threadId,
           summary: result.summary,
