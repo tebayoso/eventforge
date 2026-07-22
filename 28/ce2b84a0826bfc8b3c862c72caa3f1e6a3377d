@@ -1,0 +1,41 @@
+workfiles/STATUS.md
+  s_66d95bf86199d7::t_4ef2970e4da33b 36-40
+packages/mcp-server/src/index.ts
+  s_66d95bf86199d7::t_a691ddf3b5fca3 27-37
+workfiles/CONFIGURATION.md
+  s_66d95bf86199d7::t_a691ddf3b5fca3 150-155,176-182
+  s_2b1e2696963b91::t_7dc5f93c85331e 183
+packages/mcp-server/src/oauth.ts
+  s_66d95bf86199d7::t_a691ddf3b5fca3 1-61,65-68,72,76,79-83,87-105,111-116,124-138,145-147,157-158,172,175,188-190,197,206-208,216,225-228,234-235,242,253,267-274,281,286-287,330-332
+  s_66d95bf86199d7::t_8f20c375cde6c5 62-64,69-71,73-75,77-78,84-86,106-110,117-123,139-144,148-156,159-171,173-174,176-187,191-196,198-205,209-215,217-224,229-233,236-241,243-252,254-266,275-280,282-285,288-329,333-339
+packages/mcp-server/test/oauth.test.ts
+  s_66d95bf86199d7::t_d77441e378c448 22
+  s_66d95bf86199d7::t_8f20c375cde6c5 2-8,10-20,26-34,36-51,57-59,64-87,90-116,119-150,153-191,195-208,213-221
+  s_66d95bf86199d7::t_67812c113a9b1d 21
+  s_66d95bf86199d7::t_4ef2970e4da33b 194,209-211
+  s_66d95bf86199d7::t_a691ddf3b5fca3 1,9,23-25,35,52-56,60-63,88-89,117-118,151-152,192-193,212,222-224
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "28ce2b84a0826bfc8b3c862c72caa3f1e6a3377d",
+  "prompts": {},
+  "sessions": {
+    "s_2b1e2696963b91": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8ae1-bc1c-7080-80da-2fdf2003f4ef",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    },
+    "s_66d95bf86199d7": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8ae2-8a53-7352-8a4d-35ed1f5a5eaf",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
