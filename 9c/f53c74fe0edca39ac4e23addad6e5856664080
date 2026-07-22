@@ -1,0 +1,66 @@
+packages/core/src/contracts.ts
+  s_2b1e2696963b91::t_bdac38cf89b829 9
+  s_2b1e2696963b91::t_a341149018dc1f 28-29
+apps/cloudflare/worker-configuration.d.ts
+  s_2b1e2696963b91::t_a177d6701f1c84 2,17,22,37
+apps/control-plane/src/app.ts
+  s_2b1e2696963b91::t_a341149018dc1f 41,90-95
+  s_2b1e2696963b91::t_b70cfff4ca89f5 96-97,251,270
+workfiles/SECURITY.md
+  s_2b1e2696963b91::t_4e6775a5de5415 47-50
+apps/cloudflare/src/index.ts
+  s_2b1e2696963b91::t_bdac38cf89b829 2
+apps/cloudflare/test/cloudflare-workers.ts
+  s_2b1e2696963b91::t_3f5c8dbbda899d 1-9
+workfiles/ARCHITECTURE.md
+  s_2b1e2696963b91::t_4e6775a5de5415 110-129
+apps/cloudflare/test/identity.test.ts
+  s_2b1e2696963b91::t_bdac38cf89b829 1-5,9-12,16-17,24-25,32-34,50,70-72,83-84
+  s_2b1e2696963b91::t_6b5c159d25858e 47-49,53-66
+  s_adaa872cd3b4f8::t_a61fa7cd70e6fc 67-69
+  s_adaa872cd3b4f8::t_44c69bb6f91c15 6-8,13-15,18-23,26-31,35-46,51-52,73-82
+apps/cloudflare/migrations/control/0003_hosted_identity.sql
+  s_2b1e2696963b91::t_bdac38cf89b829 1-72
+apps/control-plane/test/app.test.ts
+  s_2b1e2696963b91::t_a341149018dc1f 36,180
+  s_2b1e2696963b91::t_837abb9229804d 181-190
+apps/cloudflare/src/session-authority.ts
+  s_2b1e2696963b91::t_bdac38cf89b829 1-29,33-45,51-72,78-81,89-98,106-145
+  s_adaa872cd3b4f8::t_44c69bb6f91c15 30-32,46-50,73-77,82-88,99-105
+apps/cloudflare/src/identity.ts
+  s_adaa872cd3b4f8::t_a61fa7cd70e6fc 159-162
+  s_2b1e2696963b91::t_6b5c159d25858e 151-158,163-165
+  s_2b1e2696963b91::t_bdac38cf89b829 1-2,17-19,29-43,56-61,64-77,82,103-111,117-131,138-141,166,173-174,179,188-195,204-205,212-215,225,229-230,235-236,243,249-252,262-266,272-274,278
+  s_adaa872cd3b4f8::t_44c69bb6f91c15 3-16,20-28,44-55,62-63,78-81,83-102,112-116,132-137,142-148,150,167-172,175-178,180-187,196-203,206-211,216-224,226-228,231-234,237-242,244-248,253-261,267-271,275-277
+  s_2b1e2696963b91::t_c002babdd82cf5 149
+apps/cloudflare/wrangler.jsonc
+  s_2b1e2696963b91::t_bdac38cf89b829 37,39-40,86,88
+  s_adaa872cd3b4f8::t_44c69bb6f91c15 38,87
+apps/cloudflare/vitest.config.ts
+  s_2b1e2696963b91::t_3f5c8dbbda899d 1-5
+  s_2b1e2696963b91::t_8a4e77d9d825d8 6-9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "9cf53c74fe0edca39ac4e23addad6e5856664080",
+  "prompts": {},
+  "sessions": {
+    "s_2b1e2696963b91": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8ae1-bc1c-7080-80da-2fdf2003f4ef",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    },
+    "s_adaa872cd3b4f8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8a74-a3a1-7813-9be6-37b6956eed2a",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
