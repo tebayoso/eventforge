@@ -1,0 +1,41 @@
+packages/core/src/events.ts
+  s_7e351d822547a2::t_46fe9abba71b91 279-286
+packages/core/src/index.ts
+  s_7e351d822547a2::t_46fe9abba71b91 4
+packages/core/test/core.test.ts
+  s_7e351d822547a2::t_75c76cb488e575 49-50
+  s_7e351d822547a2::t_1766aab22ae29a 6,26-48,51-72
+workfiles/SECURITY.md
+  s_7e351d822547a2::t_463036d5849b8b 22
+workfiles/THREAT_MODEL.md
+  s_7e351d822547a2::t_463036d5849b8b 25
+apps/control-plane/src/app.ts
+  s_7e351d822547a2::t_289801ad686708 127
+  s_7e351d822547a2::t_46fe9abba71b91 14,16,302-316
+workfiles/STATUS.md
+  s_7e351d822547a2::t_463036d5849b8b 13
+apps/control-plane/test/app.test.ts
+  s_7e351d822547a2::t_463036d5849b8b 2
+  s_7e351d822547a2::t_1766aab22ae29a 101-125,127-130
+  s_7e351d822547a2::t_75c76cb488e575 126
+packages/core/src/contracts.ts
+  s_7e351d822547a2::t_46fe9abba71b91 72-89,254-261
+packages/core/src/issue-review.ts
+  s_7e351d822547a2::t_46fe9abba71b91 1-76
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "cadcb8be72dd48c1a5fceb339fb91559b3a462c5",
+  "prompts": {},
+  "sessions": {
+    "s_7e351d822547a2": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8afd-9ef1-7421-a0f7-1ee08e345911",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
