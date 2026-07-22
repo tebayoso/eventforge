@@ -19,3 +19,44 @@ The repository's local demo mode is the currently supported evaluation surface. 
 - Local MCP uses stdio or loopback-only transport; non-loopback MCP is disabled and will require OAuth-scoped authorization.
 - Secrets never enter browser build variables, logs, generated connector source, or audit messages.
 - Forged code is never hot-loaded or executed in the control-plane process.
+- Hosted sessions and tokens are opaque identifiers. Every hosted request checks
+  the strongly consistent session authority; no offline JWT can outlive a role,
+  membership, factor, recovery, or session revocation.
+- Owner and Admin access requires an enrolled passkey or TOTP factor. Privileged
+  operations require a factor proof no older than 15 minutes; normal activity
+  never extends that window.
+- WebAuthn registration and authentication are bound to the production origin,
+  RP ID, current account, server challenge, and signature counter. User
+  verification is required and credential backup state is retained for review.
+  A lower role may fall back to a non-resident passkey when its device lacks
+  resident-key support; Owner and Admin access still requires either a resident
+  passkey or TOTP.
+- Recovery codes are generated with a cryptographically secure random source,
+  displayed once, stored only as individually salted slow hashes, and consumed
+  atomically. Regeneration invalidates every earlier code.
+- Browser mutations use same-origin host-only secure cookies, non-simple JSON
+  requests, strict Origin and Fetch Metadata validation, and sensitive-action
+  reauthentication. The session bootstrap returns a request token bound to the
+  server-side session; every mutation must echo it in a dedicated header.
+  Authentication responses do not reveal whether an account or workspace exists.
+- Invitations bind one workspace, exact normalized email, intended role,
+  inviter, opaque identifier, and seven-day expiry. Imported or forwarded data
+  cannot grant membership to a different identity. Existing and new users follow
+  the same acceptance response and verification destination; membership is
+  created server-side only after verified identity resolution.
+- The concrete request-token header is `X-EventForge-Request-Token`. Its value
+  is session-bound only in the Durable Object, never a second cookie or a
+  client-decoded claim. The production adapter must reject a mutation without
+  this header, `Origin: https://eventforge.dev`, and acceptable Fetch Metadata.
+- The final workspace owner cannot be removed, downgraded, leave, or close the
+  owning account. Ownership transfer requires recent MFA and an existing
+  verified successor; support has no impersonation or silent override path.
+- Governance audit events are actor- and session-attributed, tenant-scoped, and
+  append-only through the application interface. Issue #17 remains responsible
+  for tamper evidence, retention, export, and the immutable-evidence lifecycle;
+  issue #7 does not claim those stronger guarantees early.
+- A session-authority restore never restores usable sessions. Recovery occurs
+  with ingress blocked, rotates the revocation epoch, deletes all session and
+  request-token state, and requires independent factor authentication. A request
+  already executing when revocation commits may finish; clients must treat a
+  revocation acknowledgement as applying to requests that begin afterward.
