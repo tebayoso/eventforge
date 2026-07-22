@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import cors from "@fastify/cors";
 import rawBody from "fastify-raw-body";
 import Fastify, { type FastifyInstance } from "fastify";
@@ -363,9 +363,7 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
         );
         return;
       }
-      const policySnapshotHash = createHash("sha256")
-        .update(JSON.stringify(workflow.policy))
-        .digest("hex");
+      const policySnapshotHash = decision.policyDigest;
       const proposal: ActionProposal = {
         id: randomUUID(),
         workflowId: workflow.id,

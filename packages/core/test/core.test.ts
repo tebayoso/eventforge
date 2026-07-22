@@ -19,9 +19,94 @@ import {
   untrustedEventGuard,
   verifyBareHmac,
   verifyHmac,
+  manifestDigest,
+  simulatePolicy,
+  verifyPackImport,
 } from "../src/index.js";
 
 describe("event security", () => {
+  it("uses the identical evaluator for live and side-effect-free historical simulation", () => {
+    const manifest = {
+      schemaVersion: 1 as const,
+      evaluatorVersion: "2026-07-22.1",
+      workspaceId: "w",
+      packId: "pack",
+      version: 1,
+      policy: {
+        version: 1,
+        approvalMode: "approval_required" as const,
+        allowedCapabilities: ["read" as const],
+        allowedRepositories: ["repo"],
+        allowedPaths: ["**"],
+        allowedDomains: [],
+        allowedProviders: ["github" as const],
+      },
+      scopes: ["repo"],
+      source: "test",
+      createdAt: "2026-07-22T00:00:00.000Z",
+    };
+    const request = {
+      actor: {
+        actorId: "owner",
+        workspaceId: "w",
+        role: "owner" as const,
+        mfaVerified: true,
+        scopes: [],
+      },
+      provider: "github" as const,
+      repository: "repo",
+      paths: [],
+      domains: [],
+      capabilities: ["read"],
+    };
+    const live = evaluatePolicy(manifest.policy, request);
+    const simulated = simulatePolicy(manifest, [
+      { id: "event", request, retained: true, authorized: true },
+    ]);
+    expect(simulated).toMatchObject({ status: "complete", evaluated: 1, eligible: 1 });
+    expect(simulated.decisions[0]?.decision).toEqual(live);
+    expect(manifestDigest(manifest)).toHaveLength(64);
+  });
+
+  it("blocks unretained evidence and untrusted or incompatible signed imports", () => {
+    const manifest = {
+      schemaVersion: 1 as const,
+      evaluatorVersion: "wrong",
+      workspaceId: "w",
+      packId: "pack",
+      version: 1,
+      policy: {
+        version: 1,
+        approvalMode: "approval_required" as const,
+        allowedCapabilities: ["read" as const],
+        allowedRepositories: [],
+        allowedPaths: [],
+        allowedDomains: [],
+        allowedProviders: [],
+      },
+      scopes: [],
+      source: "test",
+      createdAt: "2026-07-22T00:00:00.000Z",
+    };
+    expect(
+      verifyPackImport({ manifest, signature: "AA==", keyId: "missing", trust: [] }),
+    ).toMatchObject({ ok: false, reason: "untrusted_signer" });
+    expect(
+      simulatePolicy({ ...manifest, evaluatorVersion: "2026-07-22.1" }, [
+        {
+          id: "gone",
+          request: {
+            actor: { actorId: "a", workspaceId: "w", role: "owner", mfaVerified: true, scopes: [] },
+            paths: [],
+            domains: [],
+            capabilities: ["read"],
+          },
+          retained: false,
+          authorized: true,
+        },
+      ]),
+    ).toMatchObject({ status: "blocked", evaluated: 0 });
+  });
   it("verifies GitHub-style HMAC without accepting a mismatched payload", () => {
     const body = JSON.stringify(demoEvents.githubCiFailure);
     const signature = `sha256=${createHmac("sha256", "secret").update(body).digest("hex")}`;

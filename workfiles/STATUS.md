@@ -18,6 +18,12 @@ Updated: 2026-07-20
 
 ## Commercial platform roadmap implementation
 
+## Policy packs (#5)
+
+Phase A foundation: a single deterministic evaluator now emits policy/context digests, evaluator/schema provenance, outcome, scope, matched rules and reason codes. Pack manifests are immutable/content-addressed and `004_policy_packs.sql` provides tenant-composite version, serialized activation, and simulation records. Phase B foundation: simulation invokes that same evaluator only and accepts evidence inputs as data; it has no action, approval, incident, billing, reaction, notification, or mutation adapter. Missing retained evidence and authorization produce blocked/partial coverage rather than a complete claim.
+
+Hosted pack import, signing-key trust administration, owner/recent-MFA activation, job execution, evidence retention, and identity are not wired, so hosted policy-pack operations remain closed. Local fixtures validate evaluator equivalence and fail-closed simulation/import cases; no production policy pack, signing key, or historical evidence was exercised.
+
 Phase 0 implementation has started with additive, tenant-scoped contracts for endpoints, routes, deliveries and attempts, issues, alert policies, incidents, bounded reaction policies and runs, evidence bundles, usage records, and entitlements. Migration `003_commercial_platform.sql` adds durable resource, entitlement, and idempotent usage-meter storage without enabling remote mode.
 
 These are persistence and interface foundations only. Hosted authentication, repository hydration, outbound delivery workers, billing export, monitoring, alert delivery, reactions, and public commercial APIs are not yet enabled or claimed as supported.

@@ -101,6 +101,15 @@ export const PolicyDecisionSchema = z.object({
   allowed: z.boolean(),
   requiresApproval: z.boolean(),
   policyVersion: z.number().int().positive(),
+  policyDigest: z.string().length(64),
+  schemaVersion: z.number().int().positive(),
+  evaluatorVersion: z.string().min(1),
+  contextDigest: z.string().length(64),
+  outcome: z.enum(["allow", "deny", "approval_required", "invalid", "unmatched"]),
+  matchedRuleIds: z.array(z.string()),
+  reasonCodes: z.array(z.string()),
+  scope: z.object({ workspaceId: z.string().min(1) }),
+  uncertainty: z.array(z.string()),
   reasons: z.array(z.string()),
   resources: z.object({
     provider: ProviderSchema.optional(),
@@ -111,6 +120,39 @@ export const PolicyDecisionSchema = z.object({
   }),
 });
 export type PolicyDecision = z.infer<typeof PolicyDecisionSchema>;
+
+export const PolicyPackStatusSchema = z.enum([
+  "draft",
+  "published",
+  "active",
+  "retired",
+  "superseded",
+]);
+export type PolicyPackStatus = z.infer<typeof PolicyPackStatusSchema>;
+
+export const PolicyPackManifestSchema = z.object({
+  schemaVersion: z.literal(1),
+  evaluatorVersion: z.string().min(1),
+  workspaceId: z.string().min(1),
+  packId: z.string().min(1),
+  version: z.number().int().positive(),
+  policy: ExecutionPolicySchema,
+  scopes: z.array(z.string()).default([]),
+  createdAt: z.string().datetime(),
+  expiresAt: z.string().datetime().optional(),
+  source: z.string().min(1),
+});
+export type PolicyPackManifest = z.infer<typeof PolicyPackManifestSchema>;
+
+export const PolicySimulationStatusSchema = z.enum([
+  "queued",
+  "running",
+  "complete",
+  "partial",
+  "blocked",
+  "cancelled",
+]);
+export type PolicySimulationStatus = z.infer<typeof PolicySimulationStatusSchema>;
 
 export type ProviderDeliveryInput = {
   rawBody: string;
