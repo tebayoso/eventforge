@@ -84,7 +84,7 @@ async function request<T>(path: string, parser: Parser<T>, init: RequestInit = {
     }
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") throw error;
-    throw new ApiError("Unable to reach the EventBridge control plane.");
+    throw new ApiError("Unable to reach the EventForge control plane.");
   }
 
   if (!response.ok) {

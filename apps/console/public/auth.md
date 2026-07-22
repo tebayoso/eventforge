@@ -1,6 +1,6 @@
-# Auth.md — EventBridge authentication
+# Auth.md — EventForge authentication
 
-EventBridge's public product documentation and discovery resources are available without credentials. EventForge remains the compatible package and API identifier. The hosted console and operational API require an authenticated, workspace-scoped identity before they expose tenant data or allow mutations.
+EventForge's public product documentation and discovery resources are available without credentials. The hosted console and operational API require an authenticated, workspace-scoped identity before they expose tenant data or allow mutations.
 
 ## Agent registration
 

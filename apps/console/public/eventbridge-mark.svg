@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 72" role="img" aria-labelledby="title desc">
-  <title id="title">EventBridge mark</title>
-  <desc id="desc">Three signal nodes connected by a bridge arch.</desc>
-  <path d="M12 54C23 22 36 14 48 14s25 8 36 40" fill="none" stroke="#b9f7d0" stroke-width="7" stroke-linecap="round"/>
-  <path d="M12 54h72" stroke="#ff7d51" stroke-width="7" stroke-linecap="round"/>
-  <circle cx="12" cy="54" r="7" fill="#f6f0df"/>
-  <circle cx="48" cy="14" r="7" fill="#ff7d51"/>
-  <circle cx="84" cy="54" r="7" fill="#b9f7d0"/>
-</svg>

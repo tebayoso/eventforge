@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 72" role="img" aria-labelledby="title desc">
+  <title id="title">EventForge anvil mark</title>
+  <desc id="desc">A compact anvil with a hot orange face and mint forging sparks.</desc>
+  <path d="M8 13h55c8 0 12 3 17 8l11 10-9 6H61c-2 5-6 9-11 12v7h18l8 8v4H20v-4l8-8h18v-7c-7-3-12-7-15-12H15L8 29Z" fill="#f6f0df" stroke="#10151a" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M8 13h55c8 0 12 3 17 8H8Z" fill="#ff7d51"/>
+  <path d="m31 7-3-5M44 7V2m13 6 4-5" fill="none" stroke="#b9f7d0" stroke-width="4" stroke-linecap="round"/>
+</svg>

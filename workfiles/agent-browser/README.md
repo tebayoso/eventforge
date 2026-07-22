@@ -278,3 +278,14 @@ Reusable pattern: verify analytics releases at four layers—compiled identifier
 - Browser console and page-error inspection were empty; the final data-layer config contained `send_page_view: false`.
 
 Reusable pattern: after an edge deployment, verify the exact hashed asset loaded before interpreting analytics traces; a still-cached prior bundle can make a correct release look broken during propagation.
+
+## 2026-07-22 — EventForge anvil rebrand
+
+- Used agent-browser `0.28.0` against `http://127.0.0.1:5173/` at 1440×1000 and 390×844 before deployment. Confirmed one app root, no horizontal overflow, no visible `EventBridge` text, and `/eventforge-mark.svg` in the brand slot.
+- Opened the SVG directly and visually confirmed the accessible orange, cream, and mint anvil at favicon and enlarged sizes. Local evidence is stored in `eventforge-anvil-local-desktop.png`, `eventforge-anvil-local-mobile.png`, and `eventforge-anvil-mark-local.png`.
+- Deployed `eventforge-console` to `https://eventforge.dev/` as Cloudflare version `486b18e7-1928-44fe-aad1-743d52b871e5`.
+- Reopened production with a cache-busting query at desktop and mobile widths. Verified the EventForge title, favicon, social title, anvil asset, landing copy, concealed waitlist, `503` sign-in gate, Markdown negotiation, Auth.md, agent card, MCP card, client manifest, and Agent Skills discovery. None of the live surfaces contains the retired brand.
+- Confirmed the GA4 loader returned `200`, its `page_view` collection request for `G-2E80P0BMCR` returned `204`, the Cloudflare Insights loader returned `200`, and `/cdn-cgi/rum` returned `204`. Browser console and page-error inspection were empty.
+- Production evidence is stored in `eventforge-anvil-production-desktop.png`, `eventforge-anvil-production-mobile.png`, and `eventforge-anvil-production-console.png`.
+
+Reusable pattern: verify a rebrand across visible UI, compact SVG rendering, HTML metadata, telemetry labels, protected fallbacks, and machine-readable discovery. Use a plain 390×844 viewport for very tall full-page mobile captures; high-DPI device emulation can produce stitched-image artifacts even when the DOM has one root.
