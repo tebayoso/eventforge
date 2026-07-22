@@ -1,0 +1,55 @@
+apps/cloudflare/src/index.ts
+  s_a1a15d37594b29::t_b0a77f1e62cbca 233-238,245-249,251-262,265-267,269-271,273,275-276,301-308,311-318,327-338,341-347,353-358,368-379,391,562-567,574-579,591-599,624-626,629-631,641-649,660-662
+  s_a1a15d37594b29::t_03d15da6a7306e 2-7,9-15,231-232,239-244,250,263-264,279-300,309-310,319-320
+  s_a1a15d37594b29::t_1417b40253f332 408,414-422,426,428,439,445-451,455,458-459,464,472,482-483,485,493-498
+  s_a1a15d37594b29::t_7e6f87b8940f87 381-387
+  s_a1a15d37594b29::t_ac19e0c61ba698 322-326,339-340,348-352,359-367,380,389,393-394,396
+  s_a1a15d37594b29::t_20eac9ee637d81 277-278
+  s_a1a15d37594b29::t_f2143c3792d3a5 551-555
+  s_a1a15d37594b29::t_a1e360acc43342 548-549,556-561,568-572,580-590,600-618,621-623,627-628,632-640,650-651
+  s_a1a15d37594b29::t_1479c4db0be898 268,272,274
+  s_a1a15d37594b29::t_b3e08bae145385 321,499
+apps/cloudflare/migrations/control/0003_delivery_installations.sql
+  s_a1a15d37594b29::t_622f56ef1ba7e3 1-15
+packages/core/src/index.ts
+  s_a1a15d37594b29::t_ecf7e92505798b 2
+apps/cloudflare/worker-configuration.d.ts
+  s_a1a15d37594b29::t_20eac9ee637d81 11-12,31-32,47
+workfiles/DURABLE_DELIVERY_RUNBOOK.md
+  s_a1a15d37594b29::t_865165412c9808 1-11
+packages/core/test/durable-delivery.test.ts
+  s_a1a15d37594b29::t_b0a77f1e62cbca 30-32
+  s_a1a15d37594b29::t_865165412c9808 1-29,33-46
+apps/cloudflare/wrangler.jsonc
+  s_a1a15d37594b29::t_20eac9ee637d81 15-16,62-63
+apps/cloudflare/migrations/events/0002_durable_deliveries.sql
+  s_a1a15d37594b29::t_622f56ef1ba7e3 1-19,21-76
+  s_adaa872cd3b4f8::t_71a9495cf0a1eb 20
+packages/core/src/durable-delivery.ts
+  s_a1a15d37594b29::t_b0a77f1e62cbca 22,34-43,52-56,59-63
+  s_a1a15d37594b29::t_ecf7e92505798b 1-21,23-33,44-51,57-58,64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "46e729bc19b923919c678a59687c1afd4bb50ce5",
+  "prompts": {},
+  "sessions": {
+    "s_a1a15d37594b29": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8ae2-8c6f-7863-8c4c-f1058df1cdab",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    },
+    "s_adaa872cd3b4f8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8a74-a3a1-7813-9be6-37b6956eed2a",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
