@@ -1,0 +1,32 @@
+packages/core/src/index.ts
+  s_8060d3d04858cc::t_9dbaedb72be9eb 6
+workfiles/CONFIGURATION.md
+  s_8060d3d04858cc::t_1df10df9d610d9 182-191
+packages/core/test/billing.test.ts
+  s_8060d3d04858cc::t_23d5e61ce7b140 3-10,14-27,30-49,53-72,77-79,81-83,87-89,94-97,99-105
+  s_8060d3d04858cc::t_1df10df9d610d9 1,90-93,98
+  s_8060d3d04858cc::t_9dbaedb72be9eb 2,11-13,28-29,50-52,73-76,80,84-86,106-107
+apps/control-plane/migrations/004_billing_entitlements.sql
+  s_8060d3d04858cc::t_9dbaedb72be9eb 1-16,24-33
+  s_8060d3d04858cc::t_1df10df9d610d9 17-23
+packages/core/src/billing.ts
+  s_8060d3d04858cc::t_9dbaedb72be9eb 2-7,17-20,37-49,54,65-81,102-103,135-136,142,156-163
+  s_8060d3d04858cc::t_1df10df9d610d9 1,151
+  s_8060d3d04858cc::t_23d5e61ce7b140 8-16,21-36,50-53,55-64,82-101,104-134,137-141,143-150,152-155
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "b387b7bc5a8923cca7ae12f33bc19264fc87333f",
+  "prompts": {},
+  "sessions": {
+    "s_8060d3d04858cc": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8af2-fbda-7ff0-82d7-7d88b98b28ef",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
