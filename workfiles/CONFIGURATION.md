@@ -179,6 +179,16 @@ MCP endpoint. The URL must point to a server exposing the MCP `/mcp` route.
 
 ## Environment variable reference
 
+## Hosted billing (not enabled by this repository)
+
+Hosted billing remains fail-closed until a separately authenticated remote host
+supplies a least-privilege Stripe restricted key, webhook signing secret, and
+externally configured recurring USD Price ids for the separate Team and Business
+Products. Never put these values in repository configuration, browser variables,
+or local demo files. Tax is disabled until active registrations and a canonical
+tax code/configuration have been confirmed; a missing tax configuration is a
+visible deployment blocker, not a zero-tax fallback.
+
 ### MCP client and launcher
 
 | Variable                      | Default                       | Meaning                                                  |
