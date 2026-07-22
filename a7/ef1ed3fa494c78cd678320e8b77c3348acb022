@@ -1,0 +1,27 @@
+packages/core/test/reaction-worker.test.ts
+  s_69193e91571a38::t_7f9a326d7ecdc8 1-18,20-24
+  s_69193e91571a38::t_5f71d5068dddcb 19
+packages/core/src/index.ts
+  s_69193e91571a38::t_7f9a326d7ecdc8 6
+packages/core/src/reaction-worker.ts
+  s_69193e91571a38::t_7f9a326d7ecdc8 1-45,47-92,94,96-99
+  s_69193e91571a38::t_5f71d5068dddcb 46,93,95
+workfiles/STATUS.md
+  s_69193e91571a38::t_7f9a326d7ecdc8 3,23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "a7ef1ed3fa494c78cd678320e8b77c3348acb022",
+  "prompts": {},
+  "sessions": {
+    "s_69193e91571a38": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8aee-6e74-7d61-b6b3-4ec4cca7716e",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
