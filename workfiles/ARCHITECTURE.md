@@ -53,7 +53,16 @@ typed outcomes rather than secrets or host errors.
 Installation is fail-closed until issue #8 artifact trust is available. A
 reviewed, unexpired publisher review, exact-digest Owner recent-MFA approval,
 valid signature, non-revoked artifact, and compatible core/capability set are
-all required. Marketplace listings are not authority: during an outage only an
-existing exact installation with a valid signed revocation snapshot no older
-than 15 minutes may run. Full production certification remains closed pending
-the real signer/revocation services and recovery drills.
+all required. `evaluateInstall` exposes deterministic denial reason codes; its
+caller supplies the evaluation time so expiry decisions are reproducible. New
+installs require live marketplace revocation evidence. Scope entries are
+bounded, unique identifiers without wildcards, control characters, or generic
+unbounded sentinels; retention is an integer from `0d` through `3650d`, and
+publisher signing keys are bounded public `did:key` or PEM values.
+
+Marketplace listings are not authority. During an outage only an existing exact
+installation with a valid artifact signature and a separately signed,
+non-revoked revocation snapshot aged 0 through 15 minutes may run. Live or
+unavailable revocation state is not treated as outage snapshot evidence. Full
+production certification remains closed pending the real signer/revocation
+services and recovery drills.
