@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type {
   EventEnvelope,
   ExecutionPolicy,
@@ -5,6 +6,17 @@ import type {
   PolicyRequest,
   WorkflowDefinition,
 } from "./contracts.js";
+
+export const POLICY_EVALUATOR_VERSION = "2026-07-22.1";
+
+function digest(value: unknown): string {
+  const canonical = JSON.stringify(value, (_key, item) =>
+    item && typeof item === "object" && !Array.isArray(item)
+      ? Object.fromEntries(Object.entries(item).sort(([a], [b]) => a.localeCompare(b)))
+      : item,
+  );
+  return createHash("sha256").update(canonical).digest("hex");
+}
 
 export function matchesWorkflow(workflow: WorkflowDefinition, event: EventEnvelope): boolean {
   if (
@@ -118,10 +130,35 @@ export function evaluatePolicy(policy: ExecutionPolicy, request: PolicyRequest):
     }
   }
   const writeRequested = request.capabilities.some((capability) => capability !== "read");
+  const allowed = reasons.length === 0;
+  const requiresApproval = writeRequested && policy.approvalMode === "approval_required";
   return {
-    allowed: reasons.length === 0,
-    requiresApproval: writeRequested && policy.approvalMode === "approval_required",
+    allowed,
+    requiresApproval,
     policyVersion: policy.version,
+    policyDigest: digest(policy),
+    schemaVersion: 1,
+    evaluatorVersion: POLICY_EVALUATOR_VERSION,
+    contextDigest: digest(request),
+    outcome: !allowed ? "deny" : requiresApproval ? "approval_required" : "allow",
+    matchedRuleIds: allowed ? ["execution-policy-v1"] : [],
+    reasonCodes: reasons.map((reason) =>
+      reason.startsWith("Capability")
+        ? "capability_outside_scope"
+        : reason.startsWith("Repository")
+          ? "repository_outside_scope"
+          : reason.startsWith("Provider")
+            ? "provider_outside_scope"
+            : reason.startsWith("Path")
+              ? "path_outside_scope"
+              : reason.startsWith("Domain")
+                ? "domain_outside_scope"
+                : reason.startsWith("Viewer")
+                  ? "viewer_read_only"
+                  : "repository_required",
+    ),
+    scope: { workspaceId: request.actor.workspaceId },
+    uncertainty: [],
     reasons,
     resources: {
       provider: request.provider,
