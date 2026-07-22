@@ -29,12 +29,17 @@ function initializeGoogleAnalytics(): void {
   if (!GA_MEASUREMENT_ID || document.querySelector("script[data-eventbridge-ga]")) return;
   const analyticsWindow = window as AnalyticsWindow;
   analyticsWindow.dataLayer = analyticsWindow.dataLayer || [];
-  analyticsWindow.gtag = (...args: unknown[]) => analyticsWindow.dataLayer?.push(args);
+  analyticsWindow.gtag = function gtag() {
+    // gtag.js requires its commands to be queued as the function's arguments object.
+    // eslint-disable-next-line prefer-rest-params
+    analyticsWindow.dataLayer?.push(arguments);
+  };
   analyticsWindow.gtag("js", new Date());
   analyticsWindow.gtag("config", GA_MEASUREMENT_ID, {
     anonymize_ip: true,
     allow_google_signals: false,
     page_title: document.title,
+    send_page_view: false,
   });
   const script = document.createElement("script");
   script.async = true;

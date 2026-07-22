@@ -267,3 +267,14 @@ Reusable pattern: keep a marketing capture route out of discovery, enforce origi
 - Visually inspected the full production landing page captured at `workfiles/agent-browser/screenshots/eventbridge-ga4-production-2026-07-22.png`.
 
 Reusable pattern: verify analytics releases at four layers—compiled identifier, live bundle, third-party loader plus queued configuration, and the provider's realtime report—without treating a successful script download alone as proof of event ingestion.
+
+## 2026-07-22 — Production CSP and analytics repair
+
+- Reproduced the production CSP warning and the blocked Cloudflare Web Analytics script on `https://eventforge.dev/`.
+- Updated both the HTML meta policy and Worker `_headers` policy with the documented GA4 and Cloudflare analytics sources. Kept `frame-ancestors 'none'` in the HTTP response policy and removed it from the unsupported meta policy.
+- Replaced the GA command queue's rest-parameter arrays with Google's required `arguments` objects and disabled the automatic config page view so the shared explicit `page_view` is counted once.
+- Deployed the final console as Cloudflare version `a16fa9cc-d78a-4b0a-be01-597cd8794462` and verified asset `index-D3ktepWR.js` in a fresh non-automation browser session.
+- Confirmed one GA4 `page_view` request to `https://www.google-analytics.com/g/collect` returned `204`, the GA client and `_ga` cookies initialized, the Cloudflare Insights script returned `200`, and the first-party `/cdn-cgi/rum` POST returned `204` after the page became hidden.
+- Browser console and page-error inspection were empty; the final data-layer config contained `send_page_view: false`.
+
+Reusable pattern: after an edge deployment, verify the exact hashed asset loaded before interpreting analytics traces; a still-cached prior bundle can make a correct release look broken during propagation.
