@@ -1,0 +1,25 @@
+apps/control-plane/migrations/004_enterprise_governance.sql
+  s_ea83c5352637a9::t_106eeffdbe5e55 1-45
+packages/core/test/platform.test.ts
+  s_ea83c5352637a9::t_106eeffdbe5e55 3-5,68-82
+packages/core/src/platform.ts
+  s_ea83c5352637a9::t_106eeffdbe5e55 7-107
+workfiles/STATUS.md
+  s_ea83c5352637a9::t_106eeffdbe5e55 21-22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "87ac1a72c88f6e13b9c0488dc868b9e007ab2968",
+  "prompts": {},
+  "sessions": {
+    "s_ea83c5352637a9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8afa-ac2f-76e1-b473-1e320171032d",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
