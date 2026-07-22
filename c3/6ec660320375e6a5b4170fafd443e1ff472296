@@ -1,0 +1,29 @@
+packages/core/test/autonomy.test.ts
+  s_aea298fb2b5d7c::t_e9706c3402213f 2-7,11-40,48-51,53-80,83-84,86-94,97-107,110-118
+  s_aea298fb2b5d7c::t_27ff81fc3edf76 41-47,52
+  s_aea298fb2b5d7c::t_27e105245a1036 1,8-10,81-82,85,95-96,108-109,119-120
+packages/core/src/autonomy.ts
+  s_aea298fb2b5d7c::t_27e105245a1036 1-39,47-50,55-84,89-106,113-114,121,130,138,144,152,159-161
+  s_aea298fb2b5d7c::t_27ff81fc3edf76 40-46,51-54
+  s_aea298fb2b5d7c::t_e9706c3402213f 85-88,107-112,115-120,122-129,131-137,139-143,145-151,153-158
+workfiles/STATUS.md
+  s_aea298fb2b5d7c::t_27e105245a1036 35-38
+packages/core/src/index.ts
+  s_aea298fb2b5d7c::t_27e105245a1036 2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "c36ec660320375e6a5b4170fafd443e1ff472296",
+  "prompts": {},
+  "sessions": {
+    "s_aea298fb2b5d7c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8afa-a662-7342-b75f-c0b1c1fd624f",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
