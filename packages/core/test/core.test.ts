@@ -19,6 +19,8 @@ import {
   untrustedEventGuard,
   verifyBareHmac,
   verifyHmac,
+  projectOutcomeMetrics,
+  unknownAging,
 } from "../src/index.js";
 
 describe("event security", () => {
@@ -287,6 +289,40 @@ describe("event security", () => {
         payload: { action: "closed", pull_request: { number: 3 } },
       }),
     ).toBe(false);
+  });
+});
+
+describe("outcome analytics", () => {
+  const transition = (subjectId: string, state: "executed" | "effect-verified" | "resolution-verified" | "unknown", occurredAt: string, method: "provider_measurement" | "provider_recovery" | "unavailable" = "provider_measurement") => ({
+    id: `${subjectId}-${state}-${occurredAt}`,
+    workspaceId: "w",
+    subjectId,
+    state,
+    occurredAt,
+    evidence: { method, source: "fixture", version: "v1", observedAt: occurredAt },
+  });
+
+  it("keeps provider effect verification distinct from independent resolution", () => {
+    const metrics = projectOutcomeMetrics("w", [
+      transition("action-1", "effect-verified", "2026-07-20T00:00:00.000Z"),
+      transition("incident-1", "resolution-verified", "2026-07-20T01:00:00.000Z", "provider_recovery"),
+    ]);
+    expect(metrics.effectVerificationRate).toBe(1);
+    expect(metrics.resolutionRate).toBe(1);
+    expect(metrics.sourceCutoff).toBe("2026-07-20T01:00:00.000Z");
+  });
+
+  it("projects retries by business subject and preserves unknown aging", () => {
+    const unknown = transition("action-1", "unknown", "2026-07-18T00:00:00.000Z", "unavailable");
+    const metrics = projectOutcomeMetrics("w", [
+      transition("action-1", "executed", "2026-07-17T00:00:00.000Z"),
+      unknown,
+      { ...transition("other-workspace", "effect-verified", "2026-07-20T00:00:00.000Z"), workspaceId: "other" },
+    ]);
+    expect(metrics.unknownCount).toBe(1);
+    expect(metrics.effectVerificationRate).toBe(0);
+    expect(metrics.completeness).toMatchObject({ numerator: 0, denominator: 1, comparisonEnabled: false });
+    expect(unknownAging(unknown, new Date("2026-07-20T00:00:00.000Z"))).toBe("escalation");
   });
 });
 

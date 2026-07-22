@@ -18,6 +18,8 @@ Updated: 2026-07-20
 
 ## Commercial platform roadmap implementation
 
+Outcome analytics now has an additive, versioned core projection and append-only transition migration. It distinguishes exact provider effect verification from independently evidenced resolution, leaves unavailable/ambiguous evidence unknown, carries source cutoff and completeness/freshness, and treats retries as the same business subject. This is fixture arithmetic and persistence foundation only: authenticated dashboards, aggregation privacy controls, exports, membership/correlation ledger integration, and live provider evidence adapters remain unavailable.
+
 Phase 0 implementation has started with additive, tenant-scoped contracts for endpoints, routes, deliveries and attempts, issues, alert policies, incidents, bounded reaction policies and runs, evidence bundles, usage records, and entitlements. Migration `003_commercial_platform.sql` adds durable resource, entitlement, and idempotent usage-meter storage without enabling remote mode.
 
 These are persistence and interface foundations only. Hosted authentication, repository hydration, outbound delivery workers, billing export, monitoring, alert delivery, reactions, and public commercial APIs are not yet enabled or claimed as supported.
