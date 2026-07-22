@@ -2,6 +2,10 @@
 
 Updated: 2026-07-20
 
+## Issue #17 replay/audit foundation
+
+Core now contains a local-first EvidenceStore/AuditLedger split: expired content is blanked and becomes unavailable while an append-only, tenant-scoped proof retains only hashes, attribution, redaction/policy/decision references, ancestry hash, and terminal outcome. Replay requires recent MFA/authorization, evidence availability, reason and idempotency; it creates a fresh pending-approval linked attempt. This is deliberately not a hosted API until the account/revocation and durable repository dependencies are complete.
+
 ## Supported now
 
 | Area                                 | Status                                                                                                                                                                    |
