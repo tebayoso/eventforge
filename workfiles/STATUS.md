@@ -18,6 +18,8 @@ Updated: 2026-07-20
 
 ## Commercial platform roadmap implementation
 
+Operational-readiness foundations now model tenant-safe per-surface launch gates, append-only evidence, deterministic synthetic probe adapters, operator-only usage reconciliation, public-status projection, audited fail-closed kill-switch decisions, rollback/restore constraints, alert taxonomy, and staged rollout evaluation. These are configuration, fixture, and persistence foundations only: no live monitors, canary, restore drill, alert delivery, or launch approval is claimed; each hosted surface remains closed until independent real evidence is recorded.
+
 Phase 0 implementation has started with additive, tenant-scoped contracts for endpoints, routes, deliveries and attempts, issues, alert policies, incidents, bounded reaction policies and runs, evidence bundles, usage records, and entitlements. Migration `003_commercial_platform.sql` adds durable resource, entitlement, and idempotent usage-meter storage without enabling remote mode.
 
 These are persistence and interface foundations only. Hosted authentication, repository hydration, outbound delivery workers, billing export, monitoring, alert delivery, reactions, and public commercial APIs are not yet enabled or claimed as supported.
