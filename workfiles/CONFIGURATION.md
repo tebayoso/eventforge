@@ -147,7 +147,12 @@ disable this check to expose a local process to the internet.
 ## Remote Streamable HTTP
 
 For a hosted or private deployment, the MCP URL must be HTTPS and terminate at
-an OAuth-aware proxy or EventForge's OAuth 2.1 authorization layer:
+EventForge's OAuth 2.1 authorization layer. P0 supports only provisioned
+first-party Codex clients using Authorization Code + S256 PKCE. The only OAuth
+scopes are `eventforge:read` (events and workflow state) and
+`eventforge:review` (investigation/proposal details); neither permits actions,
+approvals, installation, or connector changes. OAuth establishes visibility and
+never replaces policy or approval checks.
 
 ```bash
 codex mcp add eventforge-remote --url https://mcp.example.com/mcp
@@ -165,17 +170,16 @@ tool_timeout_sec = 60
 default_tools_approval_mode = "writes"
 ```
 
-If the host administrator gives you a short-lived bearer token instead:
-
-```toml
-[mcp_servers.eventforge_remote]
-url = "https://mcp.example.com/mcp"
-bearer_token_env_var = "EVENTFORGE_MCP_TOKEN"
-default_tools_approval_mode = "writes"
-```
-
 The public `eventforge.dev` console and API are not interchangeable with an
 MCP endpoint. The URL must point to a server exposing the MCP `/mcp` route.
+
+Remote production remains disabled until a durable grant repository, the live
+session/token authority, security testing, and deployment configuration are
+complete. Refresh-token compromise response: revoke the affected client grant
+family for that workspace, remove/role-reduce the member if appropriate, and
+review the tenant-scoped `refresh_reuse` security event. DPoP is deferred, so
+bearer-token replay remains a documented residual risk. An external penetration
+test is a release gate before enabling remote MCP.
 
 ## Environment variable reference
 

@@ -24,3 +24,14 @@ if (
 
 export { EventForgeApi, EventForgeApiError } from "./client.js";
 export { createEventForgeServer, EVENTFORGE_TOOL_NAMES } from "./server.js";
+export {
+  InMemoryOAuthGrantRepository,
+  OAuthAuthorizationService,
+  OAuthSecurityEventSink,
+  OAUTH_SCOPES,
+  pkceS256,
+  type FirstPartyClient,
+  type IdentityAuthority,
+  type OAuthGrantRepository,
+  type OAuthScope,
+} from "./oauth.js";
