@@ -38,6 +38,7 @@ import type { TunnelProvisioner } from "./managed-tunnel.js";
 const DEFAULT_WORKSPACE = "demo-workspace";
 const DEFAULT_PROJECT = "eventforge-demo-service";
 const LOCAL_CONSOLE_ORIGIN = "http://localhost:5173";
+const RECENT_MFA_WINDOW_MS = 15 * 60 * 1000;
 
 type IntegrationBinding = {
   provider: Exclude<Provider, "custom">;
@@ -83,6 +84,14 @@ export function isLoopbackRequestHost(hostname: string): boolean {
     hostname === "127.0.0.1" ||
     hostname === "::1" ||
     hostname === "[::1]"
+  );
+}
+
+export function hasRecentMfa(auth: AuthContext, now = Date.now()): boolean {
+  if (!auth.mfaVerified || !auth.mfaVerifiedAt) return false;
+  const verifiedAt = Date.parse(auth.mfaVerifiedAt);
+  return (
+    Number.isFinite(verifiedAt) && verifiedAt <= now && now - verifiedAt <= RECENT_MFA_WINDOW_MS
   );
 }
 
@@ -239,7 +248,7 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
     )
       return;
     const auth = await options.authenticate?.(request);
-    if (!auth || !auth.mfaVerified)
+    if (!auth || !hasRecentMfa(auth))
       return reply.status(401).send({ error: "Authenticated MFA session required." });
     authContexts.set(request, auth);
     if (request.method === "GET" && !auth.scopes.includes("eventforge:read")) {
@@ -258,6 +267,7 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
         workspaceId,
         role: "owner",
         mfaVerified: runtime.mode !== "remote",
+        mfaVerifiedAt: runtime.mode !== "remote" ? new Date().toISOString() : undefined,
         scopes: [
           "eventforge:read",
           "eventforge:operate",

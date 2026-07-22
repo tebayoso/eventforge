@@ -44,6 +44,10 @@ The repository's local demo mode is the currently supported evaluation surface. 
   cannot grant membership to a different identity. Existing and new users follow
   the same acceptance response and verification destination; membership is
   created server-side only after verified identity resolution.
+- The concrete request-token header is `X-EventForge-Request-Token`. Its value
+  is session-bound only in the Durable Object, never a second cookie or a
+  client-decoded claim. The production adapter must reject a mutation without
+  this header, `Origin: https://eventforge.dev`, and acceptable Fetch Metadata.
 - The final workspace owner cannot be removed, downgraded, leave, or close the
   owning account. Ownership transfer requires recent MFA and an existing
   verified successor; support has no impersonation or silent override path.
