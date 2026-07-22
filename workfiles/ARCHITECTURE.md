@@ -84,8 +84,28 @@ an authority outage fails closed for reads as well as writes.
 P0 deliberately has no artificial keepalive. Normal traffic keeps active user
 objects warm; cold starts are accepted and measured rather than multiplying cost
 and load with scheduled pings. The release gate measures warm and cold p95/p99
-session-validation latency and blocks rollout if the approved auth budget is
-exceeded.
+session-validation latency. Added validation latency must remain at or below 100
+ms warm p95, 200 ms warm p99, 250 ms cold p95, and 500 ms cold p99 in the launch
+regions. A per-user object accepts at most 100 validations per second with a
+bounded burst of 200; excess traffic fails explicitly instead of growing an
+unbounded queue.
+
+The authority stores only sessions, request tokens, revocation epochs, and
+transition state in SQLite-backed Durable Object storage. Identity factors and
+workspace membership remain in D1, so authority recovery cannot manufacture an
+identity or grant access. Storage invariants and schema versions are checked on
+every object start. An invariant or storage failure quarantines the object and
+denies every session.
+
+SQLite point-in-time recovery is retained for 30 days as the operational backup
+mechanism. Restore is performed with ingress disabled for the affected authority.
+Before ingress resumes, the recovery procedure atomically increments the
+revocation epoch, deletes all restored sessions and request tokens, clears any
+partial transition, and records the incident in D1. All users then authenticate
+again with their independently stored verified factor or recovery code. Active
+session material is never exported to a second backup. If storage cannot be
+restored, the same fail-closed reset creates an empty authority; it cannot restore
+or bypass a lost identity factor.
 
 ## Trust boundaries
 
