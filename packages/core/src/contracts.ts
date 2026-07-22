@@ -69,6 +69,24 @@ export const EventEnvelopeSchema = z.object({
 });
 export type EventEnvelope = z.infer<typeof EventEnvelopeSchema>;
 
+export const IssueReviewModeSchema = z.enum(["review_only", "authorized_implementation"]);
+export type IssueReviewMode = z.infer<typeof IssueReviewModeSchema>;
+
+export const IssueReviewAssessmentSchema = z.object({
+  mode: z.literal("review_only"),
+  status: z.enum(["assessed", "safely_failed"]),
+  requestSummary: z.string().max(500),
+  affectedAreas: z.array(z.string()).max(5),
+  riskNotes: z.array(z.string()).max(5),
+  missingInformation: z.array(z.string()).max(5),
+  safeNextStep: z.string().max(300),
+  actorClassification: z.literal("untrusted"),
+  policyVersion: z.literal(1),
+  auditEventIdHash: z.string().length(64),
+  reason: z.string().max(200).optional(),
+});
+export type IssueReviewAssessment = z.infer<typeof IssueReviewAssessmentSchema>;
+
 export const ApprovalModeSchema = z.enum(["approval_required", "allow_listed_writes"]);
 export type ApprovalMode = z.infer<typeof ApprovalModeSchema>;
 
@@ -233,7 +251,14 @@ export type ForgeJob = z.infer<typeof ForgeJobSchema>;
 export type AuditEntry = {
   id: string;
   workspaceId: string;
-  kind: "event_received" | "workflow_matched" | "agent_run" | "approval" | "forge" | "connector";
+  kind:
+    | "event_received"
+    | "workflow_matched"
+    | "agent_run"
+    | "issue_review"
+    | "approval"
+    | "forge"
+    | "connector";
   subjectId: string;
   message: string;
   createdAt: string;

@@ -10,6 +10,7 @@ Updated: 2026-07-20
 | Provider verification                | GitHub, Linear, and Sentry adapters with signatures, delivery IDs, replay checks where available, redaction, and injected mapping hooks                                   |
 | Policy and approvals                 | Resource-aware evaluator foundation; versioned approval/rejection/expiry; default approval required; execution worker not implemented                                     |
 | Codex runner                         | Read-only investigation, structured result, process-lifetime thread ID retention, and `resumeThread` support                                                              |
+| GitHub issue review                  | Review-only deterministic assessment; issue events cannot invoke the agent or create a write proposal. Manual authenticated implementation is not activated by issue text. |
 | MCP package                          | Self-starting compiled stdio and loopback Streamable HTTP server; GitHub package install, npm pack, and discovery smoke tests                                             |
 | Local relay                          | On-demand MCP startup; Quick/manual named fallbacks; managed per-user tunnel client and hosted provisioner foundation                                                     |
 | Codex plugin                         | Manifest, skills, MCP registration, and health-only opt-in lifecycle hook                                                                                                 |

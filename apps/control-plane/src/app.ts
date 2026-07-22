@@ -11,7 +11,9 @@ import {
   createForgeDraft,
   demoEvents,
   githubPullRequestNumber,
+  assessGitHubIssueEvent,
   isGitHubCiFailure,
+  isGitHubIssueEvent,
   isGitHubIssueOpened,
   isGitHubPullRequestReviewEvent,
   matchesWorkflow,
@@ -122,7 +124,7 @@ function createIssueReviewWorkflow(): WorkflowDefinition {
     name: "Review newly opened GitHub issues",
     enabled: true,
     trigger: { provider: "github", topic: "issues" },
-    filters: { action: "opened" },
+    filters: {},
     agentProfile: "issue-triager",
     memoryScope: "project",
     policy: {
@@ -297,6 +299,21 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
     });
     store.audit(event.workspaceId, "agent_run", run.id, "Agent investigation started.");
     try {
+      if (isGitHubIssueEvent(event)) {
+        const assessment = assessGitHubIssueEvent(event);
+        store.updateRun(run.id, {
+          summary: assessment.requestSummary,
+          status: assessment.status === "assessed" ? "completed" : "failed",
+          finishedAt: new Date().toISOString(),
+        });
+        store.audit(
+          event.workspaceId,
+          "issue_review",
+          assessment.auditEventIdHash,
+          `GitHub issue review ${assessment.status}; mode=review_only; reason=${assessment.reason ?? "assessed"}.`,
+        );
+        return;
+      }
       const pullRequestNumber = githubPullRequestNumber(event);
       const previousThreadId = store.runs().find((candidate) => {
         if (candidate.workflowId !== workflow.id || candidate.id === run.id) return false;
