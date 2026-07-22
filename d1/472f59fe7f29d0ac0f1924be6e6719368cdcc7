@@ -1,0 +1,19 @@
+workfiles/agent-browser/README.md
+  s_c80379944a38d6::t_1f9d2d1696f51d 268-272
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "d1472f59fe7f29d0ac0f1924be6e6719368cdcc7",
+  "prompts": {},
+  "sessions": {
+    "s_c80379944a38d6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8af6-80b8-7042-9256-94f3751bd891",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
