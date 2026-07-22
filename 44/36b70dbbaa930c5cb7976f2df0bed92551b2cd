@@ -1,0 +1,25 @@
+packages/core/src/demand-sources.test.ts
+  s_7c1376f113ce20::t_8cda33da492cc9 1-22
+packages/core/src/demand-sources.ts
+  s_7c1376f113ce20::t_8cda33da492cc9 1-70
+packages/core/src/index.ts
+  s_7c1376f113ce20::t_8cda33da492cc9 2
+workfiles/STATUS.md
+  s_7c1376f113ce20::t_8cda33da492cc9 21-24
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "4436b70dbbaa930c5cb7976f2df0bed92551b2cd",
+  "prompts": {},
+  "sessions": {
+    "s_7c1376f113ce20": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8af6-85da-7e70-b6d0-7110f7a0d183",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
