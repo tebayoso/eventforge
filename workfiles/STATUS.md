@@ -18,6 +18,10 @@ Updated: 2026-07-20
 
 ## Commercial platform roadmap implementation
 
+### #21 provider-installation security foundation (fixture-only)
+
+Sentry and Linear now have additive installation contracts and a PostgreSQL migration for one-workspace, one-provider-account bindings. Each selection requires explicit confirmed resource ids (selective or explicitly labelled all-discovered), Sentry is schema-enforced read-only, and Linear reaction contracts allow only comment, allowlisted state transition, or enumerated priority update. Remote webhook lookup now requires an exact server-side provider installation key; payload claims never select a workspace. Credentials remain encrypted-at-rest migration fields only and are not wired to hosted execution. Health polling, OAuth discovery, deletion workers, rotation windows, and reaction execution remain gated Track B work; local adapters remain unchanged.
+
 Phase 0 implementation has started with additive, tenant-scoped contracts for endpoints, routes, deliveries and attempts, issues, alert policies, incidents, bounded reaction policies and runs, evidence bundles, usage records, and entitlements. Migration `003_commercial_platform.sql` adds durable resource, entitlement, and idempotent usage-meter storage without enabling remote mode.
 
 These are persistence and interface foundations only. Hosted authentication, repository hydration, outbound delivery workers, billing export, monitoring, alert delivery, reactions, and public commercial APIs are not yet enabled or claimed as supported.

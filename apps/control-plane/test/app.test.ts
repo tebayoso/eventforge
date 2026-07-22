@@ -48,7 +48,7 @@ async function withRemoteApp(
   auth: AuthContext | null = remoteOwner,
   integrations?: Array<{
     provider: "github" | "linear" | "sentry";
-    installationKey?: string;
+    installationKey: string;
     repository?: string;
     workspaceId: string;
     projectId: string;
@@ -312,6 +312,48 @@ describe("control plane", () => {
     } finally {
       if (previousSecret === undefined) delete process.env.GITHUB_WEBHOOK_SECRET;
       else process.env.GITHUB_WEBHOOK_SECRET = previousSecret;
+    }
+  });
+
+  it("rejects a verified remote Linear delivery without its exact installation mapping", async () => {
+    const previousSecret = process.env.LINEAR_WEBHOOK_SECRET;
+    process.env.LINEAR_WEBHOOK_SECRET = "linear-mapping-secret";
+    const payload = JSON.stringify({
+      type: "Issue",
+      webhookTimestamp: Date.now(),
+      organizationId: "org-a",
+    });
+    try {
+      await withRemoteApp(
+        new EventForgeStore(),
+        async (app) => {
+          const response = await app.inject({
+            method: "POST",
+            url: "/webhooks/linear",
+            payload,
+            headers: {
+              "content-type": "application/json",
+              "linear-delivery": "delivery-a",
+              "linear-signature": createHmac("sha256", "linear-mapping-secret")
+                .update(payload)
+                .digest("hex"),
+            },
+          });
+          expect(response.statusCode).toBe(403);
+        },
+        remoteOwner,
+        [
+          {
+            provider: "linear",
+            installationKey: "org-b",
+            workspaceId: "workspace-b",
+            projectId: "project-b",
+          },
+        ],
+      );
+    } finally {
+      if (previousSecret === undefined) delete process.env.LINEAR_WEBHOOK_SECRET;
+      else process.env.LINEAR_WEBHOOK_SECRET = previousSecret;
     }
   });
 
