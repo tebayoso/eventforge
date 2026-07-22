@@ -33,14 +33,18 @@ The repository's local demo mode is the currently supported evaluation surface. 
   atomically. Regeneration invalidates every earlier code.
 - Browser mutations use same-origin host-only secure cookies, non-simple JSON
   requests, strict Origin and Fetch Metadata validation, and sensitive-action
-  reauthentication. Authentication responses do not reveal whether an account
-  or workspace exists.
+  reauthentication. The session bootstrap returns a request token bound to the
+  server-side session; every mutation must echo it in a dedicated header.
+  Authentication responses do not reveal whether an account or workspace exists.
 - Invitations bind one workspace, exact normalized email, intended role,
   inviter, opaque identifier, and seven-day expiry. Imported or forwarded data
-  cannot grant membership to a different identity.
+  cannot grant membership to a different identity. Existing and new users follow
+  the same acceptance response and verification destination; membership is
+  created server-side only after verified identity resolution.
 - The final workspace owner cannot be removed, downgraded, leave, or close the
   owning account. Ownership transfer requires recent MFA and an existing
   verified successor; support has no impersonation or silent override path.
-- Governance audit events are actor- and session-attributed, tenant-scoped,
-  append-only, and hash-chained. Issue #17 remains responsible for the broader
-  retention, export, and immutable-evidence lifecycle.
+- Governance audit events are actor- and session-attributed, tenant-scoped, and
+  append-only through the application interface. Issue #17 remains responsible
+  for tamper evidence, retention, export, and the immutable-evidence lifecycle;
+  issue #7 does not claim those stronger guarantees early.
