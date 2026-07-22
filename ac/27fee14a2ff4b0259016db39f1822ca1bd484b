@@ -1,0 +1,23 @@
+workfiles/CONFIGURATION.md
+  s_3944757a172de5::t_c342496b4fb698 227-230,243-244
+workfiles/agent-browser/README.md
+  s_3944757a172de5::t_cee1da49fb44d7 259-269
+apps/console/.env.production
+  s_3944757a172de5::t_c342496b4fb698 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "ac27fee14a2ff4b0259016db39f1822ca1bd484b",
+  "prompts": {},
+  "sessions": {
+    "s_3944757a172de5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8a43-bd9b-7532-a4a9-4690c7a84ad0",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
