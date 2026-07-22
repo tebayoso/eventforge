@@ -1,0 +1,50 @@
+packages/core/src/workflows.ts
+  s_87a48a6b0df844::t_dda5eea5091967 1,10-20,133-134,136-137,139-145,159-161
+  s_87a48a6b0df844::t_9d1c3c1c083cfb 146-158
+packages/core/test/core.test.ts
+  s_2b1e2696963b91::t_59b3b04b922a39 22-24,28-29,47,62,66-72,90,109
+  s_87a48a6b0df844::t_9d1c3c1c083cfb 30-46,48-61,63-65,73-89,91-108
+apps/control-plane/migrations/004_policy_packs.sql
+  s_87a48a6b0df844::t_305ef5bba90076 1-41
+packages/core/src/contracts.ts
+  s_87a48a6b0df844::t_9d1c3c1c083cfb 147-154
+  s_87a48a6b0df844::t_dda5eea5091967 104-112,124-146,155
+  s_87a48a6b0df844::t_9c03fa0910a978 156
+workfiles/POLICY_PACK_DEPENDENCIES.md
+  s_87a48a6b0df844::t_9d1c3c1c083cfb 3-11
+  s_87a48a6b0df844::t_305ef5bba90076 1-2,12-13
+packages/core/src/policy-packs.ts
+  s_87a48a6b0df844::t_9d1c3c1c083cfb 10-14,25-31,35-44,49-70,78-83
+  s_87a48a6b0df844::t_dda5eea5091967 1-9,15-24,32-34,45-48,71-77,84
+packages/core/src/index.ts
+  s_87a48a6b0df844::t_dda5eea5091967 6
+apps/control-plane/src/app.ts
+  s_87a48a6b0df844::t_5c49aa98a953d3 366
+  s_87a48a6b0df844::t_0f5255db423000 1
+workfiles/STATUS.md
+  s_87a48a6b0df844::t_305ef5bba90076 21-26
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "8fb8be3f4f1d09795b8dd0b8e628547d32835587",
+  "prompts": {},
+  "sessions": {
+    "s_2b1e2696963b91": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8ae1-bc1c-7080-80da-2fdf2003f4ef",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    },
+    "s_87a48a6b0df844": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8af6-7b9a-7301-9ec0-6a7bd82e78a4",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
