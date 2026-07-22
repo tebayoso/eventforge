@@ -33,6 +33,7 @@ const remoteOwner: AuthContext = {
   workspaceId: "workspace-1",
   role: "owner",
   mfaVerified: true,
+  mfaVerifiedAt: new Date().toISOString(),
   scopes: [
     "eventforge:read",
     "eventforge:operate",
@@ -173,6 +174,17 @@ describe("control plane", () => {
   it("refuses an implicit browser origin allowlist in production", () => {
     expect(() => configuredBrowserOrigins(undefined, "production")).toThrow(
       "EVENTFORGE_ALLOWED_ORIGINS",
+    );
+  });
+
+  it("fails closed when an injected remote identity has stale MFA instead of extending it on requests", async () => {
+    await withRemoteApp(
+      new EventForgeStore(),
+      async (app) => {
+        const response = await app.inject({ method: "GET", url: "/events" });
+        expect(response.statusCode).toBe(401);
+      },
+      { ...remoteOwner, mfaVerifiedAt: new Date(Date.now() - 15 * 60_000 - 1).toISOString() },
     );
   });
 

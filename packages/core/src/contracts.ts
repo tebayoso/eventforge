@@ -6,7 +6,7 @@ export type Provider = z.infer<typeof ProviderSchema>;
 export const RuntimeModeSchema = z.enum(["local", "remote", "test"]);
 export type RuntimeMode = z.infer<typeof RuntimeModeSchema>;
 
-export const WorkspaceRoleSchema = z.enum(["owner", "operator", "viewer"]);
+export const WorkspaceRoleSchema = z.enum(["owner", "admin", "operator", "viewer"]);
 export type WorkspaceRole = z.infer<typeof WorkspaceRoleSchema>;
 
 export const McpScopeSchema = z.enum([
@@ -25,6 +25,8 @@ export const AuthContextSchema = z.object({
   sessionId: z.string().min(1).optional(),
   clientId: z.string().min(1).optional(),
   mfaVerified: z.boolean().default(false),
+  /** Absolute proof timestamp; normal requests must never refresh this value. */
+  mfaVerifiedAt: z.string().datetime().optional(),
   scopes: z.array(McpScopeSchema).default([]),
 });
 export type AuthContext = z.infer<typeof AuthContextSchema>;

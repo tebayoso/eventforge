@@ -1,4 +1,5 @@
 import { encryptPayload, sha256, verifyHmac } from "./crypto.js";
+export { SessionAuthority } from "./session-authority.js";
 
 type IngestMessage = { eventId: string; workspaceId: string; idempotencyKey: string };
 type Surface = "api" | "hooks" | "preview" | "unknown";

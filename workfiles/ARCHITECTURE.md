@@ -107,6 +107,26 @@ session material is never exported to a second backup. If storage cannot be
 restored, the same fail-closed reset creates an empty authority; it cannot restore
 or bypass a lost identity factor.
 
+### Issue #7 implementation and launch gate
+
+`apps/cloudflare/src/identity.ts` is the hosted lifecycle policy implementation.
+It has deterministic test ports for email delivery and factor verification; the
+production adapter must provide D1 transactions, an email sender, WebAuthn
+verification, and TOTP verification before any hosted route is enabled.
+`SessionAuthority` is the one-per-canonical-user SQLite Durable Object and is
+bound as `IDENTITY_AUTHORITY`; its only session material is opaque IDs, request
+tokens, membership versions, and revocation state. D1 migration `0003` contains
+identities, email challenges, memberships, invitations, factors, recovery-code
+hashes, and attributable governance events.
+
+There is deliberately no live email/provider binding in this repository. The
+Worker therefore continues to return `AUTH_GATED` for `/api/auth/*` and `/v1/*`
+in every deployed environment. Enabling it requires a reviewed adapter,
+production WebAuthn verification for `eventforge.dev`/`https://eventforge.dev`,
+an invitation-only enrollment path, D1 transaction wiring for revoke-first
+membership transitions, authority latency/SLO instrumentation, and a successful
+recovery drill. Passing deterministic tests is not production proof.
+
 ## Trust boundaries
 
 - Provider bodies are untrusted until provider-specific raw-body signature, delivery identifier, and replay checks where supported succeed. Remote installation scope is resolved separately through configured mappings.
