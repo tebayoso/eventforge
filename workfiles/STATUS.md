@@ -1,6 +1,6 @@
 # Implementation status
 
-Updated: 2026-07-20
+Updated: 2026-07-22
 
 ## Supported now
 
@@ -20,7 +20,7 @@ Updated: 2026-07-20
 
 Phase 0 implementation has started with additive, tenant-scoped contracts for endpoints, routes, deliveries and attempts, issues, alert policies, incidents, bounded reaction policies and runs, evidence bundles, usage records, and entitlements. Migration `003_commercial_platform.sql` adds durable resource, entitlement, and idempotent usage-meter storage without enabling remote mode.
 
-These are persistence and interface foundations only. Hosted authentication, repository hydration, outbound delivery workers, billing export, monitoring, alert delivery, reactions, and public commercial APIs are not yet enabled or claimed as supported.
+These are persistence and interface foundations only. A local core reaction-worker enforcement kernel now provides strict GitHub/Linear allowlisted action envelopes, deterministic exact-effect hashes, and fail-closed approval/policy/scope/kill-cache/budget/concurrency reservation checks. It has no provider writer or credentials, so shadow/hosted effects cannot execute from this slice. Hosted authentication, repository hydration, durable reservation storage, outbound delivery workers, billing export, monitoring, alert delivery, reconciliation, and public commercial APIs remain unenabled and are not claimed as supported.
 
 The Cloudflare-native hosted path now has isolated preview and production D1 control/event databases, private R2 payload storage, ingestion Queues and DLQs, and applied initial migrations. `api.eventforge.dev` and `hooks.eventforge.dev` are Worker custom domains with Cloudflare-managed DNS/TLS and host-isolated route surfaces. A deployed preview signed canary returned `202` and reconciled to one processed event, one published outbox item, and one audit entry. Production webhook ingress and authenticated `/v1` APIs remain deliberately gated until Better Auth and tenant repositories are implemented. The static Worker intercepts `/console` and returns a non-cacheable `503` instead of exposing the operations shell before authentication exists.
 
