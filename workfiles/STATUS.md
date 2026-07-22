@@ -2,6 +2,10 @@
 
 Updated: 2026-07-20
 
+## Timeline foundation (#19)
+
+Core timeline schemas, deterministic canonical manifest hashing, typed redaction omissions, HTML field alignment, and an additive PostgreSQL table are implemented. There is no hosted endpoint, customer export, signing-key wiring, or live evidence claim; those remain closed on #7/#13/#17 dependencies.
+
 ## Supported now
 
 | Area                                 | Status                                                                                                                                                                    |

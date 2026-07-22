@@ -40,3 +40,7 @@ Remote mode is intentionally fail-closed. Startup requires PostgreSQL, an encryp
 ## Stable contracts
 
 The runtime contracts live in `packages/core/src/contracts.ts`: `RuntimeMode`, `AuthContext`, `ProviderAdapter`, `PolicyDecision`, `EventEnvelope`, `WorkflowDefinition`, `ActionProposal`, `ForgeJob`, repository interfaces, and MCP scopes.
+
+## Timeline foundation (#19)
+
+`packages/core/src/timeline.ts` defines tenant-scoped, append-only timeline entry and export contracts. It separates facts, findings, proposals, policy results, decisions, attempts, and outcomes; corrections are new entries linked through causal/version references. The canonical manifest is deterministic JSON with SHA-256 integrity hashing, an explicit machine-to-human field map, and a standalone verifier. Redacted, expired, and deleted entries remain typed omissions. This is an internal deterministic foundation only: hosted viewing/export stays fail-closed until #7, #13, and #17 provide authenticated repositories, revocation, and recent-MFA signing-key access.
