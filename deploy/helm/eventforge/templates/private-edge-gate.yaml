@@ -1,0 +1,3 @@
+{{- if .Values.privateEdge.enabled }}
+{{- fail "privateEdge.enabled is blocked: Cloudflare D1, R2, Queues, Worker cron, and hosted identity contracts have no tested private-edge adapters. Run node scripts/private-edge-preflight.mjs for remediation." }}
+{{- end }}

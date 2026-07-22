@@ -1,5 +1,15 @@
 # Deployment
 
+## Private edge status (issue #9)
+
+Private edge is **blocked, not available**. The versioned Helm reference (`0.2.0`) deliberately refuses `privateEdge.enabled=true`; it is a security reference and preflight surface, not an installable claim. The only declared reference shape is Kubernetes v1.33, one `nginx` ingress class, cert-manager TLS, namespace-scoped service account, restricted pods, default-deny NetworkPolicy, and externally managed Postgres/object store/queue/OIDC/KMS. NetworkPolicy enforcement is mandatory; manifests alone do not enforce it. The policy is opt-in until preflight can safely validate required DNS/dependency egress. Kubernetes documents the [restricted pod profile](https://kubernetes.io/docs/concepts/security/pod-security-standards/) and requires a network plugin that enforces [NetworkPolicy](https://kubernetes.io/docs/concepts/services-networking/network-policies/). No managed vendor/version, capacity envelope, or private-edge drill is claimed as exercised.
+
+Run `pnpm private-edge:preflight`; it exits non-zero and emits human and JSON results without secrets. `--cluster` additionally reports the kubectl server version, but cannot convert fixture or endpoint checks into readiness. Mandatory blockers are Worker D1, R2, Queues, cron, and hosted identity/OIDC workspace-MFA parity. No Durable Object or KV binding is used by application code (generated Worker types are not a runtime dependency).
+
+Keys must be customer-owned external KMS or Secrets Store CSI references only; the chart contains no key material. Missing/revoked keys must fail dependent operations closed. Before availability, bootstrap, rotation with safe dual-read only, revocation, lost-key terminal behavior, break-glass ownership, and isolated restore/promotion must be exercised. Backups must cover configuration/mapping, durable events/attempts, evidence and metadata, pseudonymous audit, and policy/approval; RPO 15 minutes and RTO 4 hours remain inherited targets, not proven outcomes. Rollback is compatible code/config only: never database rewind or evidence deletion, and blocked across incompatible schema.
+
+Private-edge diagnostics are unimplemented. A future export must require role plus recent MFA, exact preview, allowlisted bounded fields, encryption, audit, and exclusion of secrets, environment, tokens, payloads, evidence, raw logs, key paths, and tenant identifiers. Customer owns cluster/network/storage/KMS/identity/backup destination; EventForge owns chart/app/migrations/preflight/compatibility; incident diagnosis is joint. No airgap, hosted fallback, telemetry requirement, bespoke topology, or unmanaged fork is supported.
+
 ## Production architecture
 
 EventForge is the product name; `eventforge.dev` is its canonical public domain. This deployment deliberately does not rename packages, containers, Helm releases, or runtime variables.
