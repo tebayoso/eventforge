@@ -229,9 +229,10 @@ limit. Emails are stored in the production `eventforge-control` D1 database;
 payloads are never accepted by this route.
 
 Production is configured through the public runtime file
-`apps/console/public/analytics-config.json` (these are not secret credentials).
-For a different project or preview environment, override the values at build
-time:
+`apps/console/public/analytics-config.json`, with the GA4 fallback tracked in
+`apps/console/.env.production` so every production build remains tagged. These
+are public project identifiers, not secret credentials. For a different project
+or preview environment, override the values before building the console:
 
 ```bash
 export VITE_POSTHOG_KEY="phc_..."
@@ -240,11 +241,12 @@ export VITE_GA_MEASUREMENT_ID="G-XXXXXXXXXX"
 pnpm --filter @eventforge/console deploy:cloudflare
 ```
 
-EventBridge emits anonymous `page_view`, `waitlist_submit_started`,
+EventForge emits anonymous `page_view`, `waitlist_submit_started`,
 `waitlist_submitted`, and `waitlist_submit_failed` events. Email addresses and
 form payloads are never sent to PostHog or Google Analytics. Create the
 PostHog project and GA4 web stream in their respective accounts, then update
-the public runtime IDs; do not put private credentials in the bundle.
+the public runtime IDs or provide replacement build-time IDs. Keep all private
+credentials outside source control and the browser bundle.
 
 The API worker's D1 migration and rate-limit secret are provisioned with:
 
