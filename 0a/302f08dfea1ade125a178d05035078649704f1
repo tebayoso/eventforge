@@ -1,0 +1,21 @@
+plugins/eventforge/server/eventforge-mcp.mjs
+  s_717f8c81e65bfb::t_18e28998145282 2-3,6,9,11,34,36-38,42
+plugins/eventforge/server/eventforge-standalone.cjs
+  s_717f8c81e65bfb::t_18e28998145282 9,16,21-23,25,43,45-46,59,348-349,354,370-371,379,383,389,405,410,434,443,445,452-453,486,498,502
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "0a302f08dfea1ade125a178d05035078649704f1",
+  "prompts": {},
+  "sessions": {
+    "s_717f8c81e65bfb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8b1f-96ff-7571-ba96-89256223a480",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
