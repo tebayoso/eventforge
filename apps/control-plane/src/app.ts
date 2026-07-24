@@ -288,9 +288,6 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
       workflow.id,
       `${workflow.name} matched ${event.provider}:${event.topic}.`,
     );
-    const memories = store.memory
-      .query(event.workspaceId, event.projectId, JSON.stringify(event.payload))
-      .map((memory) => memory.text);
     const run = store.addRun({
       id: randomUUID(),
       workflowId: workflow.id,
@@ -301,6 +298,8 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
     });
     store.audit(event.workspaceId, "agent_run", run.id, "Agent investigation started.");
     try {
+      // Issue content is never an authorization signal. Keep its deterministic assessment
+      // ahead of memory retrieval, model execution, policy evaluation, and provider actions.
       if (isGitHubIssueEvent(event)) {
         const assessment = assessGitHubIssueEvent(event);
         store.updateRun(run.id, {
@@ -316,6 +315,9 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
         );
         return;
       }
+      const memories = store.memory
+        .query(event.workspaceId, event.projectId, JSON.stringify(event.payload))
+        .map((memory) => memory.text);
       const pullRequestNumber = githubPullRequestNumber(event);
       const previousThreadId = store.runs().find((candidate) => {
         if (candidate.workflowId !== workflow.id || candidate.id === run.id) return false;

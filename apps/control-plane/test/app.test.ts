@@ -100,8 +100,10 @@ function workspaceWorkflow(workspaceId: string, projectId: string): WorkflowDefi
 describe("control plane", () => {
   it("assesses issue events without invoking an agent or creating a write proposal", async () => {
     const investigate = vi.fn();
+    const store = new EventForgeStore();
+    const queryMemory = vi.spyOn(store.memory, "query");
     const app = await createApp({
-      store: new EventForgeStore(),
+      store,
       persistAudit: false,
       runner: { investigate },
     });
@@ -119,6 +121,7 @@ describe("control plane", () => {
       },
     });
     expect(response.statusCode).toBe(202);
+    expect(queryMemory).not.toHaveBeenCalled();
     expect(investigate).not.toHaveBeenCalled();
     expect((await app.inject({ method: "GET", url: "/actions" })).json()).toEqual([]);
     expect((await app.inject({ method: "GET", url: "/runs" })).json()[0]).toMatchObject({
@@ -130,8 +133,10 @@ describe("control plane", () => {
 
   it("safely completes prompt-injected issue comments without invoking the runner", async () => {
     const investigate = vi.fn();
+    const store = new EventForgeStore();
+    const queryMemory = vi.spyOn(store.memory, "query");
     const app = await createApp({
-      store: new EventForgeStore(),
+      store,
       persistAudit: false,
       runner: { investigate },
     });
@@ -153,6 +158,7 @@ describe("control plane", () => {
     });
 
     expect(response.statusCode).toBe(202);
+    expect(queryMemory).not.toHaveBeenCalled();
     expect(investigate).not.toHaveBeenCalled();
     expect((await app.inject({ method: "GET", url: "/actions" })).json()).toEqual([]);
     expect((await app.inject({ method: "GET", url: "/runs" })).json()[0]).toMatchObject({
