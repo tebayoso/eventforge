@@ -2,6 +2,7 @@ export * from "./contracts.js";
 export * from "./durable-delivery.js";
 export * from "./events.js";
 export * from "./forge.js";
+export * from "./issue-review.js";
 export * from "./memory.js";
 export * from "./platform.js";
 export * from "./store.js";

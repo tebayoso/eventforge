@@ -23,8 +23,7 @@ function registerWebMcpTool() {
 
   modelContext.registerTool({
     name: "eventforge_get_started",
-    description:
-      "Return the public EventBridge installation and operating-surface links. The EventForge package name remains stable for compatibility.",
+    description: "Return the public EventForge installation and operating-surface links.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
     execute: async () => ({
       install:
@@ -42,7 +41,7 @@ const isConsoleRoute =
   window.location.pathname.startsWith("/console/");
 const isWaitlistRoute = window.location.pathname === "/waitlist";
 applyTheme(getInitialTheme());
-initializeAnalytics();
+void initializeAnalytics();
 registerWebMcpTool();
 
 createRoot(document.getElementById("root")!).render(
