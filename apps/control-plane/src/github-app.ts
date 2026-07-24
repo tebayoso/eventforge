@@ -1,20 +1,18 @@
 import { createHash, randomBytes } from "node:crypto";
 
 export type GitHubInstallationState =
-  | "pending-confirmation"
-  | "connected"
-  | "attention-required"
-  | "suspended"
-  | "removed";
+  "pending-confirmation" | "connected" | "attention-required" | "suspended" | "removed";
 
 export type AttestedInstallation = {
   installationId: string;
   accountLogin: string;
   accountType: "Organization" | "User";
-  repositories: Array<{ id: string; fullName: string; archived?: boolean }>;
+  repositories: GitHubRepository[];
   permissions: { checks: "read"; issues: "read"; pullRequests: "read" };
   active: boolean;
 };
+
+export type GitHubRepository = { id: string; fullName: string; archived?: boolean };
 
 export interface GitHubInstallationAttestor {
   attest(installationId: string): Promise<AttestedInstallation>;
@@ -26,15 +24,38 @@ type InstallState = {
   workspaceId: string;
   returnTo: string;
   intendedAccount: string;
+  retentionPolicyId: string;
   expiresAt: number;
   used: boolean;
 };
 
 export type GitHubInstallation = AttestedInstallation & {
   workspaceId: string;
+  retentionPolicyId: string;
+  mappingVersion: number;
   state: GitHubInstallationState;
   connectedAt?: string;
 };
+
+export type GitHubInstallationResolution =
+  | { ok: true; installation: GitHubInstallation }
+  | {
+      ok: false;
+      reason:
+        | "installation-not-found"
+        | "installation-not-connected"
+        | "repository-not-installed"
+        | "repository-archived";
+    };
+
+function hasExactReadPermissions(permissions: AttestedInstallation["permissions"]): boolean {
+  return (
+    permissions?.checks === "read" &&
+    permissions?.issues === "read" &&
+    permissions?.pullRequests === "read" &&
+    Object.keys(permissions).length === 3
+  );
+}
 
 /**
  * Server-side source of truth for hosted GitHub App bindings. This is deliberately
@@ -50,8 +71,13 @@ export class GitHubInstallationRegistry {
     workspaceId: string;
     returnTo: string;
     intendedAccount: string;
+    retentionPolicyId: string;
     now?: Date;
   }): string {
+    const now = input.now?.getTime() ?? Date.now();
+    for (const [nonceHash, state] of this.#states) {
+      if (state.used || state.expiresAt <= now) this.#states.delete(nonceHash);
+    }
     const nonce = randomBytes(32).toString("base64url");
     this.#states.set(this.hash(nonce), {
       nonceHash: this.hash(nonce),
@@ -59,7 +85,8 @@ export class GitHubInstallationRegistry {
       workspaceId: input.workspaceId,
       returnTo: input.returnTo,
       intendedAccount: input.intendedAccount,
-      expiresAt: (input.now?.getTime() ?? Date.now()) + 10 * 60_000,
+      retentionPolicyId: input.retentionPolicyId,
+      expiresAt: now + 10 * 60_000,
       used: false,
     });
     return nonce;
@@ -79,41 +106,66 @@ export class GitHubInstallationRegistry {
     if (state.actorId !== input.actorId || state.workspaceId !== input.workspaceId)
       throw new Error("GitHub installation state is not bound to this actor and workspace.");
     state.used = true;
-    const attested = await input.attestor.attest(input.installationId);
-    if (!attested.active || attested.accountLogin !== state.intendedAccount)
-      throw new Error("GitHub installation attestation did not match the intended account.");
-    if (Object.values(attested.permissions).some((permission) => permission !== "read"))
-      throw new Error("GitHub installation has unsupported permissions.");
-    const existing = this.#installations.get(attested.installationId);
-    if (existing && existing.workspaceId !== state.workspaceId)
-      throw new Error("GitHub installation is already bound to another workspace.");
-    const installation: GitHubInstallation = {
-      ...attested,
-      workspaceId: state.workspaceId,
-      state: "pending-confirmation",
-    };
-    this.#installations.set(installation.installationId, installation);
-    return installation;
+    try {
+      const attested = await input.attestor.attest(input.installationId);
+      if (
+        !attested.active ||
+        attested.installationId !== input.installationId ||
+        attested.accountLogin !== state.intendedAccount
+      )
+        throw new Error(
+          "GitHub installation attestation did not match the requested installation and intended account.",
+        );
+      if (!hasExactReadPermissions(attested.permissions))
+        throw new Error("GitHub installation does not have the exact required read permissions.");
+      const existing = this.#installations.get(attested.installationId);
+      if (existing && existing.workspaceId !== state.workspaceId)
+        throw new Error("GitHub installation is already bound to another workspace.");
+      const installation: GitHubInstallation = {
+        ...attested,
+        repositories: attested.repositories.map((repository) => ({ ...repository })),
+        permissions: { ...attested.permissions },
+        workspaceId: state.workspaceId,
+        retentionPolicyId: state.retentionPolicyId,
+        mappingVersion: (existing?.mappingVersion ?? 0) + 1,
+        state: "pending-confirmation",
+      };
+      this.#installations.set(installation.installationId, installation);
+      return this.snapshot(installation);
+    } finally {
+      this.#states.delete(state.nonceHash);
+    }
   }
 
-  confirm(installationId: string, workspaceId: string): GitHubInstallation {
+  confirm(installationId: string, workspaceId: string, now = new Date()): GitHubInstallation {
     const installation = this.require(installationId, workspaceId);
     if (installation.state !== "pending-confirmation")
       throw new Error("GitHub installation is not awaiting confirmation.");
     installation.state = "connected";
-    installation.connectedAt = new Date().toISOString();
-    return installation;
+    installation.connectedAt = now.toISOString();
+    return this.snapshot(installation);
   }
 
-  resolve(installationId: string, repository: string): GitHubInstallation | undefined {
+  get(installationId: string, workspaceId: string): GitHubInstallation {
+    return this.snapshot(this.require(installationId, workspaceId));
+  }
+
+  resolve(installationId: string, repository: string): GitHubInstallationResolution {
     const installation = this.#installations.get(installationId);
-    if (
-      !installation ||
-      installation.state !== "connected" ||
-      !installation.repositories.some((item) => item.fullName === repository && !item.archived)
-    )
-      return undefined;
-    return installation;
+    if (!installation) return { ok: false, reason: "installation-not-found" };
+    if (installation.state !== "connected")
+      return { ok: false, reason: "installation-not-connected" };
+    const mappedRepository = installation.repositories.find((item) => item.fullName === repository);
+    if (!mappedRepository) return { ok: false, reason: "repository-not-installed" };
+    if (mappedRepository.archived) return { ok: false, reason: "repository-archived" };
+    return { ok: true, installation: this.snapshot(installation) };
+  }
+
+  replaceRepositories(installationId: string, repositories: GitHubRepository[]): void {
+    const installation = this.#installations.get(installationId);
+    if (!installation || installation.state === "removed")
+      throw new Error("GitHub installation is not available for repository reconciliation.");
+    installation.repositories = repositories.map((repository) => ({ ...repository }));
   }
 
   revoke(
@@ -133,5 +185,13 @@ export class GitHubInstallationRegistry {
 
   private hash(value: string): string {
     return createHash("sha256").update(value).digest("hex");
+  }
+
+  private snapshot(installation: GitHubInstallation): GitHubInstallation {
+    return {
+      ...installation,
+      repositories: installation.repositories.map((repository) => ({ ...repository })),
+      permissions: { ...installation.permissions },
+    };
   }
 }

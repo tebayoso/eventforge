@@ -5,6 +5,7 @@ export type RequestAuthenticator = (request: FastifyRequest) => Promise<AuthCont
 
 export type RuntimeConfig = {
   mode: RuntimeMode;
+  githubAppEnabled: boolean;
   bodyLimit: number;
   rateLimitPerMinute: number;
   agentRunsPerHour: number;
@@ -31,15 +32,15 @@ export function resolveRuntimeConfig(
       : environment.NODE_ENV === "test"
         ? "test"
         : "local";
+  const githubAppFlag = environment.EVENTFORGE_GITHUB_APP_ENABLED;
+  if (githubAppFlag && githubAppFlag !== "true" && githubAppFlag !== "false")
+    throw new Error("EVENTFORGE_GITHUB_APP_ENABLED must be true or false.");
+  const githubAppEnabled = mode === "remote" && githubAppFlag === "true";
   if (mode === "remote") {
-    const missing = [
-      "DATABASE_URL",
-      "EVENTFORGE_ENCRYPTION_KEY",
-      "EVENTFORGE_ALLOWED_ORIGINS",
-      "GITHUB_APP_ID",
-      "GITHUB_APP_PRIVATE_KEY",
-      "GITHUB_WEBHOOK_SECRET",
-    ].filter((name) => !environment[name]);
+    const required = ["DATABASE_URL", "EVENTFORGE_ENCRYPTION_KEY", "EVENTFORGE_ALLOWED_ORIGINS"];
+    if (githubAppEnabled)
+      required.push("GITHUB_APP_ID", "GITHUB_APP_PRIVATE_KEY", "GITHUB_WEBHOOK_SECRET");
+    const missing = required.filter((name) => !environment[name]);
     if (missing.length) throw new Error(`Remote mode requires ${missing.join(", ")}.`);
     if (!hasAuthenticator)
       throw new Error("Remote mode requires an authenticated request provider.");
@@ -55,6 +56,7 @@ export function resolveRuntimeConfig(
   }
   return {
     mode,
+    githubAppEnabled,
     bodyLimit: Number(environment.EVENTFORGE_BODY_LIMIT ?? 1_048_576),
     rateLimitPerMinute: Number(
       environment.EVENTFORGE_RATE_LIMIT_PER_MINUTE ?? (mode === "local" ? 600 : 120),
