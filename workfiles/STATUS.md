@@ -2,6 +2,26 @@
 
 Updated: 2026-07-20
 
+## Issue #17 replay/audit foundation
+
+Core now contains an adapter-backed EvidenceStore/AuditLedger split: expired content is replaced
+with a blanked record and becomes unavailable while tenant-scoped proof retains only hashes,
+attribution, redaction/policy/decision references, ancestry hash, and outcome. Replay uses a trusted
+clock and authoritative attempt/policy lookups, requires recent MFA/authorization, evidence
+availability, reason and request-consistent idempotency, and creates a fresh pending-approval linked
+attempt. Async repository transactions atomically couple replay/approval compare-and-set state with
+their audit entries and require commit-time revalidation of authorization, parent status, MFA and
+evidence deadlines, current policy, and the full evidence provenance fingerprint.
+Retention is bounded from a trusted storage clock; corrupt expiry data becomes unavailable and
+eligible for deletion. Policy or evidence changes block stale approval. Export helpers produce
+matching canonical JSON and escaped HTML covered by keyed integrity verification.
+
+The bundled in-memory adapters are explicitly ephemeral test/demo implementations. Replay fails
+closed unless authorization, audit, and durable repositories are operational; tests must opt into
+the ephemeral escape explicitly. Hosted key custody, adapter transactions, audited evidence access,
+deletion/export workflows, and privacy/security drills remain required before this can be exposed as
+a hosted API.
+
 ## Supported now
 
 | Area                                 | Status                                                                                                                                                                     |
