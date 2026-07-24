@@ -19,6 +19,37 @@ demo runner, and listen only on loopback. Production or hosted operation must
 provide authentication, TLS, workspace scoping, and a separately managed
 provider secret boundary.
 
+## Hosted GitHub App boundary
+
+Hosted GitHub App ingress is disabled by default. Enabling the bounded hosted
+path requires all of the following:
+
+- `EVENTFORGE_GITHUB_APP_ENABLED=true`
+- `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`, and `GITHUB_WEBHOOK_SECRET`
+- a server-side installation registry injected into the control plane
+
+The boundary accepts only signed GitHub Cloud `check_run`, `issues`, and
+`pull_request` deliveries with a delivery identifier. Installation and
+repository claims are checked against the attested server-side mapping before
+tenant data is created.
+
+Installations require:
+
+- an Owner/Admin MFA session and ten-minute single-use state nonce
+- explicit confirmation after every installation or reinstallation
+- exact read-only Checks, Issues, and Pull requests permissions
+- a workspace retention-policy link that remains after uninstall
+
+Suspended, removed, unconfirmed, out-of-scope, and archived repositories cannot
+create an investigation. GitHub text and logs remain untrusted evidence, and the
+hosted path cannot create a GitHub write proposal. Local GitHub relay operation
+remains credential-free and unchanged.
+
+This switch is a fail-closed foundation gate, not a production-readiness claim.
+Keep it disabled until the durable installation store, GitHub API attestor,
+callback/confirmation routes, lifecycle reconciliation, credential cleanup,
+support runbook, and security release gates are complete.
+
 ## Zero-checkout stdio (recommended)
 
 Requirements: Node.js 20.11 or newer and a Codex CLI with MCP support.
