@@ -56,6 +56,7 @@ describe("OAuth 2.1 authorization domain", () => {
     const { service: s } = service();
     expect(s.metadata("https://mcp.eventforge.dev")).toMatchObject({
       scopes_supported: ["eventforge:read", "eventforge:review"],
+      bearer_methods_supported: ["header"],
     });
     expect(() => s.metadata("http://mcp.eventforge.dev")).toThrow("HTTPS");
   });
@@ -149,6 +150,36 @@ describe("OAuth 2.1 authorization domain", () => {
       }),
     ).resolves.toMatchObject({ workspaceId: "workspace-a" });
   });
+  it("binds access to the current identity session on every authentication", async () => {
+    const assertions: Array<{ sessionId?: string }> = [];
+    const s = new OAuthAuthorizationService(
+      [client],
+      new InMemoryOAuthGrantRepository(),
+      {
+        assertCurrent: async (input) => {
+          assertions.push(input);
+          return { active: true, mfaVerified: true };
+        },
+      },
+      new OAuthSecurityEventSink(),
+    );
+    const c = await codeFor(s);
+    const tokens = await s.exchangeCode({
+      code: c.code,
+      clientId: client.id,
+      redirectUri: REDIRECT_URI,
+      codeVerifier: verifier,
+    });
+
+    await s.authenticate({
+      accessToken: tokens.accessToken,
+      audience: AUDIENCE,
+      workspaceId: "workspace-a",
+      requiredScope: "eventforge:read",
+    });
+
+    expect(assertions.at(-1)).toMatchObject({ sessionId: "session-1" });
+  });
   it("rotates refreshes once, never expands scope, and revokes the family on reuse", async () => {
     const { service: s, events } = service();
     const c = await codeFor(s);
@@ -191,6 +222,26 @@ describe("OAuth 2.1 authorization domain", () => {
     ).rejects.toThrow("Unauthorized");
     expect(events.events).toEqual([{ workspaceId: "workspace-a", type: "refresh_reuse" }]);
   });
+  it("distinguishes an empty refresh scope set from scope expansion", async () => {
+    const { service: s } = service();
+    const c = await codeFor(s);
+    const tokens = await s.exchangeCode({
+      code: c.code,
+      clientId: client.id,
+      redirectUri: REDIRECT_URI,
+      codeVerifier: verifier,
+    });
+
+    await expect(
+      s.refresh({
+        refreshToken: tokens.refreshToken,
+        clientId: client.id,
+        audience: AUDIENCE,
+        workspaceId: "workspace-a",
+        scopes: [],
+      }),
+    ).rejects.toThrow("Refresh scopes cannot be empty");
+  });
   it("serializes concurrent refresh retries to one successor", async () => {
     const { service: s } = service();
     const c = await codeFor(s);
@@ -214,11 +265,16 @@ describe("OAuth 2.1 authorization domain", () => {
     await expect(codeFor(noMfa, "workspace-a", ["eventforge:review"])).rejects.toThrow(
       "Authorization denied",
     );
-    const s = new OAuthAuthorizationService([client], new InMemoryOAuthGrantRepository(), {
-      assertCurrent: async () => {
-        throw new Error("offline");
+    const s = new OAuthAuthorizationService(
+      [client],
+      new InMemoryOAuthGrantRepository(),
+      {
+        assertCurrent: async () => {
+          throw new Error("offline");
+        },
       },
-    });
+      new OAuthSecurityEventSink(),
+    );
     await expect(codeFor(s)).rejects.toThrow("offline");
   });
 });
