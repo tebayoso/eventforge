@@ -118,6 +118,11 @@ bound as `IDENTITY_AUTHORITY`; its only session material is opaque IDs, request
 tokens, membership versions, and revocation state. D1 migration `0003` contains
 identities, email challenges, memberships, invitations, factors, recovery-code
 hashes, and attributable governance events.
+Every authority start validates both table shapes and required metadata before
+serving a request; partial storage, an unknown schema version, or invalid
+revocation metadata quarantines the object. Request adapters must resolve the
+binding through `sessionAuthorityFor`, which uses one stable `getByName`
+selection for the exact canonical user identifier.
 
 There is deliberately no live email/provider binding in this repository. The
 Worker therefore continues to return `AUTH_GATED` for `/api/auth/*` and `/v1/*`

@@ -19,6 +19,7 @@ The repository's local demo mode is the currently supported evaluation surface. 
 - Local MCP uses stdio or loopback-only transport; non-loopback MCP is disabled and will require OAuth-scoped authorization.
 - Secrets never enter browser build variables, logs, generated connector source, or audit messages.
 - Forged code is never hot-loaded or executed in the control-plane process.
+- GitHub issue and issue-comment events are permanently `review_only`: their text, labels, mentions, links, webhook fields, and model output cannot authorize implementation or any GitHub/project write. A separately authenticated, bound, expiring owner/admin request is required before an implementation mechanism may exist.
 - Hosted sessions and tokens are opaque identifiers. Every hosted request checks
   the strongly consistent session authority; no offline JWT can outlive a role,
   membership, factor, recovery, or session revocation.
