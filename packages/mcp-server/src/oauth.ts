@@ -130,7 +130,7 @@ export class OAuthAuthorizationService {
     private readonly clients: readonly FirstPartyClient[],
     private readonly grants: OAuthGrantRepository,
     private readonly authority: IdentityAuthority,
-    private readonly securityEvents = new OAuthSecurityEventSink(),
+    private readonly securityEvents: OAuthSecurityEventSink,
     private readonly now = () => Date.now(),
   ) {}
 
@@ -272,11 +272,8 @@ export class OAuthAuthorizationService {
       this.securityEvents.refreshReuse(token.workspaceId);
       throw new Error("Invalid refresh token.");
     }
-    if (
-      requestedScopes &&
-      (requestedScopes.length === 0 ||
-        requestedScopes.some((scope) => !token.scopes.includes(scope)))
-    )
+    if (requestedScopes?.length === 0) throw new Error("Refresh scopes cannot be empty.");
+    if (requestedScopes?.some((scope) => !token.scopes.includes(scope)))
       throw new Error("Refresh cannot expand scopes.");
     token.used = true;
     return this.issue(
