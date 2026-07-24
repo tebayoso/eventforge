@@ -1,0 +1,52 @@
+apps/cloudflare/worker-configuration.d.ts
+  s_717f8c81e65bfb::t_e900a645a15de0 2,17,22,37
+apps/cloudflare/wrangler.jsonc
+  s_717f8c81e65bfb::t_e900a645a15de0 37-40,86-88
+apps/cloudflare/src/session-authority.ts
+  s_717f8c81e65bfb::t_e900a645a15de0 1-265
+apps/control-plane/src/app.ts
+  s_717f8c81e65bfb::t_e900a645a15de0 42,91-98,255,274
+packages/core/src/contracts.ts
+  s_717f8c81e65bfb::t_e900a645a15de0 9,28-29
+workfiles/SECURITY.md
+  s_717f8c81e65bfb::t_e900a645a15de0 23-63
+apps/cloudflare/test/identity.test.ts
+  s_717f8c81e65bfb::t_e900a645a15de0 1-84
+apps/cloudflare/test/cloudflare-workers.ts
+  s_717f8c81e65bfb::t_e900a645a15de0 1-9
+apps/cloudflare/src/index.ts
+  s_717f8c81e65bfb::t_e900a645a15de0 2
+apps/cloudflare/migrations/control/0003_hosted_identity.sql
+  s_717f8c81e65bfb::t_e900a645a15de0 1-72
+apps/cloudflare/src/identity.ts
+  s_717f8c81e65bfb::t_e900a645a15de0 1-278
+plugins/eventforge/server/eventforge-mcp-http.cjs
+  s_717f8c81e65bfb::t_e900a645a15de0 2,6,13,18,21,32,42,52,56,59-61,63,81,83-84,97,386-387,392,408-409,417,421,427,443,448,472,481,483,490-491,518,533,545,549,551,555,558-560
+apps/cloudflare/test/session-authority.test.ts
+  s_717f8c81e65bfb::t_e900a645a15de0 1-84
+workfiles/ARCHITECTURE.md
+  s_717f8c81e65bfb::t_e900a645a15de0 31-134
+apps/cloudflare/vitest.config.ts
+  s_717f8c81e65bfb::t_e900a645a15de0 1-9
+plugins/eventforge/server/eventforge-standalone.cjs
+  s_717f8c81e65bfb::t_e900a645a15de0 6,9,16,21-23,25,43,45-46,59,348-349,352-354,370-371,379,383,389,405,410,434,443,445,452-453,480,486,498,502,504,508,511-513
+apps/control-plane/test/app.test.ts
+  s_717f8c81e65bfb::t_e900a645a15de0 36,253-260
+  s_717f8c81e65bfb::t_ab68f7e8b47aa0 261-263
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "24adc37a010c4b504484097988be9c1f389c8316",
+  "prompts": {},
+  "sessions": {
+    "s_717f8c81e65bfb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8b1f-96ff-7571-ba96-89256223a480",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
