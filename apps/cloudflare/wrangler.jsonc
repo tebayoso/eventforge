@@ -34,6 +34,10 @@
     },
   ],
   "r2_buckets": [{ "binding": "PAYLOADS", "bucket_name": "eventforge-payloads-preview" }],
+  "durable_objects": {
+    "bindings": [{ "name": "IDENTITY_AUTHORITY", "class_name": "SessionAuthority" }],
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["SessionAuthority"] }],
   "queues": {
     "producers": [{ "binding": "INGEST_QUEUE", "queue": "eventforge-ingest-preview" }],
     "consumers": [
@@ -79,6 +83,9 @@
         },
       ],
       "r2_buckets": [{ "binding": "PAYLOADS", "bucket_name": "eventforge-payloads-production" }],
+      "durable_objects": {
+        "bindings": [{ "name": "IDENTITY_AUTHORITY", "class_name": "SessionAuthority" }],
+      },
       "queues": {
         "producers": [{ "binding": "INGEST_QUEUE", "queue": "eventforge-ingest-production" }],
         "consumers": [
