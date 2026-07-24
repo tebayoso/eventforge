@@ -1,0 +1,25 @@
+apps/control-plane/src/app.ts
+  s_717f8c81e65bfb::t_4f7851d3b52cf2 301-302,318-320
+plugins/eventforge/server/eventforge-standalone.cjs
+  s_717f8c81e65bfb::t_fcfda7483e8dc8 6,9,21,23,25,27-31,33-41,43,45-46,196,198,240,244,371,379,445,453,455-459,463,465,469-470,472,474-475,478,480,482,486,504,508,512-513
+plugins/eventforge/server/eventforge-mcp-http.cjs
+  s_717f8c81e65bfb::t_fcfda7483e8dc8 2,18,21,32,42,56,59,61,63,65-67,69,71-73,75-79,81,83-84,166,172,174,181,191,234-235,237,242,251,254,258,278,280,282,362,364,409,417,421,427,483,493-494,501,507,510,512-513,516,518,529,533,551,555,558-560
+apps/control-plane/test/app.test.ts
+  s_717f8c81e65bfb::t_4f7851d3b52cf2 103-104,106,124,136-137,139,161
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "4048ddea1b8e6b6b1be4ea1da9c4c8936d537157",
+  "prompts": {},
+  "sessions": {
+    "s_717f8c81e65bfb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8b1f-96ff-7571-ba96-89256223a480",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
