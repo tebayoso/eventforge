@@ -25,7 +25,7 @@ let anonymousId: string | undefined;
 function getAnonymousId(): string {
   if (anonymousId) return anonymousId;
   try {
-    const key = "eventbridge-anonymous-id";
+    const key = "eventforge-anonymous-id";
     anonymousId = window.localStorage.getItem(key) ?? crypto.randomUUID();
     window.localStorage.setItem(key, anonymousId);
   } catch {
@@ -35,20 +35,25 @@ function getAnonymousId(): string {
 }
 
 function initializeGoogleAnalytics(): void {
-  if (!analyticsConfig.gaMeasurementId || document.querySelector("script[data-eventbridge-ga]"))
+  if (!analyticsConfig.gaMeasurementId || document.querySelector("script[data-eventforge-ga]"))
     return;
   const analyticsWindow = window as AnalyticsWindow;
   analyticsWindow.dataLayer = analyticsWindow.dataLayer || [];
-  analyticsWindow.gtag = (...args: unknown[]) => analyticsWindow.dataLayer?.push(args);
+  analyticsWindow.gtag = function gtag() {
+    // gtag.js requires its commands to be queued as the function's arguments object.
+    // eslint-disable-next-line prefer-rest-params
+    analyticsWindow.dataLayer?.push(arguments);
+  };
   analyticsWindow.gtag("js", new Date());
   analyticsWindow.gtag("config", analyticsConfig.gaMeasurementId, {
     anonymize_ip: true,
     allow_google_signals: false,
     page_title: document.title,
+    send_page_view: false,
   });
   const script = document.createElement("script");
   script.async = true;
-  script.dataset.eventbridgeGa = "true";
+  script.dataset.eventforgeGa = "true";
   script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(analyticsConfig.gaMeasurementId)}`;
   document.head.append(script);
 }
@@ -62,7 +67,7 @@ export function captureEvent(event: string, properties: AnalyticsProperties = {}
       ...properties,
       $current_url: window.location.href,
       $host: window.location.host,
-      product: "eventbridge",
+      product: "eventforge",
     },
   };
   if (analyticsConfig.posthogKey) {
@@ -78,9 +83,9 @@ export function captureEvent(event: string, properties: AnalyticsProperties = {}
   analyticsWindow.gtag?.("event", event, properties);
 }
 
-export function initializeAnalytics(): void {
-  if (typeof window === "undefined") return;
-  void fetch("/analytics-config.json", { cache: "no-store" })
+export function initializeAnalytics(): Promise<void> {
+  if (typeof window === "undefined") return Promise.resolve();
+  return fetch("/analytics-config.json", { cache: "no-store" })
     .then((response) => (response.ok ? response.json() : undefined))
     .then((config: PublicAnalyticsConfig | undefined) => {
       if (config) {
