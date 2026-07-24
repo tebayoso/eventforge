@@ -1,10 +1,11 @@
 import { encryptPayload, sha256, verifyHmac } from "./crypto.js";
 import {
   DELIVERY_LEASE_MS,
+  SafeDeliveryReason,
   deliveryIdempotencyKey,
   retryState,
-  type SafeDeliveryReason,
 } from "@eventforge/core";
+export { SessionAuthority, authorityObjectName, sessionAuthorityFor } from "./session-authority.js";
 
 type IngestMessage = {
   deliveryId: string;
@@ -242,6 +243,23 @@ async function publishOutbox(env: Env, limit = 100): Promise<number> {
   return published;
 }
 
+async function publishOutboxBestEffort(
+  env: Env,
+  delivery: Pick<IngestMessage, "deliveryId" | "workspaceId">,
+): Promise<void> {
+  try {
+    await publishOutbox(env);
+  } catch {
+    console.error(
+      JSON.stringify({
+        event: "delivery_queue_publish_deferred",
+        deliveryId: delivery.deliveryId,
+        workspaceId: delivery.workspaceId,
+      }),
+    );
+  }
+}
+
 type Installation = {
   id: string;
   workspace_id: string;
@@ -276,12 +294,18 @@ async function verifiedInstallationById(
   );
 }
 
-function safeReason(error: unknown): SafeDeliveryReason {
+class DeliveryFailure extends Error {
+  constructor(readonly reason: SafeDeliveryReason) {
+    super(reason);
+  }
+}
+
+export function safeReason(error: unknown): SafeDeliveryReason {
+  if (error instanceof DeliveryFailure) return error.reason;
   const message = error instanceof Error ? error.message : "";
-  if (message === "payload_unavailable") return "payload_unavailable";
-  if (message === "payload_corrupt") return "payload_corrupt";
-  if (message === "payload_too_large") return "payload_too_large";
-  return "upstream_unavailable";
+  if (SafeDeliveryReason.includes(message as SafeDeliveryReason))
+    return message as SafeDeliveryReason;
+  return "internal_error";
 }
 
 async function quarantine(
@@ -289,15 +313,15 @@ async function quarantine(
   delivery: IngestMessage,
   reason: SafeDeliveryReason,
   now = new Date(),
-): Promise<void> {
+): Promise<boolean> {
   const timestamp = now.toISOString();
   const retainUntil = new Date(now.getTime() + 30 * 24 * 60 * 60_000).toISOString();
-  await env.EVENTS_DB.batch([
+  const results = await env.EVENTS_DB.batch([
     env.EVENTS_DB.prepare(
-      "update deliveries set status = 'quarantined', safe_reason = ?, quarantined_at = ?, updated_at = ?, lease_expires_at = null where id = ? and workspace_id = ?",
+      "update deliveries set status = 'quarantined', safe_reason = ?, quarantined_at = ?, updated_at = ?, lease_expires_at = null where id = ? and workspace_id = ? and status not in ('completed','quarantined','rejected')",
     ).bind(reason, timestamp, timestamp, delivery.deliveryId, delivery.workspaceId),
     env.EVENTS_DB.prepare(
-      "insert into delivery_dlq (delivery_id,workspace_id,safe_reason,correlation_id,attempts_count,quarantined_at,retain_until) select id,workspace_id,?,?,attempts_count,?,? from deliveries where id = ? and workspace_id = ? on conflict(delivery_id) do nothing",
+      "insert into delivery_dlq (delivery_id,workspace_id,safe_reason,correlation_id,attempts_count,quarantined_at,retain_until) select id,workspace_id,?,?,attempts_count,?,? from deliveries where id = ? and workspace_id = ? and status = 'quarantined' and safe_reason = ? on conflict(delivery_id) do nothing",
     ).bind(
       reason,
       delivery.correlationId,
@@ -305,36 +329,43 @@ async function quarantine(
       retainUntil,
       delivery.deliveryId,
       delivery.workspaceId,
+      reason,
     ),
     env.EVENTS_DB.prepare(
-      "insert into audit_entries (id,workspace_id,kind,subject_id,message,created_at) values (?,?,?,?,?,?)",
+      "insert into audit_entries (id,workspace_id,kind,subject_id,message,created_at) select ?,workspace_id,?,?,?,? from deliveries where id = ? and workspace_id = ? and status = 'quarantined' and safe_reason = ?",
     ).bind(
       crypto.randomUUID(),
-      delivery.workspaceId,
       "delivery_quarantined",
       delivery.deliveryId,
       `delivery quarantined: ${reason}`,
       timestamp,
+      delivery.deliveryId,
+      delivery.workspaceId,
+      reason,
     ),
   ]);
+  return Number(results[0]?.meta.changes ?? 0) > 0;
 }
 
-/** Only repairs the three documented lease/outcome inconsistencies; it is not a general repair engine. */
-async function reconcileDeliveries(env: Env, limit = 100): Promise<number> {
+/** Repairs only stale queue/lease state; completed writes are atomic with outcomes and usage. */
+export async function reconcileDeliveries(env: Env, limit = 100): Promise<number> {
   const now = new Date();
+  const staleBefore = new Date(now.getTime() - DELIVERY_LEASE_MS).toISOString();
   const stale = await env.EVENTS_DB.prepare(
-    "select id,workspace_id,installation_id,provider,correlation_id,status,attempts_count,first_attempt_at from deliveries where (status in ('accepted','queued') and created_at <= ?) or (status = 'processing' and lease_expires_at <= ?) or (status = 'completed' and not exists (select 1 from delivery_outcomes where delivery_outcomes.delivery_id = deliveries.id and delivery_outcomes.workspace_id = deliveries.workspace_id)) limit ?",
+    "select id,workspace_id,installation_id,provider,correlation_id,status,attempts_count,first_attempt_at,payload_ref,payload_checksum from deliveries where (status in ('accepted','queued') and created_at <= ?) or (status = 'processing' and lease_expires_at <= ?) or (status = 'retrying' and next_retry_at <= ?) limit ?",
   )
-    .bind(new Date(now.getTime() - DELIVERY_LEASE_MS).toISOString(), now.toISOString(), limit)
+    .bind(staleBefore, now.toISOString(), now.toISOString(), limit)
     .all<{
       id: string;
       workspace_id: string;
       installation_id: string;
       provider: string;
       correlation_id: string;
-      status: "accepted" | "queued" | "processing" | "completed";
+      status: "accepted" | "queued" | "processing" | "retrying";
       attempts_count: number;
       first_attempt_at: string | null;
+      payload_ref: string;
+      payload_checksum: string;
     }>();
   let reconciled = 0;
   for (const row of stale.results) {
@@ -345,9 +376,27 @@ async function reconcileDeliveries(env: Env, limit = 100): Promise<number> {
       provider: row.provider,
       correlationId: row.correlation_id,
     };
-    if (row.status === "completed") {
-      await quarantine(env, body, "reconciliation", now);
-      reconciled += 1;
+    const installation = await verifiedInstallationById(env, row.installation_id, row.provider);
+    if (!installation || installation.workspace_id !== row.workspace_id) {
+      if (await quarantine(env, body, "workspace_deleted", now)) reconciled += 1;
+      continue;
+    }
+    if (installation.status !== "active") {
+      const reason =
+        installation.status === "deleted" ? "workspace_deleted" : "workspace_suspended";
+      if (await quarantine(env, body, reason, now)) reconciled += 1;
+      continue;
+    }
+    const payload = await env.PAYLOADS.head(row.payload_ref);
+    if (!payload) {
+      if (await quarantine(env, body, "payload_unavailable", now)) reconciled += 1;
+      continue;
+    }
+    if (
+      payload.customMetadata?.checksum !== row.payload_checksum ||
+      !payload.customMetadata?.nonce
+    ) {
+      if (await quarantine(env, body, "payload_corrupt", now)) reconciled += 1;
       continue;
     }
     const next = retryState({
@@ -355,6 +404,7 @@ async function reconcileDeliveries(env: Env, limit = 100): Promise<number> {
       firstAttemptAt: row.first_attempt_at ? Date.parse(row.first_attempt_at) : undefined,
       now: now.getTime(),
       reason: "reconciliation",
+      jitterKey: row.id,
     });
     if (next.state === "quarantined") {
       await quarantine(env, body, next.reason, now);
@@ -362,22 +412,12 @@ async function reconcileDeliveries(env: Env, limit = 100): Promise<number> {
       continue;
     }
     const timestamp = now.toISOString();
-    const attemptNumber = Number(row.attempts_count) + 1;
-    const result = await env.EVENTS_DB.prepare(
-      "insert into delivery_attempts (id,workspace_id,delivery_id,attempt_number,operation,status,safe_reason,billing_effect,started_at,finished_at) values (?,?,?,?,?,'failed',?,'none',?,?) on conflict(workspace_id,delivery_id,attempt_number) do nothing",
+    const transition = await env.EVENTS_DB.prepare(
+      "update deliveries set status = 'queued', safe_reason = 'reconciliation', next_retry_at = null, lease_expires_at = null, updated_at = ? where id = ? and workspace_id = ? and ((status in ('accepted','queued') and created_at <= ?) or (status = 'processing' and lease_expires_at <= ?) or (status = 'retrying' and next_retry_at <= ?))",
     )
-      .bind(
-        crypto.randomUUID(),
-        row.workspace_id,
-        row.id,
-        attemptNumber,
-        "reconciliation",
-        "reconciliation",
-        timestamp,
-        timestamp,
-      )
+      .bind(timestamp, row.id, row.workspace_id, staleBefore, timestamp, timestamp)
       .run();
-    if (Number(result.meta.changes ?? 0) === 0) continue;
+    if (Number(transition.meta.changes ?? 0) === 0) continue;
     if (row.status === "processing") {
       await env.EVENTS_DB.prepare(
         "update delivery_attempts set status = 'failed', safe_reason = 'reconciliation', finished_at = ?, lease_expires_at = null where workspace_id = ? and delivery_id = ? and status = 'processing'",
@@ -385,11 +425,6 @@ async function reconcileDeliveries(env: Env, limit = 100): Promise<number> {
         .bind(timestamp, row.workspace_id, row.id)
         .run();
     }
-    await env.EVENTS_DB.prepare(
-      "update deliveries set status = 'retrying', attempts_count = ?, safe_reason = 'reconciliation', next_retry_at = ?, lease_expires_at = null, updated_at = ? where id = ? and workspace_id = ?",
-    )
-      .bind(attemptNumber, timestamp, timestamp, row.id, row.workspace_id)
-      .run();
     await env.INGEST_QUEUE.send(body);
     reconciled += 1;
   }
@@ -428,7 +463,10 @@ async function ingestCanary(request: Request, env: Env): Promise<Response> {
     .bind(installation.workspace_id, "custom", deliveryId)
     .first<{ id: string }>();
   if (existing) {
-    await publishOutbox(env);
+    await publishOutboxBestEffort(env, {
+      deliveryId: existing.id,
+      workspaceId: installation.workspace_id,
+    });
     return Response.json(
       { accepted: true, duplicate: true, eventId: existing.id },
       { status: 202 },
@@ -492,11 +530,7 @@ async function ingestCanary(request: Request, env: Env): Promise<Response> {
   }
   // Durable receipt is acknowledged even when the asynchronous publisher is unavailable.
   // The cron publisher will retry the committed outbox record after restart.
-  try {
-    await publishOutbox(env);
-  } catch {
-    // Queue intent remains durable; payload or error bodies are never logged here.
-  }
+  await publishOutboxBestEffort(env, message);
   return Response.json({ accepted: true, duplicate: false, eventId }, { status: 202 });
 }
 
@@ -569,26 +603,60 @@ export default {
           continue;
         }
         const delivery = await env.EVENTS_DB.prepare(
-          "select attempts_count, first_attempt_at, status from deliveries where id = ? and workspace_id = ? and installation_id = ?",
+          "select attempts_count, first_attempt_at, status, payload_ref, payload_checksum from deliveries where id = ? and workspace_id = ? and installation_id = ?",
         )
           .bind(body.deliveryId, body.workspaceId, body.installationId)
           .first<{
             attempts_count: number;
             first_attempt_at: string | null;
             status: string;
+            payload_ref: string;
+            payload_checksum: string;
           }>();
         if (!delivery || ["completed", "quarantined", "rejected"].includes(delivery.status)) {
+          message.ack();
+          continue;
+        }
+        const budget = retryState({
+          attempts: Number(delivery.attempts_count),
+          firstAttemptAt: delivery.first_attempt_at
+            ? Date.parse(delivery.first_attempt_at)
+            : undefined,
+          now: now.getTime(),
+          reason: "upstream_unavailable",
+          jitterKey: body.deliveryId,
+        });
+        if (budget.state === "quarantined") {
+          await quarantine(env, body, budget.reason, now);
           message.ack();
           continue;
         }
         const attempt = Number(delivery.attempts_count) + 1;
         const timestamp = now.toISOString();
         const lease = new Date(now.getTime() + DELIVERY_LEASE_MS).toISOString();
-        // Persist the processing start before any payload or business work.
-        await env.EVENTS_DB.batch([
-          env.EVENTS_DB.prepare(
-            "insert into delivery_attempts (id,workspace_id,delivery_id,attempt_number,operation,status,billing_effect,lease_expires_at,started_at) values (?,?,?,?,?,'processing','none',?,?)",
-          ).bind(
+        const claim = await env.EVENTS_DB.prepare(
+          "update deliveries set status = 'processing', attempts_count = attempts_count + 1, first_attempt_at = coalesce(first_attempt_at, ?), lease_expires_at = ?, updated_at = ? where id = ? and workspace_id = ? and installation_id = ? and attempts_count = ? and (status in ('accepted','queued','retrying') or (status = 'processing' and lease_expires_at <= ?))",
+        )
+          .bind(
+            timestamp,
+            lease,
+            timestamp,
+            body.deliveryId,
+            body.workspaceId,
+            body.installationId,
+            delivery.attempts_count,
+            timestamp,
+          )
+          .run();
+        if (Number(claim.meta.changes ?? 0) === 0) {
+          // Another consumer owns the lease or has already reached a terminal state.
+          message.ack();
+          continue;
+        }
+        await env.EVENTS_DB.prepare(
+          "insert into delivery_attempts (id,workspace_id,delivery_id,attempt_number,operation,status,billing_effect,lease_expires_at,started_at) values (?,?,?,?,?,'processing','none',?,?)",
+        )
+          .bind(
             crypto.randomUUID(),
             body.workspaceId,
             body.deliveryId,
@@ -596,11 +664,15 @@ export default {
             "process",
             lease,
             timestamp,
-          ),
-          env.EVENTS_DB.prepare(
-            "update deliveries set status = 'processing', attempts_count = ?, first_attempt_at = coalesce(first_attempt_at, ?), lease_expires_at = ?, updated_at = ? where id = ? and workspace_id = ?",
-          ).bind(attempt, timestamp, lease, timestamp, body.deliveryId, body.workspaceId),
-        ]);
+          )
+          .run();
+        const payload = await env.PAYLOADS.head(delivery.payload_ref);
+        if (!payload) throw new DeliveryFailure("payload_unavailable");
+        if (
+          payload.customMetadata?.checksum !== delivery.payload_checksum ||
+          !payload.customMetadata?.nonce
+        )
+          throw new DeliveryFailure("payload_corrupt");
         const outcomeKey = deliveryIdempotencyKey(body.workspaceId, body.deliveryId);
         await env.EVENTS_DB.batch([
           env.EVENTS_DB.prepare(
@@ -631,6 +703,7 @@ export default {
             : undefined,
           now: now.getTime(),
           reason,
+          jitterKey: body.deliveryId,
         });
         if (next.state === "quarantined") {
           await quarantine(env, body, next.reason, now);

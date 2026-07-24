@@ -11,8 +11,9 @@ import {
   createForgeDraft,
   demoEvents,
   githubPullRequestNumber,
+  assessGitHubIssueEvent,
   isGitHubCiFailure,
-  isGitHubIssueOpened,
+  isGitHubIssueEvent,
   isGitHubPullRequestReviewEvent,
   matchesWorkflow,
   normalizeEvent,
@@ -38,6 +39,7 @@ import type { TunnelProvisioner } from "./managed-tunnel.js";
 const DEFAULT_WORKSPACE = "demo-workspace";
 const DEFAULT_PROJECT = "eventforge-demo-service";
 const LOCAL_CONSOLE_ORIGIN = "http://localhost:5173";
+const RECENT_MFA_WINDOW_MS = 15 * 60 * 1000;
 
 type IntegrationBinding = {
   provider: Exclude<Provider, "custom">;
@@ -86,6 +88,14 @@ export function isLoopbackRequestHost(hostname: string): boolean {
   );
 }
 
+export function hasRecentMfa(auth: AuthContext, now = Date.now()): boolean {
+  if (!auth.mfaVerified || !auth.mfaVerifiedAt) return false;
+  const verifiedAt = Date.parse(auth.mfaVerifiedAt);
+  return (
+    Number.isFinite(verifiedAt) && verifiedAt <= now && now - verifiedAt <= RECENT_MFA_WINDOW_MS
+  );
+}
+
 function isPublicRelayPath(url: string): boolean {
   const pathname = new URL(url, "http://localhost").pathname;
   return pathname === "/health" || /^\/webhooks\/(github|linear|sentry)$/.test(pathname);
@@ -114,15 +124,17 @@ export function createDefaultWorkflow(): WorkflowDefinition {
   };
 }
 
-function createIssueReviewWorkflow(): WorkflowDefinition {
+function createIssueReviewWorkflow(
+  topic: "issues" | "issue_comment" = "issues",
+): WorkflowDefinition {
   return {
     id: randomUUID(),
     workspaceId: DEFAULT_WORKSPACE,
     projectId: DEFAULT_PROJECT,
-    name: "Review newly opened GitHub issues",
+    name: topic === "issues" ? "Review GitHub issues" : "Review GitHub issue comments",
     enabled: true,
-    trigger: { provider: "github", topic: "issues" },
-    filters: { action: "opened" },
+    trigger: { provider: "github", topic },
+    filters: {},
     agentProfile: "issue-triager",
     memoryScope: "project",
     policy: {
@@ -190,6 +202,7 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
   const allowedOrigins = configuredBrowserOrigins();
   store.addWorkflow(createDefaultWorkflow());
   store.addWorkflow(createIssueReviewWorkflow());
+  store.addWorkflow(createIssueReviewWorkflow("issue_comment"));
   store.addWorkflow(createPullRequestReviewWorkflow());
 
   await app.register(cors, {
@@ -239,7 +252,7 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
     )
       return;
     const auth = await options.authenticate?.(request);
-    if (!auth || !auth.mfaVerified)
+    if (!auth || !hasRecentMfa(auth))
       return reply.status(401).send({ error: "Authenticated MFA session required." });
     authContexts.set(request, auth);
     if (request.method === "GET" && !auth.scopes.includes("eventforge:read")) {
@@ -258,6 +271,7 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
         workspaceId,
         role: "owner",
         mfaVerified: runtime.mode !== "remote",
+        mfaVerifiedAt: runtime.mode !== "remote" ? new Date().toISOString() : undefined,
         scopes: [
           "eventforge:read",
           "eventforge:operate",
@@ -284,9 +298,6 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
       workflow.id,
       `${workflow.name} matched ${event.provider}:${event.topic}.`,
     );
-    const memories = store.memory
-      .query(event.workspaceId, event.projectId, JSON.stringify(event.payload))
-      .map((memory) => memory.text);
     const run = store.addRun({
       id: randomUUID(),
       workflowId: workflow.id,
@@ -297,6 +308,26 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
     });
     store.audit(event.workspaceId, "agent_run", run.id, "Agent investigation started.");
     try {
+      // Issue content is never an authorization signal. Keep its deterministic assessment
+      // ahead of memory retrieval, model execution, policy evaluation, and provider actions.
+      if (isGitHubIssueEvent(event)) {
+        const assessment = assessGitHubIssueEvent(event);
+        store.updateRun(run.id, {
+          summary: assessment.requestSummary,
+          status: assessment.status === "assessed" ? "completed" : "failed",
+          finishedAt: new Date().toISOString(),
+        });
+        store.audit(
+          event.workspaceId,
+          "issue_review",
+          assessment.auditEventIdHash,
+          `GitHub issue review ${assessment.status}; mode=review_only; reason=${assessment.reason ?? "assessed"}.`,
+        );
+        return;
+      }
+      const memories = store.memory
+        .query(event.workspaceId, event.projectId, JSON.stringify(event.payload))
+        .map((memory) => memory.text);
       const pullRequestNumber = githubPullRequestNumber(event);
       const previousThreadId = store.runs().find((candidate) => {
         if (candidate.workflowId !== workflow.id || candidate.id === run.id) return false;
@@ -321,7 +352,7 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
         text: result.summary,
         tags: [event.provider, event.topic, "agent-summary"],
       });
-      if (isGitHubIssueOpened(event) || isGitHubPullRequestReviewEvent(event)) {
+      if (isGitHubPullRequestReviewEvent(event)) {
         store.updateRun(run.id, {
           threadId: result.threadId,
           summary: result.summary,

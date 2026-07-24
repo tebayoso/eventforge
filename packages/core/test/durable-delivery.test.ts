@@ -42,5 +42,22 @@ describe("durable delivery rules", () => {
       state: "quarantined",
       reason: "payload_corrupt",
     });
+    expect(retryState({ attempts: 1, now: Date.now(), reason: "payload_unavailable" })).toEqual({
+      state: "quarantined",
+      reason: "payload_unavailable",
+    });
+    expect(retryState({ attempts: 1, now: Date.now(), reason: "internal_error" })).toEqual({
+      state: "quarantined",
+      reason: "internal_error",
+    });
+  });
+
+  it("spreads retries per delivery without making operator replay nondeterministic", () => {
+    expect(retryDelaySeconds(6, "delivery-a")).toBe(retryDelaySeconds(6, "delivery-a"));
+    expect(
+      new Set(Array.from({ length: 20 }, (_, index) => retryDelaySeconds(6, `delivery-${index}`)))
+        .size,
+    ).toBeGreaterThan(1);
+    expect(retryDelaySeconds(99, "delivery-a")).toBeLessThanOrEqual(300);
   });
 });
