@@ -20,9 +20,9 @@ export function isConsolePath(pathname: string): boolean {
   return pathname === "/console" || pathname.startsWith("/console/");
 }
 
-const agentMarkdown = `# EventBridge
+const agentMarkdown = `# EventForge
 
-EventBridge is the operational control plane for every hook, from receipt to verified outcome. EventForge remains the compatible package and API identifier.
+EventForge is the operational control plane for every hook, from receipt to verified outcome.
 
 ## Public resources
 
@@ -36,7 +36,7 @@ EventBridge is the operational control plane for every hook, from receipt to ver
 
 ## Operating surfaces
 
-EventBridge provides a local, credential-free MCP server for development and a hosted API for authenticated production operations. The local launcher is installed with:
+EventForge provides a local, credential-free MCP server for development and a hosted API for authenticated production operations. The local launcher is installed with:
 
 codex mcp add eventforge -- npx -y --package github:tebayoso/eventforge eventforge-mcp
 
@@ -140,7 +140,7 @@ function markdownResponse(): Response {
 
 function gatedConsole(): Response {
   return new Response(
-    '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EventBridge sign-in required</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b0e13;color:#f4f5f7;font:16px/1.5 system-ui,sans-serif}main{max-width:38rem;padding:2rem}p{color:#aab2c0}a{color:#8ee5c2}</style><main><p>EventBridge secure console</p><h1>Sign-in is not enabled yet.</h1><p>The hosted console is closed until account authentication and tenant isolation pass their release gates.</p><a href="/">Return to EventBridge</a></main></html>',
+    '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EventForge sign-in required</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b0e13;color:#f4f5f7;font:16px/1.5 system-ui,sans-serif}main{max-width:38rem;padding:2rem}p{color:#aab2c0}a{color:#8ee5c2}</style><main><p>EventForge secure console</p><h1>Sign-in is not enabled yet.</h1><p>The hosted console is closed until account authentication and tenant isolation pass their release gates.</p><a href="/">Return to EventForge</a></main></html>',
     {
       status: 503,
       headers: { ...securityHeaders, "content-type": "text/html; charset=utf-8" },

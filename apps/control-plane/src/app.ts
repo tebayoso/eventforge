@@ -11,8 +11,9 @@ import {
   createForgeDraft,
   demoEvents,
   githubPullRequestNumber,
+  assessGitHubIssueEvent,
   isGitHubCiFailure,
-  isGitHubIssueOpened,
+  isGitHubIssueEvent,
   isGitHubPullRequestReviewEvent,
   matchesWorkflow,
   normalizeEvent,
@@ -34,10 +35,12 @@ import {
 } from "./runtime.js";
 import type { RelayController } from "./local-relay.js";
 import type { TunnelProvisioner } from "./managed-tunnel.js";
+import { GitHubInstallationRegistry, type GitHubInstallation } from "./github-app.js";
 
 const DEFAULT_WORKSPACE = "demo-workspace";
 const DEFAULT_PROJECT = "eventforge-demo-service";
 const LOCAL_CONSOLE_ORIGIN = "http://localhost:5173";
+const RECENT_MFA_WINDOW_MS = 15 * 60 * 1000;
 
 type IntegrationBinding = {
   provider: Exclude<Provider, "custom">;
@@ -54,6 +57,7 @@ export type AppOptions = {
   integrations?: IntegrationBinding[];
   relayController?: RelayController;
   tunnelProvisioner?: TunnelProvisioner;
+  githubInstallations?: GitHubInstallationRegistry;
 };
 
 declare module "fastify" {
@@ -86,6 +90,14 @@ export function isLoopbackRequestHost(hostname: string): boolean {
   );
 }
 
+export function hasRecentMfa(auth: AuthContext, now = Date.now()): boolean {
+  if (!auth.mfaVerified || !auth.mfaVerifiedAt) return false;
+  const verifiedAt = Date.parse(auth.mfaVerifiedAt);
+  return (
+    Number.isFinite(verifiedAt) && verifiedAt <= now && now - verifiedAt <= RECENT_MFA_WINDOW_MS
+  );
+}
+
 function isPublicRelayPath(url: string): boolean {
   const pathname = new URL(url, "http://localhost").pathname;
   return pathname === "/health" || /^\/webhooks\/(github|linear|sentry)$/.test(pathname);
@@ -114,15 +126,17 @@ export function createDefaultWorkflow(): WorkflowDefinition {
   };
 }
 
-function createIssueReviewWorkflow(): WorkflowDefinition {
+function createIssueReviewWorkflow(
+  topic: "issues" | "issue_comment" = "issues",
+): WorkflowDefinition {
   return {
     id: randomUUID(),
     workspaceId: DEFAULT_WORKSPACE,
     projectId: DEFAULT_PROJECT,
-    name: "Review newly opened GitHub issues",
+    name: topic === "issues" ? "Review GitHub issues" : "Review GitHub issue comments",
     enabled: true,
-    trigger: { provider: "github", topic: "issues" },
-    filters: { action: "opened" },
+    trigger: { provider: "github", topic },
+    filters: {},
     agentProfile: "issue-triager",
     memoryScope: "project",
     policy: {
@@ -167,8 +181,25 @@ function secretFor(provider: Provider): string | undefined {
   return undefined;
 }
 
+const SUPPORTED_HOSTED_GITHUB_EVENTS = new Set(["check_run", "issues", "pull_request"]);
+
+function githubRepositoryName(payload: Record<string, unknown>): string | undefined {
+  const repository = payload.repository;
+  if (!repository || typeof repository !== "object" || Array.isArray(repository)) return undefined;
+  const fullName = (repository as Record<string, unknown>).full_name;
+  if (
+    typeof fullName !== "string" ||
+    fullName.length > 201 ||
+    !/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(fullName)
+  )
+    return undefined;
+  return fullName;
+}
+
 export async function createApp(options: AppOptions = {}): Promise<FastifyInstance> {
   const runtime = resolveRuntimeConfig(process.env, Boolean(options.authenticate));
+  if (runtime.githubAppEnabled && !options.githubInstallations)
+    throw new Error("Hosted GitHub App ingress requires a server-side installation registry.");
   const app = Fastify({
     logger: process.env.NODE_ENV !== "test",
     bodyLimit: runtime.bodyLimit,
@@ -190,6 +221,7 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
   const allowedOrigins = configuredBrowserOrigins();
   store.addWorkflow(createDefaultWorkflow());
   store.addWorkflow(createIssueReviewWorkflow());
+  store.addWorkflow(createIssueReviewWorkflow("issue_comment"));
   store.addWorkflow(createPullRequestReviewWorkflow());
 
   await app.register(cors, {
@@ -239,7 +271,7 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
     )
       return;
     const auth = await options.authenticate?.(request);
-    if (!auth || !auth.mfaVerified)
+    if (!auth || !hasRecentMfa(auth))
       return reply.status(401).send({ error: "Authenticated MFA session required." });
     authContexts.set(request, auth);
     if (request.method === "GET" && !auth.scopes.includes("eventforge:read")) {
@@ -258,6 +290,7 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
         workspaceId,
         role: "owner",
         mfaVerified: runtime.mode !== "remote",
+        mfaVerifiedAt: runtime.mode !== "remote" ? new Date().toISOString() : undefined,
         scopes: [
           "eventforge:read",
           "eventforge:operate",
@@ -284,9 +317,6 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
       workflow.id,
       `${workflow.name} matched ${event.provider}:${event.topic}.`,
     );
-    const memories = store.memory
-      .query(event.workspaceId, event.projectId, JSON.stringify(event.payload))
-      .map((memory) => memory.text);
     const run = store.addRun({
       id: randomUUID(),
       workflowId: workflow.id,
@@ -297,6 +327,26 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
     });
     store.audit(event.workspaceId, "agent_run", run.id, "Agent investigation started.");
     try {
+      // Issue content is never an authorization signal. Keep its deterministic assessment
+      // ahead of memory retrieval, model execution, policy evaluation, and provider actions.
+      if (isGitHubIssueEvent(event)) {
+        const assessment = assessGitHubIssueEvent(event);
+        store.updateRun(run.id, {
+          summary: assessment.requestSummary,
+          status: assessment.status === "assessed" ? "completed" : "failed",
+          finishedAt: new Date().toISOString(),
+        });
+        store.audit(
+          event.workspaceId,
+          "issue_review",
+          assessment.auditEventIdHash,
+          `GitHub issue review ${assessment.status}; mode=review_only; reason=${assessment.reason ?? "assessed"}.`,
+        );
+        return;
+      }
+      const memories = store.memory
+        .query(event.workspaceId, event.projectId, JSON.stringify(event.payload))
+        .map((memory) => memory.text);
       const pullRequestNumber = githubPullRequestNumber(event);
       const previousThreadId = store.runs().find((candidate) => {
         if (candidate.workflowId !== workflow.id || candidate.id === run.id) return false;
@@ -321,7 +371,7 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
         text: result.summary,
         tags: [event.provider, event.topic, "agent-summary"],
       });
-      if (isGitHubIssueOpened(event) || isGitHubPullRequestReviewEvent(event)) {
+      if (isGitHubPullRequestReviewEvent(event)) {
         store.updateRun(run.id, {
           threadId: result.threadId,
           summary: result.summary,
@@ -334,6 +384,24 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
           "agent_run",
           run.id,
           "Read-only Codex GitHub review completed; no provider action was proposed.",
+        );
+        return;
+      }
+      // A hosted GitHub App is investigation-only. Untrusted GitHub evidence must
+      // never reach the generic write-proposal path, even after downstream changes.
+      if (runtime.mode === "remote" && event.provider === "github") {
+        store.updateRun(run.id, {
+          threadId: result.threadId,
+          summary: result.summary,
+          structuredResult: result.structured,
+          status: "completed",
+          finishedAt: new Date().toISOString(),
+        });
+        store.audit(
+          event.workspaceId,
+          "agent_run",
+          run.id,
+          "Hosted GitHub investigation completed read-only.",
         );
         return;
       }
@@ -576,6 +644,8 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
     const payload = request.body as Record<string, unknown>;
     if (!payload || typeof payload !== "object")
       return reply.status(400).send({ error: "Webhook body must be JSON." });
+    if (runtime.mode === "remote" && provider.data === "github" && !runtime.githubAppEnabled)
+      return reply.status(404).send({ error: "Hosted GitHub App ingress is disabled." });
     const secret = secretFor(provider.data);
     const raw = request.rawBody?.toString() ?? JSON.stringify(payload);
     const verification = providerAdapters[provider.data].verify({
@@ -588,11 +658,59 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
       return reply
         .status(401)
         .send({ error: verification.reason ?? "Invalid or missing webhook signature." });
-    const binding = options.integrations?.find(
-      (item) =>
-        item.provider === provider.data && item.installationKey === verification.installationKey,
-    );
-    if (runtime.mode === "remote" && !binding)
+    if (
+      runtime.mode === "remote" &&
+      provider.data === "github" &&
+      !SUPPORTED_HOSTED_GITHUB_EVENTS.has(verification.topic ?? "")
+    )
+      return reply.status(202).send({
+        accepted: false,
+        reason: "GitHub event is outside the hosted read-only allowlist.",
+      });
+    const binding =
+      provider.data === "github"
+        ? undefined
+        : options.integrations?.find(
+            (item) =>
+              item.provider === provider.data &&
+              item.installationKey === verification.installationKey,
+          );
+    const githubRepository = githubRepositoryName(payload);
+    let githubInstallation: GitHubInstallation | undefined;
+    let githubProjectId: string | undefined;
+    if (runtime.mode === "remote" && provider.data === "github") {
+      if (!verification.installationKey || !githubRepository) {
+        app.log.warn(
+          { reason: "malformed-installation-or-repository" },
+          "GitHub delivery rejected before tenant mapping",
+        );
+        return reply.status(403).send({
+          error: "Webhook installation is not an active attested repository mapping.",
+        });
+      }
+      const resolution = options.githubInstallations!.resolve(
+        verification.installationKey,
+        githubRepository,
+      );
+      if (!resolution.ok) {
+        app.log.warn(
+          { reason: resolution.reason },
+          "GitHub delivery rejected before tenant mapping",
+        );
+        return reply.status(403).send({
+          error: "Webhook installation is not an active attested repository mapping.",
+        });
+      }
+      githubInstallation = resolution.installation;
+      githubProjectId = options.integrations?.find(
+        (item) =>
+          item.provider === "github" &&
+          item.installationKey === verification.installationKey &&
+          item.repository === githubRepository &&
+          item.workspaceId === githubInstallation?.workspaceId,
+      )?.projectId;
+    }
+    if (runtime.mode === "remote" && provider.data !== "github" && !binding)
       return reply
         .status(403)
         .send({ error: "Webhook installation is not mapped to a workspace." });
@@ -600,11 +718,13 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
       signatureStatus: "verified",
       deliveryId: verification.deliveryId,
       topicHint: verification.topic,
-      workspaceId: binding?.workspaceId,
-      projectId: binding?.projectId,
+      workspaceId: githubInstallation?.workspaceId ?? binding?.workspaceId,
+      projectId: githubProjectId ?? binding?.projectId,
       repository:
         runtime.mode === "remote"
-          ? binding?.repository
+          ? githubInstallation
+            ? githubRepository
+            : binding?.repository
           : provider.data === "github"
             ? process.env.EVENTFORGE_GITHUB_REPOSITORY
             : undefined,
