@@ -1,0 +1,19 @@
+workfiles/REVIEW_PR34_DEMAND_SOURCES.md
+  s_a429da96906584::t_09a5902a3b2543 46,65-74,115,135-148,162-175
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "3c9bb2bb066f05caf8e5a100e83f8047ecea600b",
+  "prompts": {},
+  "sessions": {
+    "s_a429da96906584": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b93a75c8-61f8-434d-96df-51b2888466a4",
+        "model": "unknown"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
