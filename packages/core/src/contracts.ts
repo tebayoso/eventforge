@@ -6,7 +6,7 @@ export type Provider = z.infer<typeof ProviderSchema>;
 export const RuntimeModeSchema = z.enum(["local", "remote", "test"]);
 export type RuntimeMode = z.infer<typeof RuntimeModeSchema>;
 
-export const WorkspaceRoleSchema = z.enum(["owner", "operator", "viewer"]);
+export const WorkspaceRoleSchema = z.enum(["owner", "admin", "operator", "viewer"]);
 export type WorkspaceRole = z.infer<typeof WorkspaceRoleSchema>;
 
 export const McpScopeSchema = z.enum([
@@ -25,6 +25,8 @@ export const AuthContextSchema = z.object({
   sessionId: z.string().min(1).optional(),
   clientId: z.string().min(1).optional(),
   mfaVerified: z.boolean().default(false),
+  /** Absolute proof timestamp; normal requests must never refresh this value. */
+  mfaVerifiedAt: z.string().datetime().optional(),
   scopes: z.array(McpScopeSchema).default([]),
 });
 export type AuthContext = z.infer<typeof AuthContextSchema>;
@@ -68,6 +70,24 @@ export const EventEnvelopeSchema = z.object({
   redactions: z.array(z.string()).default([]),
 });
 export type EventEnvelope = z.infer<typeof EventEnvelopeSchema>;
+
+export const IssueReviewModeSchema = z.enum(["review_only", "authorized_implementation"]);
+export type IssueReviewMode = z.infer<typeof IssueReviewModeSchema>;
+
+export const IssueReviewAssessmentSchema = z.object({
+  mode: z.literal("review_only"),
+  status: z.enum(["assessed", "safely_failed"]),
+  requestSummary: z.string().max(500),
+  affectedAreas: z.array(z.string()).max(5),
+  riskNotes: z.array(z.string()).max(5),
+  missingInformation: z.array(z.string()).max(5),
+  safeNextStep: z.string().max(300),
+  actorClassification: z.literal("untrusted"),
+  policyVersion: z.literal(1),
+  auditEventIdHash: z.string().length(64),
+  reason: z.string().max(200).optional(),
+});
+export type IssueReviewAssessment = z.infer<typeof IssueReviewAssessmentSchema>;
 
 export const ApprovalModeSchema = z.enum(["approval_required", "allow_listed_writes"]);
 export type ApprovalMode = z.infer<typeof ApprovalModeSchema>;
@@ -233,7 +253,14 @@ export type ForgeJob = z.infer<typeof ForgeJobSchema>;
 export type AuditEntry = {
   id: string;
   workspaceId: string;
-  kind: "event_received" | "workflow_matched" | "agent_run" | "approval" | "forge" | "connector";
+  kind:
+    | "event_received"
+    | "workflow_matched"
+    | "agent_run"
+    | "issue_review"
+    | "approval"
+    | "forge"
+    | "connector";
   subjectId: string;
   message: string;
   createdAt: string;
