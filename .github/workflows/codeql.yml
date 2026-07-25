@@ -3,7 +3,12 @@ name: CodeQL
 on:
   pull_request:
   push:
-    branches: [main]
+    # `master` is the repository default; `1.0-rc` is where release work lands.
+    # Both are listed because CI previously reached 1.0-rc only through the
+    # `pull_request` event, which fired solely because a long-lived PR to main
+    # happened to be open. Deleting that PR's base would have silently left the
+    # release branch with no Quality or CodeQL run at all.
+    branches: [master, 1.0-rc]
   schedule:
     - cron: "27 4 * * 1"
 
