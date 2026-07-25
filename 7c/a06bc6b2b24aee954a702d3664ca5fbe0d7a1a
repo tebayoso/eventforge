@@ -1,0 +1,19 @@
+apps/control-plane/test/app.test.ts
+  s_b8f363d60c5254::t_8ce0fdeb84b68c 492-537
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "7ca06bc6b2b24aee954a702d3664ca5fbe0d7a1a",
+  "prompts": {},
+  "sessions": {
+    "s_b8f363d60c5254": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d0bbcb80-2c05-4713-9305-313855936c2b",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
