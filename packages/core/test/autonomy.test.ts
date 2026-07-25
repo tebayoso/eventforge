@@ -106,6 +106,79 @@ describe("graduated autonomy gate", () => {
       }),
     ).toMatchObject({ eligible: false });
   });
+  it("fails closed when agreements exceed eligible cases instead of passing on a NaN bound", () => {
+    // Regression: p > 1 makes p*(1-p) negative, so the Wilson bound went NaN and
+    // `NaN < 0.98` is false, which silently skipped the whole statistical gate.
+    const result = evaluate({
+      evidence: { ...evidence, distinctEligibleCases: 200, predictedObservedAgreements: 100000 },
+    });
+    expect(result.eligible).toBe(false);
+    expect(Number.isFinite(result.wilsonLowerBound)).toBe(false);
+    expect(result.reasons).toContain(
+      "Shadow evidence is internally inconsistent or out of domain.",
+    );
+  });
+
+  it("fails closed for non-finite and negative shadow counts", () => {
+    for (const evidencePatch of [
+      { predictedObservedAgreements: Number.NaN },
+      { predictedObservedAgreements: Number.POSITIVE_INFINITY },
+      { distinctEligibleCases: Number.POSITIVE_INFINITY },
+      { distinctEligibleCases: Number.NaN },
+      { predictedObservedAgreements: -1 },
+    ])
+      expect(evaluate({ evidence: { ...evidence, ...evidencePatch } })).toMatchObject({
+        eligible: false,
+      });
+  });
+
+  it("denies stale, post-dated, and unparseable MFA timestamps", () => {
+    for (const grantPatch of [
+      { ownerMfaAt: "2020-01-01T00:00:00.000Z" },
+      { securityMfaAt: "2020-01-01T00:00:00.000Z" },
+      // After `now`: an approval cannot have happened in the future.
+      { ownerMfaAt: "2026-07-28T00:00:00.000Z" },
+      // Before this grant's own window: carried over from a prior grant.
+      { securityMfaAt: "2026-07-21T00:00:00.000Z" },
+      { ownerMfaAt: "not-a-timestamp" },
+    ])
+      expect(evaluate({ grant: { ...grant, ...grantPatch } })).toMatchObject({ eligible: false });
+  });
+
+  it("rejects hydrated grants whose runtime invariants violate the schema", () => {
+    // These are `z.literal` fields, so TypeScript alone cannot protect a grant
+    // rehydrated from storage; only the boundary parse rejects them.
+    for (const grantPatch of [
+      { riskTier: "high" },
+      { rollback: { exactInverse: false, maxAttempts: 1 } },
+      { rollback: { exactInverse: true, maxAttempts: 3 } },
+      { signatures: { owner: "short", security: digest } },
+      { verifier: { adapter: "attacker-supplied", version: "1" } },
+      { budgets: { ...grant.budgets, workspacePerHour: 500 } },
+      { id: "not-a-uuid" },
+    ])
+      expect(
+        evaluate({ grant: { ...grant, ...grantPatch } as unknown as AutonomyGrant }),
+      ).toMatchObject({
+        eligible: false,
+        reasons: ["Action, grant, or shadow evidence failed schema validation."],
+      });
+  });
+
+  it("rejects a hydrated action whose classification invariants violate the schema", () => {
+    for (const actionPatch of [
+      { labelClassification: "destructive" },
+      { providerReadAfterWrite: false },
+      { exactInverseSupported: false },
+    ])
+      expect(
+        evaluate({ action: { ...action, ...actionPatch } as unknown as AutonomousLabelAction }),
+      ).toMatchObject({
+        eligible: false,
+        reasons: ["Action, grant, or shadow evidence failed schema validation."],
+      });
+  });
+
   it("disqualifies shadow writes, unknown outcomes, violations, and failed containment drills", () => {
     for (const evidencePatch of [
       { writesAttempted: 1 },

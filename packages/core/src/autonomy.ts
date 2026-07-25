@@ -72,19 +72,56 @@ export const ShadowEvidenceSchema = z.object({
 });
 export type ShadowEvidence = z.infer<typeof ShadowEvidenceSchema>;
 
+/**
+ * Grants are routinely rehydrated from storage and handed to the evaluator as
+ * already-typed objects, which makes every `z.literal` invariant above a
+ * compile-time-only guarantee.  Re-parsing at the boundary is what actually
+ * enforces `riskTier`, `rollback.exactInverse`, and the signature fields.
+ */
+const EvaluationInputSchema = z.object({
+  action: AutonomousLabelActionSchema,
+  grant: AutonomyGrantSchema,
+  evidence: ShadowEvidenceSchema,
+});
+
 export type AutonomyEvaluation = {
   eligible: boolean;
   reasons: string[];
   wilsonLowerBound: number;
 };
 
+/**
+ * Returns `NaN` for out-of-domain input rather than a misleading number.  The
+ * caller must treat a non-finite bound as a denial: `successes > total` makes
+ * `p * (1 - p)` negative, and an unguarded `NaN < 0.98` is `false`, which would
+ * silently skip the statistical gate entirely.
+ */
 function wilsonLowerBound(successes: number, total: number): number {
-  if (total === 0) return 0;
+  if (!Number.isFinite(successes) || !Number.isFinite(total)) return Number.NaN;
+  if (total <= 0) return 0;
+  if (successes < 0 || successes > total) return Number.NaN;
   const z95 = 1.959963984540054;
   const p = successes / total;
   return (
     (p + z95 ** 2 / (2 * total) - z95 * Math.sqrt((p * (1 - p) + z95 ** 2 / (4 * total)) / total)) /
     (1 + z95 ** 2 / total)
+  );
+}
+
+/** Clock-skew allowance, matching the platform's existing 15-minute MFA recency convention. */
+const MFA_SKEW_MS = 15 * 60_000;
+
+/**
+ * A grant outlives an interactive privileged action, so MFA recency is anchored
+ * to the grant's own activation rather than to `now`: the approval must not be
+ * in the future and must belong to this grant's window, not a prior one.
+ */
+function mfaBoundToGrant(mfaAt: string, startsAt: string, now: Date): boolean {
+  const timestamp = Date.parse(mfaAt);
+  return (
+    Number.isFinite(timestamp) &&
+    timestamp <= now.getTime() &&
+    timestamp >= Date.parse(startsAt) - MFA_SKEW_MS
   );
 }
 
@@ -103,13 +140,29 @@ export function evaluateAutonomyEligibility(input: {
 }): AutonomyEvaluation {
   const now = input.now ?? new Date();
   const reasons: string[] = [];
-  const { action, grant, evidence } = input;
+  const parsed = EvaluationInputSchema.safeParse({
+    action: input.action,
+    grant: input.grant,
+    evidence: input.evidence,
+  });
+  if (!parsed.success)
+    return {
+      eligible: false,
+      reasons: ["Action, grant, or shadow evidence failed schema validation."],
+      wilsonLowerBound: 0,
+    };
+  const { action, grant, evidence } = parsed.data;
   const lower = wilsonLowerBound(
     evidence.predictedObservedAgreements,
     evidence.distinctEligibleCases,
   );
   if (grant.ownerId === grant.securityApproverId)
     reasons.push("Owner and security approver must be distinct.");
+  if (
+    !mfaBoundToGrant(grant.ownerMfaAt, grant.startsAt, now) ||
+    !mfaBoundToGrant(grant.securityMfaAt, grant.startsAt, now)
+  )
+    reasons.push("Owner or security MFA is stale, post-dated, or not bound to this grant.");
   if (Date.parse(grant.expiresAt) - Date.parse(grant.startsAt) > 7 * 24 * 60 * 60_000)
     reasons.push("Grant duration exceeds seven days.");
   if (now < new Date(grant.startsAt) || now >= new Date(grant.expiresAt))
@@ -123,7 +176,9 @@ export function evaluateAutonomyEligibility(input: {
     reasons.push("Current customer shadow evidence is required.");
   if (evidence.distinctEligibleCases < 200 || evidence.windowDays < 14)
     reasons.push("Insufficient shadow cases or duration.");
-  if (
+  if (!Number.isFinite(lower))
+    reasons.push("Shadow evidence is internally inconsistent or out of domain.");
+  else if (
     evidence.predictedObservedAgreements / Math.max(1, evidence.distinctEligibleCases) < 0.99 ||
     lower < 0.98
   )
