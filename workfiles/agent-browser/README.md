@@ -265,7 +265,42 @@ Reusable pattern: keep a marketing capture route out of discovery, enforce origi
 - Opened `https://eventforge.dev/waitlist?release=1.0-rc` in agent-browser, waited for network idle plus analytics initialization, and confirmed the EventBridge title with no browser errors.
 
 Reusable pattern: keep client analytics identifiers in a public runtime manifest so deployments are reproducible without putting private credentials in build logs or shell history.
-# GitHub publish check — 2026-07-22
+
+
+## 2026-07-22 — GA4 production tag deployment
+
+- Built the console from `main` with the production GA4 Measurement ID in `apps/console/.env.production`; the emitted asset contained `G-2E80P0BMCR`.
+- Deployed the rebased `main` console to `https://eventforge.dev/` as Cloudflare version `882caed1-8936-470d-bedc-40af3f2ff6f3`.
+- Opened the production landing page in fresh `eventforge-ga4-*` agent-browser sessions. The page rendered correctly, `window.dataLayer` contained the GA4 `config` command with privacy flags, and `https://www.googletagmanager.com/gtag/js?id=G-2E80P0BMCR` returned `200`.
+- Browser error and console inspection were empty. The automated browser did not expose a separate Google Analytics collection beacon, so authoritative ingestion confirmation remains the GA4 Realtime/DebugView report.
+- Reopened `https://eventforge.dev/console`; it retained the intentional `503` sign-in gate after deployment.
+- Visually inspected the full production landing page captured at `workfiles/agent-browser/screenshots/eventbridge-ga4-production-2026-07-22.png`.
+
+Reusable pattern: verify analytics releases at four layers—compiled identifier, live bundle, third-party loader plus queued configuration, and the provider's realtime report—without treating a successful script download alone as proof of event ingestion.
+
+## 2026-07-22 — Production CSP and analytics repair
+
+- Reproduced the production CSP warning and the blocked Cloudflare Web Analytics script on `https://eventforge.dev/`.
+- Updated both the HTML meta policy and Worker `_headers` policy with the documented GA4 and Cloudflare analytics sources. Kept `frame-ancestors 'none'` in the HTTP response policy and removed it from the unsupported meta policy.
+- Replaced the GA command queue's rest-parameter arrays with Google's required `arguments` objects and disabled the automatic config page view so the shared explicit `page_view` is counted once.
+- Deployed the final console as Cloudflare version `a16fa9cc-d78a-4b0a-be01-597cd8794462` and verified asset `index-D3ktepWR.js` in a fresh non-automation browser session.
+- Confirmed one GA4 `page_view` request to `https://www.google-analytics.com/g/collect` returned `204`, the GA client and `_ga` cookies initialized, the Cloudflare Insights script returned `200`, and the first-party `/cdn-cgi/rum` POST returned `204` after the page became hidden.
+- Browser console and page-error inspection were empty; the final data-layer config contained `send_page_view: false`.
+
+Reusable pattern: after an edge deployment, verify the exact hashed asset loaded before interpreting analytics traces; a still-cached prior bundle can make a correct release look broken during propagation.
+
+## 2026-07-22 — EventForge anvil rebrand
+
+- Used agent-browser `0.28.0` against `http://127.0.0.1:5173/` at 1440×1000 and 390×844 before deployment. Confirmed one app root, no horizontal overflow, no visible `EventBridge` text, and `/eventforge-mark.svg` in the brand slot.
+- Opened the SVG directly and visually confirmed the accessible orange, cream, and mint anvil at favicon and enlarged sizes. Local evidence is stored in `eventforge-anvil-local-desktop.png`, `eventforge-anvil-local-mobile.png`, and `eventforge-anvil-mark-local.png`.
+- Deployed `eventforge-console` to `https://eventforge.dev/` as Cloudflare version `486b18e7-1928-44fe-aad1-743d52b871e5`.
+- Reopened production with a cache-busting query at desktop and mobile widths. Verified the EventForge title, favicon, social title, anvil asset, landing copy, concealed waitlist, `503` sign-in gate, Markdown negotiation, Auth.md, agent card, MCP card, client manifest, and Agent Skills discovery. None of the live surfaces contains the retired brand.
+- Confirmed the GA4 loader returned `200`, its `page_view` collection request for `G-2E80P0BMCR` returned `204`, the Cloudflare Insights loader returned `200`, and `/cdn-cgi/rum` returned `204`. Browser console and page-error inspection were empty.
+- Production evidence is stored in `eventforge-anvil-production-desktop.png`, `eventforge-anvil-production-mobile.png`, and `eventforge-anvil-production-console.png`.
+
+Reusable pattern: verify a rebrand across visible UI, compact SVG rendering, HTML metadata, telemetry labels, protected fallbacks, and machine-readable discovery. Use a plain 390×844 viewport for very tall full-page mobile captures; high-DPI device emulation can produce stitched-image artifacts even when the DOM has one root.
+
+## 2026-07-22 — GitHub publish check (connector trust branch)
 
 - URL: `https://github.com/tebayoso/eventforge/compare/1.0-rc...codex%2Fissue-8-forge-connectors?expand=1`
 - Outcome: the branch comparison resolved to commit `5190f02`, but the browser was logged out (`Sign in` shown). GitHub CLI also reported its active token invalid, so no draft PR or review comment was created.
