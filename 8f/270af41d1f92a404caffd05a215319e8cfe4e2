@@ -1,0 +1,29 @@
+plugins/eventforge/server/eventforge-mcp-http.cjs
+  s_8fa9054b1e9c3a::t_4eb8dd05aa3461 483,490-491,545,549
+packages/core/src/outcomes.ts
+  s_8fa9054b1e9c3a::t_1cf12d2fba8a11 4-15,18-23,31-37,50-55,60-62,74-75,79-84,86-87,89-95,109-117,121-124,127-131
+  s_8fa9054b1e9c3a::t_2d57bf66411374 104
+  s_8fa9054b1e9c3a::t_7280239b95fa9a 96-99
+  s_8fa9054b1e9c3a::t_a439c9724a44ec 85,88
+packages/core/test/core.test.ts
+  s_8fa9054b1e9c3a::t_1cf12d2fba8a11 374-379,391-396,408-411,415-419,425-430,442-449,453-458,465-482,488-493
+  s_8fa9054b1e9c3a::t_c5ee95ff4db1c2 422-424,431-441,450-452,459-464,483-487,494-496
+plugins/eventforge/server/eventforge-standalone.cjs
+  s_8fa9054b1e9c3a::t_4eb8dd05aa3461 445,452-453,498,502
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "8f270af41d1f92a404caffd05a215319e8cfe4e2",
+  "prompts": {},
+  "sessions": {
+    "s_8fa9054b1e9c3a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "dbcae740-ce2b-4330-bef8-aa18539b12b8",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
