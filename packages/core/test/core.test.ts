@@ -21,7 +21,7 @@ import {
   verifyBareHmac,
   verifyHmac,
   canonicalPolicyPackManifest,
-  manifestDigest,
+  policyPackManifestDigest,
   simulatePolicy,
   verifyPackImport,
 } from "../src/index.js";
@@ -114,7 +114,7 @@ describe("event security", () => {
     ]);
     expect(simulated).toMatchObject({ status: "complete", evaluated: 1, eligible: 1 });
     expect(simulated.decisions[0]?.decision).toEqual(live);
-    expect(manifestDigest(manifest)).toHaveLength(64);
+    expect(policyPackManifestDigest(manifest)).toHaveLength(64);
   });
 
   it("blocks unretained evidence and untrusted or incompatible signed imports", () => {
@@ -222,7 +222,7 @@ describe("event security", () => {
 
     expect(verifyPackImport({ manifest, signature, keyId: "trusted", trust })).toMatchObject({
       ok: true,
-      digest: manifestDigest(manifest),
+      digest: policyPackManifestDigest(manifest),
     });
 
     // A signature over a different manifest must not transfer to this one.
