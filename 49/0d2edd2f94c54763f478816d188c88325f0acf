@@ -1,0 +1,19 @@
+workfiles/INTEGRATION_PR48.md
+  s_60395aa82a37f9::t_31b20be976e727 1-111
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "490d2edd2f94c54763f478816d188c88325f0acf",
+  "prompts": {},
+  "sessions": {
+    "s_60395aa82a37f9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "db51682b-1372-4003-ab18-d8f3b208fed3",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
