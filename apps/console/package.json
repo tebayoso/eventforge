@@ -11,7 +11,7 @@
     "dev": "vite",
     "preview:cloudflare": "pnpm run build && wrangler dev",
     "deploy:cloudflare": "pnpm run build && wrangler deploy",
-    "build:beta": "vite build --mode beta",
+    "build:beta": "vite build --mode beta && node scripts/write-beta-analytics-config.mjs",
     "deploy:beta": "pnpm run build:beta && wrangler deploy --env beta"
   },
   "dependencies": {

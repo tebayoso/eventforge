@@ -128,11 +128,25 @@ The release-candidate console is deployed as a **separate Worker**
 pnpm --filter @eventforge/console deploy:beta   # build --mode beta + wrangler deploy --env beta
 ```
 
-Analytics are disabled on beta. `apps/console/.env.beta` blanks
-`VITE_GA_MEASUREMENT_ID` and `VITE_POSTHOG_KEY`, and both providers are gated on a
-non-empty key in `src/analytics.ts`, so beta sessions stay out of the production
-GA4 property and PostHog project. Verified after deploy: the production
-measurement ID appears 0 times in the beta bundle and once in the production one.
+Analytics are disabled on beta, and this takes TWO mechanisms, not one:
+
+1. `apps/console/.env.beta` blanks the build-time `VITE_GA_MEASUREMENT_ID` and
+   `VITE_POSTHOG_KEY` fallbacks.
+2. `scripts/write-beta-analytics-config.mjs` overwrites `dist/analytics-config.json`
+   after the build.
+
+Step 2 is not optional. `public/analytics-config.json` is copied verbatim into
+`dist/` and fetched at RUNTIME by `src/analytics.ts`, where it **overrides** the
+build-time values. A beta deploy with only step 1 still shipped the production
+PostHog key and GA4 measurement id and reported into the production project — that
+happened once and was caught by curling the deployed
+`/analytics-config.json`. The script fails the build if any field is non-blank.
+
+Verify a beta deploy by checking the served asset, not just the JS bundle:
+
+```bash
+curl -s https://beta.eventforge.dev/analytics-config.json   # all fields must be ""
+```
 
 Note `/console` returns 503 ("sign-in required") on beta **and** production. That
 is the intended fail-closed state while hosted auth is unwired, not a beta defect.
