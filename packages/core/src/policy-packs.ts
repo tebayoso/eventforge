@@ -3,7 +3,7 @@ import type { PolicyDecision, PolicyPackManifest, PolicyRequest } from "./contra
 import { POLICY_EVALUATOR_VERSION, evaluatePolicy } from "./workflows.js";
 
 /** Canonical JSON is deliberately restricted to JSON-compatible manifest values. */
-export function canonicalManifest(manifest: PolicyPackManifest): string {
+export function canonicalPolicyPackManifest(manifest: PolicyPackManifest): string {
   const sort = (value: unknown): unknown => {
     if (Array.isArray(value)) return value.map(sort);
     if (value && typeof value === "object")
@@ -18,7 +18,7 @@ export function canonicalManifest(manifest: PolicyPackManifest): string {
 }
 
 export function manifestDigest(manifest: PolicyPackManifest): string {
-  return createHash("sha256").update(canonicalManifest(manifest)).digest("hex");
+  return createHash("sha256").update(canonicalPolicyPackManifest(manifest)).digest("hex");
 }
 
 export type TrustedSigner = { keyId: string; publicKey: string; revoked?: boolean };
@@ -38,7 +38,7 @@ export function verifyPackImport(input: {
     return { ok: false, reason: "expired", digest };
   return verify(
     null,
-    Buffer.from(canonicalManifest(input.manifest)),
+    Buffer.from(canonicalPolicyPackManifest(input.manifest)),
     signer.publicKey,
     Buffer.from(input.signature, "base64"),
   )
