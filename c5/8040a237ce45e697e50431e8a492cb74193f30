@@ -1,0 +1,19 @@
+workfiles/REVIEW_PR43_REACTION_WORKER.md
+  s_a429da96906584::t_6a8c591739492f 1-86
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "c58040a237ce45e697e50431e8a492cb74193f30",
+  "prompts": {},
+  "sessions": {
+    "s_a429da96906584": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b93a75c8-61f8-434d-96df-51b2888466a4",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
