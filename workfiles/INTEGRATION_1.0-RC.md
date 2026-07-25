@@ -357,21 +357,30 @@ Root cause: `packages/core/src/index.ts` re-exports 13+ modules via unnamespaced
 Every new module raises the collision probability. **Recommend namespaced exports** before
 adding more modules — this will recur otherwise.
 
-## Follow-ups NOT done (deliberately out of scope)
+## Follow-ups — 1, 2 and 3 are now DONE
 
-1. **No control-plane migration runner.** Migrations 004 (x3: policy_packs, operational_readiness,
-   enterprise) must be applied BY HAND. Release-blocking operational gap.
-2. `packages/core/tsconfig.json` includes only `["src"]` — **test files are never typechecked**.
-3. Two `canonicalJson` implementations remain duplicated; not unified because they feed content
+1. ~~**No control-plane migration runner.**~~ **FIXED.** `apps/control-plane/src/migrate.ts` +
+   `migrate-cli.ts`, with a ledger, checksum drift detection, an advisory lock and a
+   non-writing `--status`. The seven files numbered `004` were renumbered `004`-`010` to give
+   them a total order. Verified against real Postgres. See `workfiles/MIGRATIONS.md`.
+   Running it surfaced an undocumented prerequisite: **pgvector** is required by `001_init.sql`.
+2. ~~`packages/core/tsconfig.json` includes only `["src"]`.~~ **FIXED.** Split into
+   `tsconfig.json` (typechecks `src` + `test`) and `tsconfig.build.json` (emits `src`), matching
+   `packages/mcp-server`. Same for `apps/control-plane`. Enabling it surfaced **34 real type
+   errors** in core's tests, all fixed — including a helper that typed its patch as the full
+   parameter object (so every partial override was unsound) and `Signer.publicKey` being too
+   narrow to hold the `KeyObject` the tests actually pass.
+3. ~~Unnamespaced `export *` barrel.~~ **FIXED.** See below.
+4. Two `canonicalJson` implementations remain duplicated; not unified because they feed content
    digests and unifying risks changing stored values.
-4. Moderate advisories: `@hono/node-server` <2.0.5 (**path traversal in serve-static** —
+5. Moderate advisories: `@hono/node-server` <2.0.5 (**path traversal in serve-static** —
    runtime-relevant, needs a major bump) and `tar` <=7.5.20.
-5. `pnpm audit --audit-level high` over dev tooling is non-blocking; re-tighten once upstream
+6. `pnpm audit --audit-level high` over dev tooling is non-blocking; re-tighten once upstream
    minimatch/glob ship on brace-expansion >=5.0.8.
-6. `mcp-server/test/http.test.ts` ECONNREFUSED flake (seen by two independent workers).
-7. Per-issue latent findings (unreachable today, no production callers) are recorded in each
+7. `mcp-server/test/http.test.ts` ECONNREFUSED flake (seen by two independent workers).
+8. Per-issue latent findings (unreachable today, no production callers) are recorded in each
    branch's review doc under `workfiles/`.
-8. Enterprise migration unique constraint does not constrain org-scoped rows (Postgres treats
+9. Enterprise migration unique constraint does not constrain org-scoped rows (Postgres treats
    NULLs as distinct); needs `nulls not distinct` (PG15+) but the repo declares no PG version.
 
 ## Cleanup done
@@ -380,3 +389,40 @@ adding more modules — this will recur otherwise.
 - earlier pass: 6 already-merged worktrees + duplicate `1.0-rc-2` + stale `tebayoso/issue-14-sdk-marketplace`
 - nested worktree dirs excluded via `.git/info/exclude` (tracked `.gitignore` untouched)
 - `main` NOT pushed, per instruction. Remaining: 2 worktrees (`main`, `release-1.0-rc`)
+
+---
+
+# Follow-up pass: the three "worth your attention" items
+
+`1.0-rc` = `01a7d40`, CI green, `pnpm quality` exit 0, **314 tests** (up from 302).
+
+| Item                              | Status                                                               |
+| --------------------------------- | -------------------------------------------------------------------- |
+| Test files never typechecked      | Fixed — split tsconfigs; 34 latent type errors found and fixed       |
+| Unnamespaced `export *` barrel    | Fixed — two-tier barrel + contract test; flat surface 185 -> 69      |
+| No control-plane migration runner | Fixed — runner + ledger + drift detection, verified on real Postgres |
+
+## Deployed for verification
+
+- **beta.eventforge.dev** — release-candidate console, separate Worker
+  (`eventforge-console-beta`), HTTP 200, security headers intact, analytics disabled.
+  Apex `eventforge.dev` untouched and still carries the production GA id.
+- **eventforge-cloud-preview** — the Worker that bundles `@eventforge/core`.
+  `/health` returns `{"ok":true,"service":"eventforge-cloud","environment":"preview","ingress":"gated"}`,
+  which is the real signal that the namespaced barrel imports cleanly under workerd.
+
+`/console` returns 503 on beta _and_ production — the intended fail-closed
+"sign-in required" state while hosted auth is unwired, not a beta defect.
+
+## Still open
+
+- Moderate advisories: `@hono/node-server` <2.0.5 (path traversal in `serve-static`) and
+  `tar` <=7.5.20. Both need transitive major bumps.
+- Dev-tooling `pnpm audit` stays non-blocking until upstream minimatch/glob ship on
+  brace-expansion >=5.0.8. The `--prod` gate is blocking and green.
+- `mcp-server/test/http.test.ts` ECONNREFUSED flake.
+- Two duplicated RFC 8785 `canonicalJson` implementations, not unified because they feed
+  content digests.
+- `apps/cloudflare/migrations/control/` still has two files numbered `0003`; left alone
+  because renaming breaks wrangler's ledger where they are already applied.
+- Per-issue latent findings recorded in each branch's review doc.
