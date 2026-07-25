@@ -36,15 +36,17 @@ It also meant the branch's own test suite failed to collect. Confirmed: `numTota
 
 Fixed by moving the constraint to an outer `superRefine` on the union, preserving the rejection. All 3 tests now execute and pass; the reservation logic they cover is verified sound.
 
-### MEDIUM — kill-switch freshness check is one-sided, so a future timestamp defeats it
+### MEDIUM — kill-switch freshness check is one-sided, so a future timestamp defeats it — FIXED in `407f3d3`
 
 `reaction-worker.ts:137` — `now.getTime() - authority.killEpochAt.getTime() > 30_000`
 
 Only _past_ skew is bounded. A `killEpochAt` in the future yields a negative difference and passes. Verified: `killEpochAt = now + 24h` → `{allowed: true}`.
 
-This is the kill-switch staleness guard. A clock-skewed or wrong-signed cache entry disables the 30s bound indefinitely rather than failing closed. One-line fix — use `Math.abs(...)`, or reject `killEpochAt > now` outright.
+This is the kill-switch staleness guard. A clock-skewed or wrong-signed cache entry disables the 30s bound indefinitely rather than failing closed.
 
-### MEDIUM — `reserveReaction` throws instead of returning a denial
+Fixed by comparing `Math.abs(killAgeMs)` and rejecting non-finite ages, so a future timestamp and an unparseable date both deny. Regression test: _"denies a kill cache dated in the future instead of trusting unbounded skew"_.
+
+### MEDIUM — `reserveReaction` throws instead of returning a denial — FIXED in `407f3d3`
 
 `reaction-worker.ts:116` (via `reactionHash` → `normalizedAction` / `.parse`)
 
@@ -53,7 +55,9 @@ The signature promises `Reservation` and the doc comment promises fail-closed re
 - malformed envelope field (e.g. untrimmed `resource`) → `ZodError`. Verified.
 - `github.labels` with the same label in `add` and `remove` → `Error("label cannot be both added and removed")`. Verified.
 
-An exception is not a scope bypass, so this is not an authorization hole — but callers written against the declared return type will not have a `try`, so a malformed envelope crashes the worker instead of recording a denial. There is no test coverage for either path. Suggest returning `{allowed: false, reason: "envelope_invalid"}`.
+An exception is not a scope bypass, so this is not an authorization hole — but callers written against the declared return type will not have a `try`, so a malformed envelope crashes the worker instead of recording a denial, and a caller that _does_ catch reads it as a non-denial.
+
+Fixed by returning `{allowed: false, reason: "envelope_invalid"}` from a `try` around the hash computation. Regression test: _"denies a malformed envelope instead of throwing past the guard"_. Side effect: because the schema parse now gates every later check, an invalid `expiresAt` can no longer slip past the `<= now` comparison as `NaN`.
 
 ### MEDIUM–LOW — `budgetClass` is never bound to `action.type`
 
@@ -81,6 +85,8 @@ Budget is the abuse guard, so debiting the wrong bucket lets one class of effect
 
 ## Verdict
 
-**Safe to merge into 1.0-rc as of `5269199`** — but it would not have been safe at `a7ef1ed`: that commit would have broken every consumer of `@eventforge/core` at import time.
+**Safe to merge into 1.0-rc as of `407f3d3`** — but it would not have been safe at `a7ef1ed`: that commit would have broken every consumer of `@eventforge/core` at import time.
 
-The four remaining findings are all in unreachable-from-production code (no provider writer, no credentials, no durable reservation store in this slice), so none is exploitable today. The kill-switch skew and the throw-instead-of-deny paths should be closed before any writer is wired up, since both undercut the fail-closed guarantees this kernel exists to provide.
+The two fail-open findings above are fixed and covered. The remaining two — `budgetClass` not bound to `action.type`, and `localeCompare` key ordering — are deliberately deferred to the issue #20 follow-ups. Neither is exploitable today: this slice has no provider writer, no credentials, and no durable reservation store, so nothing reaches a real effect. Both should be closed before a writer is wired up.
+
+Core suite after the fixes: 42 tests collected and passing in `packages/core` (5 in `reaction-worker.test.ts`); `reaction-worker.ts` coverage 93.84% stmts / 76.92% branch, up from 90.24 / 73.91.
