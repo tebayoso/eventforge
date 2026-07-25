@@ -1,4 +1,4 @@
-import { createHash, sign, verify } from "node:crypto";
+import { createHash, sign, verify, type KeyObject } from "node:crypto";
 import { z } from "zod";
 
 const Sha256 = z.string().regex(/^[a-f0-9]{64}$/);
@@ -77,7 +77,7 @@ export type DsseEnvelope = {
 };
 export type Signer = {
   id: string;
-  publicKey: string | Buffer;
+  publicKey: string | Buffer | KeyObject;
   state: "active" | "revoked" | "compromised";
   validUntil: string;
 };
@@ -123,7 +123,7 @@ export function createManifest(input: Omit<ConnectorManifest, "version">): Conne
 export function signManifest(
   manifest: ConnectorManifest,
   keyId: string,
-  privateKey?: string | Buffer,
+  privateKey?: string | Buffer | KeyObject,
 ): DsseEnvelope {
   if (!privateKey) throw new Error("Managed signing key unavailable; production signing is closed");
   const payload = canonicalJson(manifest);

@@ -64,8 +64,9 @@ const evidence: ShadowEvidence = {
   rollbackDrillPassed: true,
   killDrillPassed: true,
   concurrencyDrillPassed: true,
+  fixtureOnly: false,
 };
-const evaluate = (patch: Parameters<typeof evaluateAutonomyEligibility>[0] = {} as never) =>
+const evaluate = (patch: Partial<Parameters<typeof evaluateAutonomyEligibility>[0]> = {}) =>
   evaluateAutonomyEligibility({
     action,
     grant,
