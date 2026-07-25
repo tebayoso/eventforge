@@ -1,0 +1,24 @@
+packages/core/src/autonomy.ts
+  s_969d3d1d8a30cf::t_4e686356e2ca01 161-165,179-181
+  s_969d3d1d8a30cf::t_bd845da732df8a 75-86,93,98,114,118
+  s_969d3d1d8a30cf::t_53165f806d3df5 94-97,100-102,111-113,115-117,119-127,143-154
+packages/core/test/autonomy.test.ts
+  s_969d3d1d8a30cf::t_7770a530de0cbf 109-179
+  s_969d3d1d8a30cf::t_4e686356e2ca01 180-181
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "dc97feb74f6c135e502a14c2aacbe6360af048c1",
+  "prompts": {},
+  "sessions": {
+    "s_969d3d1d8a30cf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b429597b-58e8-470f-bc53-5f02965f674c",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
