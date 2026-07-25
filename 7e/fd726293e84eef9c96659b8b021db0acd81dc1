@@ -1,0 +1,40 @@
+apps/console/src/FeaturesPage.tsx
+  s_dee68aa906dae0::t_b659e92515896d 44-45,105,107,138,140,243,245
+  s_dee68aa906dae0::t_1e217e65989a26 27,278,282,285,396
+  s_dee68aa906dae0::t_df81d683a0a305 1-26,28-43,46-104,106,108-137,139,141-242,244,246-277,279-281,283-284,286-395,397-398
+apps/console/src/styles.css
+  s_dee68aa906dae0::t_0233343dc67b72 2195-2408
+  s_dee68aa906dae0::t_a116b6b6e89360 2409-2426
+apps/console/src/LandingPage.tsx
+  s_dee68aa906dae0::t_3716486f574697 2
+  s_dee68aa906dae0::t_524167b4eb8217 59
+  s_dee68aa906dae0::t_279c3acca306ef 67,320
+  s_dee68aa906dae0::t_a116b6b6e89360 473,476-477
+  s_dee68aa906dae0::t_5fbbe45270abee 474-475
+apps/console/src/main.tsx
+  s_dee68aa906dae0::t_a669e6deedbd45 4,44,51-59
+apps/console/src/Mark.tsx
+  s_dee68aa906dae0::t_3716486f574697 1-5
+apps/console/src/FeaturesPage.test.tsx
+  s_dee68aa906dae0::t_9b3173b7d46672 1-30,34-68,70-72,99-100
+  s_dee68aa906dae0::t_5fbbe45270abee 31-33
+  s_dee68aa906dae0::t_97e9079309c356 69,73-98
+apps/console/src/worker.ts
+  s_dee68aa906dae0::t_dc447d0afedeec 81-84
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "7efd726293e84eef9c96659b8b021db0acd81dc1",
+  "prompts": {},
+  "sessions": {
+    "s_dee68aa906dae0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6aefb2ec-9fc3-4ac6-832d-2b6793314ddf",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
