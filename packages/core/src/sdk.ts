@@ -59,7 +59,7 @@ const RetentionSchema = z
     message: "Retention must not exceed 3650 days",
   });
 
-export const ConnectorManifestSchema = z
+export const ConnectorPackageManifestSchema = z
   .object({
     sdkSchemaVersion: z.literal("1"),
     packageId: z.string().regex(/^[a-z0-9][a-z0-9.-]*$/),
@@ -125,7 +125,7 @@ export const ConnectorManifestSchema = z
       });
     }
   });
-export type ConnectorManifest = z.infer<typeof ConnectorManifestSchema>;
+export type ConnectorPackageManifest = z.infer<typeof ConnectorPackageManifestSchema>;
 
 export type CapabilityContext = Readonly<{
   tenantId: string;
@@ -238,7 +238,7 @@ export type TrustServices = Readonly<{
 }>;
 
 export type InstallInput = Readonly<{
-  manifest: ConnectorManifest;
+  manifest: ConnectorPackageManifest;
   review: z.infer<typeof ReviewSchema>;
   trust: TrustServices;
   runtime: { coreVersion: string; capabilities: readonly Capability[] };
@@ -274,7 +274,7 @@ function compareVersions(left: string, right: string): number {
 }
 
 export function isCompatible(
-  manifest: ConnectorManifest,
+  manifest: ConnectorPackageManifest,
   runtime: { coreVersion: string; capabilities: readonly Capability[] },
 ): boolean {
   if (!VersionSchema.safeParse(runtime.coreVersion).success) return false;
@@ -292,10 +292,10 @@ function sameSet(left: readonly string[], right: readonly string[]): boolean {
 }
 
 export function requiresFreshConsent(
-  previous: ConnectorManifest,
-  next: ConnectorManifest,
+  previous: ConnectorPackageManifest,
+  next: ConnectorPackageManifest,
 ): boolean {
-  const scopeChanged = (Object.keys(previous.scope) as (keyof ConnectorManifest["scope"])[]).some(
+  const scopeChanged = (Object.keys(previous.scope) as (keyof ConnectorPackageManifest["scope"])[]).some(
     (key) => !sameSet(previous.scope[key], next.scope[key]),
   );
   const capabilityExpanded = next.capabilities.some(
