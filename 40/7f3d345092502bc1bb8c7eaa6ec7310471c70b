@@ -1,0 +1,23 @@
+packages/core/src/reaction-worker.ts
+  s_a429da96906584::t_a5ad9f62e33eef 126
+  s_a429da96906584::t_9dd7930c5e6b78 147-149,153-154
+  s_a429da96906584::t_608ed9c9f0c299 122-125,127-129
+packages/core/test/reaction-worker.test.ts
+  s_a429da96906584::t_d3f967eccb7f38 87-124
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "407f3d345092502bc1bb8c7eaa6ec7310471c70b",
+  "prompts": {},
+  "sessions": {
+    "s_a429da96906584": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b93a75c8-61f8-434d-96df-51b2888466a4",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
