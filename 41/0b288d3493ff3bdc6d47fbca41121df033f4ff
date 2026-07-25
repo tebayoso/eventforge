@@ -1,0 +1,35 @@
+apps/control-plane/src/operational-readiness.ts
+  s_717f8c81e65bfb::t_e60f9142e75a79 258-261
+  s_717f8c81e65bfb::t_7173fcdaaeba96 210,219
+  s_e3446811ef1f5f::t_77b85476b31bf9 146,238
+  s_717f8c81e65bfb::t_99df1ab73d3f68 1-9,12-34,36-113,115-122,127-145,147,149-157,162-168,170-176,179-180,184-209,211-218,220,222-233,236-237,240-257,262-293,296-328,337-348,350-398,405-408,410-443
+  s_717f8c81e65bfb::t_9ec82de12d3c96 123-125,158-161,329-335,399-404
+apps/control-plane/test/operational-readiness.test.ts
+  s_e3446811ef1f5f::t_e8b3ff343c4a13 111
+  s_717f8c81e65bfb::t_7173fcdaaeba96 143,147-155,165
+  s_717f8c81e65bfb::t_1ec196bcd38140 2-90,92-110,112-142,144-146,156-164,166-319
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "410b288d3493ff3bdc6d47fbca41121df033f4ff",
+  "prompts": {},
+  "sessions": {
+    "s_717f8c81e65bfb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8b1f-96ff-7571-ba96-89256223a480",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    },
+    "s_e3446811ef1f5f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9d4bb017-c3ba-4234-88c6-31c18d1e461e",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
