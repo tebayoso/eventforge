@@ -1,0 +1,40 @@
+apps/control-plane/tsconfig.build.json
+  s_dee68aa906dae0::t_6de018e43d56be 1-9
+apps/control-plane/migrations/010_provider_installations.sql
+  s_dee68aa906dae0::t_8597df50c964f7 1-22
+packages/core/test/replay-audit.test.ts
+  s_dee68aa906dae0::t_254f9aa82b2b51 4
+  s_dee68aa906dae0::t_2cfa019c52a41b 38,385,501
+packages/core/tsconfig.json
+  s_dee68aa906dae0::t_485a66f8d66620 3
+packages/core/src/connector-trust.ts
+  s_dee68aa906dae0::t_75e58d94f6c47d 126
+  s_dee68aa906dae0::t_f6f6297cc2cad9 1,80
+apps/control-plane/package.json
+  s_dee68aa906dae0::t_6de018e43d56be 12
+  s_dee68aa906dae0::t_ef2b942528690b 18-21
+packages/core/test/autonomy.test.ts
+  s_dee68aa906dae0::t_67fb26508c436d 67,69
+packages/core/tsconfig.build.json
+  s_dee68aa906dae0::t_e58e2febdec77f 1-9
+apps/control-plane/tsconfig.json
+  s_dee68aa906dae0::t_6de018e43d56be 3
+packages/core/package.json
+  s_dee68aa906dae0::t_420caa11b0a6a7 30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "97ed821b8c13148e469d616bd49f264c7ea41c03",
+  "prompts": {},
+  "sessions": {
+    "s_dee68aa906dae0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6aefb2ec-9fc3-4ac6-832d-2b6793314ddf",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
