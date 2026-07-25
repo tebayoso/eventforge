@@ -31,7 +31,7 @@ members with `localeCompare`. Two independent problems:
   `{"A","Z","_","a","b"}`. The hash was never interoperable with any conforming
   implementation, contradicting the branch's own "standalone verifier" claim.
 - **Insertion-order dependent.** `localeCompare` returns `0` for _distinct_ strings
-  (verified: NFC `U+00E9` vs NFD `e`+`U+0301`; also `"a�"` vs `"a"`). With a
+  (verified: NFC `U+00E9` vs NFD `e`+`U+0301`; also `"a"`+`U+0000` vs `"a"`). With a
   zero comparator result, V8's stable sort preserves insertion order, so the same logical
   key set hashed differently depending on property insertion order. `timelineIntegrityHash`
   was a function of the value _plus insertion order_, and `verifyTimelineArtifact` could
