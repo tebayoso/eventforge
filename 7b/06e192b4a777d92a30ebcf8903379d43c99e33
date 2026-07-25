@@ -1,0 +1,21 @@
+workfiles/INTEGRATION_PR32.md
+  s_dfe24ee9777262::t_e60fc740e066c8 3-4
+  s_dfe24ee9777262::t_0a249d7d488efa 85-93
+  s_dfe24ee9777262::t_af575a42f0b729 65-73
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "7b06e192b4a777d92a30ebcf8903379d43c99e33",
+  "prompts": {},
+  "sessions": {
+    "s_dfe24ee9777262": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9c5e67eb-9ec1-4058-b4a0-5f2e23f174e4",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
