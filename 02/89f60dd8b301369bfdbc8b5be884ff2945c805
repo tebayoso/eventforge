@@ -1,0 +1,24 @@
+packages/core/src/policy-packs.ts
+  s_36f64419cde1fe::t_698d3256187b55 79-82
+packages/core/test/core.test.ts
+  s_36f64419cde1fe::t_988120972c6160 199-200,230-235
+  s_36f64419cde1fe::t_63d9f20b17a90d 1
+  s_36f64419cde1fe::t_e737a693dceb45 23,28-74
+  s_36f64419cde1fe::t_2e054845bb82de 158-198,201-229,236-252
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "0289f60dd8b301369bfdbc8b5be884ff2945c805",
+  "prompts": {},
+  "sessions": {
+    "s_36f64419cde1fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d8ca7e7e-249f-43ff-addc-d15c89ab0699",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
