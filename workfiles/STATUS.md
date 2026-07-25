@@ -1,6 +1,6 @@
 # Implementation status
 
-Updated: 2026-07-20
+Updated: 2026-07-22
 
 ## Timeline foundation (#19)
 
@@ -56,7 +56,7 @@ Outcome analytics now has an additive, versioned core projection and append-only
 
 Phase 0 implementation has started with additive, tenant-scoped contracts for endpoints, routes, deliveries and attempts, issues, alert policies, incidents, bounded reaction policies and runs, evidence bundles, usage records, and entitlements. Migration `003_commercial_platform.sql` adds durable resource, entitlement, and idempotent usage-meter storage without enabling remote mode.
 
-These are persistence and interface foundations only. Hosted authentication, repository hydration, outbound delivery workers, billing export, monitoring, alert delivery, reactions, and public commercial APIs are not yet enabled or claimed as supported.
+These are persistence and interface foundations only. A local core reaction-worker enforcement kernel now provides strict GitHub/Linear allowlisted action envelopes, deterministic exact-effect hashes, and fail-closed approval/policy/scope/kill-cache/budget/concurrency reservation checks. It has no provider writer or credentials, so shadow/hosted effects cannot execute from this slice. Hosted authentication, repository hydration, durable reservation storage, outbound delivery workers, billing export, monitoring, alert delivery, reconciliation, and public commercial APIs remain unenabled and are not claimed as supported.
 
 Phase 2 correlation now has versioned configuration and immutable event/membership contracts, launch-bounded deterministic rule evaluation, and tenant/project filtering before candidate comparison. The additive `004_incident_correlation.sql` migration persists versioned configs and 90-day membership metadata. This is observe-only foundation only: authenticated incident APIs, canonical-event impact/investigation persistence, alias storage, manual merge/split, redacted timeline/export, backfill, review metrics, and suppression remain unavailable. Hosted mode remains fail-closed.
 

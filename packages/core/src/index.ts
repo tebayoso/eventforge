@@ -10,6 +10,7 @@ export * from "./memory.js";
 export * from "./outcomes.js";
 export * from "./platform.js";
 export * from "./policy-packs.js";
+export * from "./reaction-worker.js";
 export * from "./replay-audit.js";
 export * from "./sdk.js";
 export * from "./timeline.js";
