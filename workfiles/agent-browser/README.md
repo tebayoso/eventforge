@@ -298,3 +298,9 @@ Reusable pattern: after an edge deployment, verify the exact hashed asset loaded
 - Production evidence is stored in `eventforge-anvil-production-desktop.png`, `eventforge-anvil-production-mobile.png`, and `eventforge-anvil-production-console.png`.
 
 Reusable pattern: verify a rebrand across visible UI, compact SVG rendering, HTML metadata, telemetry labels, protected fallbacks, and machine-readable discovery. Use a plain 390×844 viewport for very tall full-page mobile captures; high-DPI device emulation can produce stitched-image artifacts even when the DOM has one root.
+
+## 2026-07-22 — GitHub publish check (connector trust branch)
+
+- URL: `https://github.com/tebayoso/eventforge/compare/1.0-rc...codex%2Fissue-8-forge-connectors?expand=1`
+- Outcome: the branch comparison resolved to commit `5190f02`, but the browser was logged out (`Sign in` shown). GitHub CLI also reported its active token invalid, so no draft PR or review comment was created.
+- Reusable pattern: confirm the exact base/head comparison URL before publishing; authenticated GitHub browser or CLI state is required for PR creation and comments.
