@@ -1,0 +1,25 @@
+apps/control-plane/migrations/004_enterprise_governance.sql
+  s_dee68aa906dae0::t_3f7be696372ca0 1-45
+packages/core/src/platform.ts
+  s_dee68aa906dae0::t_b0de966d845d4f 7-117
+packages/core/test/platform.test.ts
+  s_dee68aa906dae0::t_1a3d5ce47bf4c7 3-5,8,69-177
+workfiles/STATUS.md
+  s_dee68aa906dae0::t_ef08940d03eccf 50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "29e1b11798b8b26fef731ffa1c372fcde72a5a22",
+  "prompts": {},
+  "sessions": {
+    "s_dee68aa906dae0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6aefb2ec-9fc3-4ac6-832d-2b6793314ddf",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
