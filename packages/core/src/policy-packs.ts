@@ -76,7 +76,10 @@ export function simulatePolicy(
   const evaluated = decisions.filter((entry) => entry.decision).length;
   const eligible = inputs.filter((input) => input.retained && input.authorized).length;
   return {
-    status: evaluated === inputs.length ? "complete" : evaluated ? "partial" : "blocked",
+    // Zero evaluations is never a complete claim, even when the input set was
+    // itself empty: an empty retained-evidence set is a retention gap, not proof
+    // that the pack was fully simulated.
+    status: evaluated === 0 ? "blocked" : evaluated === inputs.length ? "complete" : "partial",
     evaluated,
     eligible,
     decisions,

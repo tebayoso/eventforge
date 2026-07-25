@@ -1,4 +1,4 @@
-import { createHmac, randomUUID } from "node:crypto";
+import { createHmac, generateKeyPairSync, randomUUID, sign } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
 import {
   EventForgeStore,
@@ -20,10 +20,58 @@ import {
   untrustedEventGuard,
   verifyBareHmac,
   verifyHmac,
+  canonicalPolicyPackManifest,
   manifestDigest,
   simulatePolicy,
   verifyPackImport,
 } from "../src/index.js";
+import { POLICY_EVALUATOR_VERSION } from "../src/workflows.js";
+import type { PolicyPackManifest, PolicyRequest } from "../src/contracts.js";
+
+const policyPackKeyPair = generateKeyPairSync("ed25519");
+const signingPrivateKey = policyPackKeyPair.privateKey;
+const signingPublicKey = policyPackKeyPair.publicKey
+  .export({ type: "spki", format: "pem" })
+  .toString();
+
+function policyPackManifest(): PolicyPackManifest {
+  return {
+    schemaVersion: 1,
+    evaluatorVersion: POLICY_EVALUATOR_VERSION,
+    workspaceId: "w",
+    packId: "pack",
+    version: 1,
+    policy: {
+      version: 1,
+      approvalMode: "approval_required",
+      allowedCapabilities: ["read"],
+      allowedRepositories: ["repo"],
+      allowedPaths: ["**"],
+      allowedDomains: [],
+      allowedProviders: ["github"],
+    },
+    scopes: ["repo"],
+    source: "test",
+    createdAt: "2026-07-22T00:00:00.000Z",
+  };
+}
+
+function policyPackRequest(): PolicyRequest {
+  return {
+    actor: {
+      actorId: "owner",
+      workspaceId: "w",
+      role: "owner",
+      mfaVerified: true,
+      scopes: [],
+    },
+    provider: "github",
+    repository: "repo",
+    paths: [],
+    domains: [],
+    capabilities: ["read"],
+  };
+}
 
 describe("event security", () => {
   it("uses the identical evaluator for live and side-effect-free historical simulation", () => {
@@ -107,6 +155,101 @@ describe("event security", () => {
         },
       ]),
     ).toMatchObject({ status: "blocked", evaluated: 0 });
+    expect(
+      verifyPackImport({
+        manifest,
+        signature: "AA==",
+        keyId: "trusted",
+        trust: [{ keyId: "trusted", publicKey: signingPublicKey }],
+      }),
+    ).toMatchObject({ ok: false, reason: "incompatible_evaluator" });
+    expect(
+      verifyPackImport({
+        manifest,
+        signature: "AA==",
+        keyId: "revoked",
+        trust: [{ keyId: "revoked", publicKey: signingPublicKey, revoked: true }],
+      }),
+    ).toMatchObject({ ok: false, reason: "untrusted_signer" });
+  });
+
+  it("never reports complete simulation coverage without evaluating retained evidence", () => {
+    const manifest = policyPackManifest();
+    // An empty retained-evidence set is a retention gap, not a full simulation.
+    expect(simulatePolicy(manifest, [])).toMatchObject({
+      status: "blocked",
+      evaluated: 0,
+      eligible: 0,
+    });
+    expect(simulatePolicy(manifest, [])).not.toMatchObject({ status: "complete" });
+
+    const authorizedInput = {
+      id: "kept",
+      request: policyPackRequest(),
+      retained: true,
+      authorized: true,
+    };
+    expect(
+      simulatePolicy(manifest, [
+        authorizedInput,
+        { ...authorizedInput, id: "lost", authorized: false },
+      ]),
+    ).toMatchObject({ status: "partial", evaluated: 1, eligible: 1 });
+    expect(
+      simulatePolicy(manifest, [{ ...authorizedInput, id: "lost", authorized: false }])
+        .decisions[0],
+    ).toMatchObject({ id: "lost", reason: "authorization_lost" });
+
+    const oversized = Array.from({ length: 10_001 }, (_entry, index) => ({
+      ...authorizedInput,
+      id: `input-${index}`,
+    }));
+    expect(simulatePolicy(manifest, oversized)).toMatchObject({
+      status: "blocked",
+      evaluated: 0,
+      decisions: [{ id: "job", reason: "input_limit_exceeded" }],
+    });
+  });
+
+  it("accepts only a correctly signed, unexpired pack manifest from a trusted signer", () => {
+    const manifest = policyPackManifest();
+    const signature = sign(
+      null,
+      Buffer.from(canonicalPolicyPackManifest(manifest)),
+      signingPrivateKey,
+    ).toString("base64");
+    const trust = [{ keyId: "trusted", publicKey: signingPublicKey }];
+
+    expect(verifyPackImport({ manifest, signature, keyId: "trusted", trust })).toMatchObject({
+      ok: true,
+      digest: manifestDigest(manifest),
+    });
+
+    // A signature over a different manifest must not transfer to this one.
+    expect(
+      verifyPackImport({
+        manifest: { ...manifest, packId: "other" },
+        signature,
+        keyId: "trusted",
+        trust,
+      }),
+    ).toMatchObject({ ok: false, reason: "invalid_signature" });
+
+    const expired = { ...manifest, expiresAt: "2026-07-22T00:00:00.000Z" };
+    const expiredSignature = sign(
+      null,
+      Buffer.from(canonicalPolicyPackManifest(expired)),
+      signingPrivateKey,
+    ).toString("base64");
+    expect(
+      verifyPackImport({
+        manifest: expired,
+        signature: expiredSignature,
+        keyId: "trusted",
+        trust,
+        now: new Date("2026-07-23T00:00:00.000Z"),
+      }),
+    ).toMatchObject({ ok: false, reason: "expired" });
   });
 
   it.each([
