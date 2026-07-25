@@ -65,8 +65,12 @@ export function canonicalJson(value: unknown): string {
   }
   if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
   if (typeof value === "object") {
+    // RFC 8785 orders members by UTF-16 code unit, which is what `<` compares.
+    // localeCompare must not be used here: it is ICU/locale dependent and reports
+    // 0 for distinct keys (e.g. NFC vs NFD), which would make the canonical bytes
+    // depend on key insertion order and break integrity verification.
     return `{${Object.entries(value as Record<string, unknown>)
-      .sort(([a], [b]) => a.localeCompare(b))
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
       .map(([key, item]) => `${JSON.stringify(key)}:${canonicalJson(item)}`)
       .join(",")}}`;
   }
@@ -104,12 +108,24 @@ export function redactTimelineEntry(entry: TimelineEntry, rawAccess: boolean): T
   return { ...entry, metadata: { omission: entry.redaction, unavailable: true } };
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 export function renderTimelineHtml(manifest: TimelineManifest): string {
   const entries = manifest.entries
-    .map(
-      (entry) =>
-        `<li data-timeline-kind="${entry.kind}" data-timeline-uncertainty="${entry.uncertainty}" data-timeline-redaction="${entry.redaction}">${entry.id}: ${entry.kind} (${entry.redaction === "none" ? entry.uncertainty : entry.redaction})</li>`,
-    )
+    .map((entry) => {
+      const kind = escapeHtml(entry.kind);
+      const uncertainty = escapeHtml(entry.uncertainty);
+      const redaction = escapeHtml(entry.redaction);
+      const status = entry.redaction === "none" ? uncertainty : redaction;
+      return `<li data-timeline-kind="${kind}" data-timeline-uncertainty="${uncertainty}" data-timeline-redaction="${redaction}">${escapeHtml(entry.id)}: ${kind} (${status})</li>`;
+    })
     .join("");
   return `<!doctype html><meta charset="utf-8"><ol>${entries}</ol>`;
 }
