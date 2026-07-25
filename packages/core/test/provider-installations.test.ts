@@ -4,7 +4,7 @@ import {
   ProviderInstallationSchema,
   isProviderInstallationUsable,
   type ProviderInstallation,
-} from "../src/index.js";
+} from "../src/provider-installations.js";
 
 const installation = {
   id: crypto.randomUUID(),
@@ -62,8 +62,8 @@ describe("provider installation contracts", () => {
   // failed assertion. Importing the barrel must therefore stay side-effect safe.
   it("builds every contract at module load so barrel importers still collect tests", async () => {
     const barrel = await import("../src/index.js");
-    expect(barrel.ProviderInstallationSchema).toBeDefined();
-    expect(barrel.LinearReactionRequestSchema).toBeDefined();
+    expect(barrel.providerInstallations.ProviderInstallationSchema).toBeDefined();
+    expect(barrel.providerInstallations.LinearReactionRequestSchema).toBeDefined();
   });
 
   // The reaction contract narrows the installation to a healthy, reaction-enabled

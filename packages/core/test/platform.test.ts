@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   AuditStreamEventSchema,
-  authorizeEnterpriseScope,
   BreakGlassGrantSchema,
   DeliverySchema,
   EntitlementSchema,
-  type EnterpriseServerScope,
   ReactionPolicySchema,
   UsageRecordSchema,
-} from "../src/index.js";
+  authorizeEnterpriseScope,
+  type EnterpriseServerScope,
+} from "../src/platform.js";
 
 describe("commercial platform contracts", () => {
   it("makes only the initial destination delivery billable", () => {
