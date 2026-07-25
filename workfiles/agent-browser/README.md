@@ -266,7 +266,6 @@ Reusable pattern: keep a marketing capture route out of discovery, enforce origi
 
 Reusable pattern: keep client analytics identifiers in a public runtime manifest so deployments are reproducible without putting private credentials in build logs or shell history.
 
-
 ## 2026-07-22 — GA4 production tag deployment
 
 - Built the console from `main` with the production GA4 Measurement ID in `apps/console/.env.production`; the emitted asset contained `G-2E80P0BMCR`.

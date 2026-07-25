@@ -2,6 +2,34 @@ import { createHash, sign, verify } from "node:crypto";
 import { z } from "zod";
 
 const Sha256 = z.string().regex(/^[a-f0-9]{64}$/);
+const ConnectorSubjectsSchema = z.object({
+  source: Sha256,
+  build: Sha256,
+  lock: Sha256,
+  sbom: Sha256,
+  validation: Sha256,
+  scope: Sha256,
+  compatibility: Sha256,
+  scannerPolicy: Sha256,
+});
+const ApprovalDigestsSchema = z.object({
+  artifactDigest: Sha256,
+  scopeDigest: Sha256,
+  validationDigest: Sha256,
+  scannerPolicyDigest: Sha256,
+  compatibilityDigest: Sha256,
+});
+/**
+ * Expiry gates fail closed: an absent, non-string or unparseable timestamp is
+ * treated as already expired instead of as "never expires". `Date.parse` yields
+ * NaN for junk input, and every NaN comparison is false, so a raw
+ * `Date.parse(value) <= now` check would silently disable the gate.
+ */
+const validAt = (value: unknown, atMs: number): boolean => {
+  if (typeof value !== "string") return false;
+  const expiresAtMs = Date.parse(value);
+  return Number.isFinite(expiresAtMs) && expiresAtMs > atMs;
+};
 export const ConnectorScopeSchema = z.object({
   network: z
     .array(
@@ -88,8 +116,8 @@ export const manifestDigest = (manifest: ConnectorManifest) => sha256(canonicalJ
 export function createManifest(input: Omit<ConnectorManifest, "version">): ConnectorManifest {
   ConnectorScopeSchema.parse(input.scope);
   for (const digest of Object.values(input.subjects)) Sha256.parse(digest);
-  if (Date.parse(input.expiresAt) <= Date.now())
-    throw new Error("Artifact expiry must be in the future");
+  if (!validAt(input.expiresAt, Date.now()))
+    throw new Error("Artifact expiry must be a parseable timestamp in the future");
   return { version: 1, ...input };
 }
 export function signManifest(
@@ -117,12 +145,13 @@ export function verifyEnvelope(
     envelope.signatures.length !== 1
   )
     throw new Error("Invalid connector DSSE envelope");
-  const manifest = JSON.parse(
-    Buffer.from(envelope.payload, "base64").toString("utf8"),
-  ) as ConnectorManifest;
-  const payload = canonicalJson(manifest);
+  const decoded: unknown = JSON.parse(Buffer.from(envelope.payload, "base64").toString("utf8"));
+  const payload = canonicalJson(decoded);
   if (Buffer.from(payload).toString("base64") !== envelope.payload)
     throw new Error("Manifest is not canonical JCS");
+  if (!ConnectorSubjectsSchema.safeParse((decoded as ConnectorManifest | null)?.subjects).success)
+    throw new Error("Manifest subjects are not complete SHA-256 digests");
+  const manifest = decoded as ConnectorManifest;
   const signature = envelope.signatures[0];
   if (!signature) throw new Error("Invalid connector DSSE envelope");
   const signer = signers.get(signature.keyid);
@@ -130,8 +159,8 @@ export function verifyEnvelope(
     !signer ||
     signer.id !== manifest.signerKeyId ||
     signer.state !== "active" ||
-    Date.parse(signer.validUntil) <= now.getTime() ||
-    Date.parse(manifest.expiresAt) <= now.getTime()
+    !validAt(signer.validUntil, now.getTime()) ||
+    !validAt(manifest.expiresAt, now.getTime())
   )
     throw new Error("Signer or artifact is ineligible");
   if (!verify(null, Buffer.from(payload), signer.publicKey, Buffer.from(signature.sig, "base64")))
@@ -151,9 +180,13 @@ export function approvalEligible(
     actor.role !== "owner" ||
     !actor.mfaRecent ||
     approval.ownerId !== actor.id ||
-    Date.parse(approval.expiresAt) <= now.getTime()
+    !validAt(approval.expiresAt, now.getTime())
   )
     return false;
+  // Every bound digest must be a real SHA-256 value: comparing two absent
+  // digests with `===` would otherwise approve an artifact vacuously.
+  if (!ApprovalDigestsSchema.safeParse(approval).success) return false;
+  if (!ConnectorSubjectsSchema.safeParse(manifest.subjects).success) return false;
   return (
     approval.artifactDigest === manifestDigest(manifest) &&
     approval.scopeDigest === manifest.subjects.scope &&
