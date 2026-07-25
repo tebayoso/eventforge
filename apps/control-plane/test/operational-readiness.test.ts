@@ -108,9 +108,10 @@ describe("operational readiness", () => {
     ).rejects.toThrow("evidence workspace mismatch");
   });
 
-  it("keeps each gate independently closed for missing, stale, skipped, or failed evidence", () => {
+  it("keeps each gate closed for missing, future-dated, stale, skipped, or failed evidence", () => {
     expect(evaluateGate(gate(), [], now)).toBe("unknown");
     expect(evaluateGate(gate(), [passed()], now + 600_001)).toBe("stale");
+    expect(evaluateGate(gate(), [{ ...passed(), observedAt: now + 1 }], now)).toBe("stale");
     expect(evaluateGate(gate(), [passed("console_api", "skipped")], now)).toBe("skipped");
     expect(evaluateGate(gate(), [passed("console_api", "failed")], now)).toBe("failed");
     expect(evaluateGate(gate(), [passed()], now)).toBe("passed");

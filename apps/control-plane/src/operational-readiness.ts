@@ -178,7 +178,9 @@ export function evaluateGate(
   if (!related.length) return "unknown";
   if (related.some((item) => item.result === "failed")) return "failed";
   if (related.some((item) => item.result === "skipped")) return "skipped";
-  if (related.some((item) => now - item.observedAt > maxAgeMs)) return "stale";
+  if (related.some((item) => item.observedAt > now || now - item.observedAt > maxAgeMs)) {
+    return "stale";
+  }
   return related.every((item) => item.result === "passed") ? "passed" : "unknown";
 }
 
