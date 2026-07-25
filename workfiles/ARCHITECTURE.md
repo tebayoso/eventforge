@@ -170,3 +170,6 @@ non-revoked revocation snapshot aged 0 through 15 minutes may run. Live or
 unavailable revocation state is not treated as outage snapshot evidence. Full
 production certification remains closed pending the real signer/revocation
 services and recovery drills.
+## Timeline foundation (#19)
+
+`packages/core/src/timeline.ts` defines tenant-scoped, append-only timeline entry and export contracts. It separates facts, findings, proposals, policy results, decisions, attempts, and outcomes; corrections are new entries linked through causal/version references. The canonical manifest is deterministic JSON with SHA-256 integrity hashing, an explicit machine-to-human field map, and a standalone verifier. Redacted, expired, and deleted entries remain typed omissions. This is an internal deterministic foundation only: hosted viewing/export stays fail-closed until #7, #13, and #17 provide authenticated repositories, revocation, and recent-MFA signing-key access.

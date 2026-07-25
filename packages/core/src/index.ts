@@ -12,5 +12,6 @@ export * from "./platform.js";
 export * from "./policy-packs.js";
 export * from "./replay-audit.js";
 export * from "./sdk.js";
+export * from "./timeline.js";
 export * from "./store.js";
 export * from "./workflows.js";
