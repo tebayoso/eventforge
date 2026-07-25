@@ -1,0 +1,165 @@
+apps/cloudflare/migrations/control/0003_hosted_identity.sql
+  s_6347469d79325f::t_e0969826cc79c6 1-72
+apps/control-plane/src/github-app.ts
+  s_6347469d79325f::t_e0969826cc79c6 1-197
+plugins/eventforge/server/eventforge-standalone.cjs
+  s_6347469d79325f::t_7ebaa722b54982 6,9,16,21-23,25,43,45-46,59,348-349,354,370-371,379,383,389,405,410,434,443,445,452-453,480,486,493,498,502,504,508,511-513
+  s_6347469d79325f::t_e0969826cc79c6 2-3,10-13,27-31,33-37,39-41,72-73,99,101,126,157,159,162,165,169,173,177,179,196,198,240,244,272,304,318,324,330,336,342,346,352-353,355,393,420,426,432,438,455-459,463,465,469-470,472,474-475,478,481-482,499-500
+workfiles/THREAT_MODEL.md
+  s_6347469d79325f::t_e0969826cc79c6 25
+apps/cloudflare/worker-configuration.d.ts
+  s_6347469d79325f::t_e0969826cc79c6 2,5-19,22-43,47,50-64
+apps/console/public/auth.md
+  s_6347469d79325f::t_e0969826cc79c6 1,3
+apps/console/public/.well-known/agent-skills/index.json
+  s_6347469d79325f::t_e0969826cc79c6 7
+packages/core/test/replay-audit.test.ts
+  s_6347469d79325f::t_e0969826cc79c6 1-517
+apps/console/public/_headers
+  s_6347469d79325f::t_e0969826cc79c6 6
+apps/console/public/.well-known/agent-client.json
+  s_6347469d79325f::t_e0969826cc79c6 2,5
+apps/console/src/LandingPage.test.tsx
+  s_6347469d79325f::t_e0969826cc79c6 13-16
+apps/control-plane/src/app.ts
+  s_6347469d79325f::t_e0969826cc79c6 14,16,38,43,60,93-100,129-131,136,138-139,184-198,201-202,224,274,293,330-349,374,390-407,647-648,661-713,721-722,725-727
+apps/console/src/App.tsx
+  s_6347469d79325f::t_e0969826cc79c6 135,138,301
+packages/core/src/contracts.ts
+  s_6347469d79325f::t_e0969826cc79c6 9,28-29,74-91,256-263
+apps/cloudflare/vitest.config.ts
+  s_6347469d79325f::t_e0969826cc79c6 1-9
+apps/console/src/main.tsx
+  s_6347469d79325f::t_e0969826cc79c6 26,44
+workfiles/CONFIGURATION.md
+  s_6347469d79325f::t_e0969826cc79c6 22-52,181-186,207-214,263-266,275,279-280
+packages/core/src/durable-delivery.ts
+  s_6347469d79325f::t_e0969826cc79c6 1-82
+packages/mcp-server/src/index.ts
+  s_6347469d79325f::t_e0969826cc79c6 27-37
+apps/control-plane/src/runtime.ts
+  s_6347469d79325f::t_e0969826cc79c6 8,35-38,40-43,59
+packages/core/src/replay-audit.ts
+  s_6347469d79325f::t_e0969826cc79c6 1-786
+packages/mcp-server/test/oauth.test.ts
+  s_6347469d79325f::t_e0969826cc79c6 1-280
+apps/cloudflare/src/index.ts
+  s_6347469d79325f::t_e0969826cc79c6 2-8,10-16,232-240,246-433,443,449-457,461,463,466-469,477,483-489,493,496-497,502,510,520-521,523,531-533,582-583,585-655,657,659-667,669-690,693-724,733-735
+workfiles/SECURITY.md
+  s_6347469d79325f::t_e0969826cc79c6 22-63
+apps/console/.env.production
+  s_6347469d79325f::t_e0969826cc79c6 1-2
+apps/console/public/.well-known/agent-skills/eventforge-operations/SKILL.md
+  s_6347469d79325f::t_e0969826cc79c6 3,6,8
+apps/console/src/worker.test.ts
+  s_6347469d79325f::t_e0969826cc79c6 19
+packages/mcp-server/package.json
+  s_6347469d79325f::t_e0969826cc79c6 60-61
+plugins/eventforge/server/eventforge-mcp.mjs
+  s_6347469d79325f::t_e0969826cc79c6 2-3,6,9,11,34,36-38,42
+apps/cloudflare/src/session-authority.ts
+  s_6347469d79325f::t_e0969826cc79c6 1-265
+plugins/eventforge/server/eventforge-mcp-http.cjs
+  s_6347469d79325f::t_e0969826cc79c6 4-5,7-10,19,53,62,65-67,69,71-73,75-79,110-111,137,139,148,152,161,164,166,171-172,174,181-182,185-186,189,191-192,195,197,200-201,210,217-218,231,234-237,242,251,254,258,262,270,274-275,277-278,280-282,287,289,291,294,298,300,302,310,341,356,362,364,367-368,370,372,374,376,378,380,384,390-391,393,411,413,424,431,458,464,470,476,493-494,501,507,510,512-513,515-516,529,546-547,557
+  s_6347469d79325f::t_7ebaa722b54982 2,6,13,18,21,32,42,52,56,59-61,63,81,83-84,97,386-387,392,408-409,417,421,427,443,448,472,481,483,490-491,518,533,540,545,549,551,555,558-560
+apps/control-plane/test/app.test.ts
+  s_6347469d79325f::t_e0969826cc79c6 2,23,37,58-61,105-133,135-207,286-296,377-389,391-403,405-406,408,415-451,453-460,466-468,470,482,485-488,531,551-552,564,585-591,602,607,609-613,756-785
+  s_6347469d79325f::t_dbbfc4a6128dcb 786
+apps/console/src/analytics.ts
+  s_6347469d79325f::t_e0969826cc79c6 28,38,42-46,52,56,70,86-88
+workfiles/ARCHITECTURE.md
+  s_6347469d79325f::t_e0969826cc79c6 31-134
+apps/cloudflare/test/cloudflare-workers.ts
+  s_6347469d79325f::t_e0969826cc79c6 1-9
+apps/cloudflare/src/identity.ts
+  s_6347469d79325f::t_e0969826cc79c6 1-278
+apps/control-plane/migrations/003_commercial_platform.sql
+  s_6347469d79325f::t_e0969826cc79c6 40-59
+pnpm-workspace.yaml
+  s_6347469d79325f::t_e0969826cc79c6 12-16
+workfiles/agent-browser/README.md
+  s_6347469d79325f::t_e0969826cc79c6 268-300
+apps/console/src/analytics.test.ts
+  s_6347469d79325f::t_e0969826cc79c6 1-47
+apps/console/src/LandingPage.tsx
+  s_6347469d79325f::t_e0969826cc79c6 230,235,276,278,317,319,348,375,404,408,496,558,586,627,648,665
+workfiles/DURABLE_DELIVERY_RUNBOOK.md
+  s_6347469d79325f::t_e0969826cc79c6 1-11
+packages/core/test/durable-delivery.test.ts
+  s_6347469d79325f::t_e0969826cc79c6 1-63
+packages/core/src/demand-sources.ts
+  s_6347469d79325f::t_4fb5b1cf4291da 19-24,33-36,38-43,63-64,66-69,71-72,76-83,87-89,93-105
+apps/console/public/.well-known/agent-card.json
+  s_6347469d79325f::t_e0969826cc79c6 2,18
+apps/console/src/worker.ts
+  s_6347469d79325f::t_e0969826cc79c6 23,25,39,143
+packages/core/test/demand-sources.test.ts
+  s_6347469d79325f::t_fd229295882ee1 2-7,12-14,21-40,44-56
+  s_a429da96906584::t_8963dd7c8b2fe7 8
+apps/cloudflare/test/identity.test.ts
+  s_6347469d79325f::t_e0969826cc79c6 1-84
+apps/cloudflare/migrations/control/0003_delivery_installations.sql
+  s_6347469d79325f::t_e0969826cc79c6 1-15
+apps/cloudflare/wrangler.jsonc
+  s_6347469d79325f::t_e0969826cc79c6 15-16,39-42,66-67,90-92
+apps/cloudflare/test/durable-delivery.test.ts
+  s_6347469d79325f::t_e0969826cc79c6 1-132
+packages/core/test/core.test.ts
+  s_6347469d79325f::t_e0969826cc79c6 6,26-102
+apps/console/src/WaitlistPage.tsx
+  s_6347469d79325f::t_e0969826cc79c6 57-59,75
+packages/core/src/index.ts
+  s_6347469d79325f::t_e0969826cc79c6 3,6,9
+apps/console/public/.well-known/mcp/server-card.json
+  s_6347469d79325f::t_e0969826cc79c6 3,5
+apps/console/src/csp.test.ts
+  s_6347469d79325f::t_e0969826cc79c6 1-28
+apps/console/public/eventforge-mark.svg
+  s_6347469d79325f::t_e0969826cc79c6 1-7
+workfiles/STATUS.md
+  s_6347469d79325f::t_e0969826cc79c6 5-24,27-38,61-65
+apps/console/index.html
+  s_6347469d79325f::t_e0969826cc79c6 8,11-12,17,27,33
+apps/console/src/api.ts
+  s_6347469d79325f::t_e0969826cc79c6 87
+packages/core/src/issue-review.ts
+  s_6347469d79325f::t_e0969826cc79c6 1-84
+.gitleaks.toml
+  s_6347469d79325f::t_e0969826cc79c6 1-27
+apps/cloudflare/migrations/events/0002_durable_deliveries.sql
+  s_6347469d79325f::t_e0969826cc79c6 1-76
+apps/cloudflare/test/session-authority.test.ts
+  s_6347469d79325f::t_e0969826cc79c6 1-84
+packages/core/src/events.ts
+  s_6347469d79325f::t_e0969826cc79c6 279-286
+apps/control-plane/src/github-app.test.ts
+  s_6347469d79325f::t_e0969826cc79c6 1-279
+packages/mcp-server/src/oauth.ts
+  s_6347469d79325f::t_e0969826cc79c6 1-336
+pnpm-lock.yaml
+  s_6347469d79325f::t_1d9518e314b0b5 7-11,67,110,156,190-192,679-681,685-687,691-694,696-697,701-702,706-707,712-713,718-719,724-725,730-731,736-737,742-743,748-749,754-756,761-763,768-770,775-777,782-784,789-791,796-798,803-805,810-812,814-816,819-821,825-827,831-833,2255-2256,2258-2259,2297-2298,3618-3625,4654,4685,4690-4692,4713,4715,4718,4720,4723-4725,4728,4731,4734,4737,4740,4743,4746,4749,4752,4755,4758,4760,4763,4765,4768,4770,4773,4775,4778,4780,4783,4785,4788,4790,4793,4795,4798,4803,4805,4808,4811,4814,4877,4882,4892,5532,6489,6499,6501,6522,6558,7296,7299,7305,7977,7983-8008,8585,8591,8599
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "eb34a788574479e7318df4d7f5d174fedb7919fb",
+  "prompts": {},
+  "sessions": {
+    "s_6347469d79325f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "606ea3ce-1d91-44f4-8b15-0320cf36def3",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    },
+    "s_a429da96906584": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b93a75c8-61f8-434d-96df-51b2888466a4",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
