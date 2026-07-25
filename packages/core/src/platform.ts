@@ -92,7 +92,7 @@ export const CustomerKeyReferenceSchema = EnterpriseScope.extend({
 });
 export const AuditStreamEventSchema = EnterpriseScope.extend({
   id: Id,
-  // Audit rows are ordered per workspace and stored NOT NULL (004_enterprise_governance.sql),
+  // Audit rows are ordered per workspace and stored NOT NULL (005_enterprise_governance.sql),
   // so an event without a workspace is unstorable and must be rejected here.
   workspaceId: z.string().min(1),
   sequence: z.number().int().positive(),
