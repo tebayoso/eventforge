@@ -1,0 +1,21 @@
+packages/core/test/timeline.test.ts
+  s_dee68aa906dae0::t_08ddb61d1b046c 3,52,56,67,69
+packages/core/src/timeline.ts
+  s_dee68aa906dae0::t_08ddb61d1b046c 58,66,74,85
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "7b262309c74c7e5c7f297262ec007c3b7d239648",
+  "prompts": {},
+  "sessions": {
+    "s_dee68aa906dae0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6aefb2ec-9fc3-4ac6-832d-2b6793314ddf",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
