@@ -43,7 +43,7 @@ No test was weakened, skipped, or deleted; no coverage threshold was changed.
 
 ## Findings
 
-### 1. MEDIUM — Datadog `status` is not allowlisted, contradicting its own test
+### 1. MEDIUM — Datadog `status` is not allowlisted, contradicting its own test — FIXED in `8442699`
 
 `normalizeDatadogMonitorTransition` (`demand-sources.ts:87-107`) type-checks
 `transition.status` as a string and passes it straight into the returned durable
@@ -62,11 +62,16 @@ comment describes as deliberately narrow and redacted. Not reachable today (no
 caller), but this function is the designated sanitizer for that provider, so
 whatever wires Datadog ingress will trust it.
 
-Recommended: allowlist the discrete transition statuses the same way
-`supportedEventMatrix` allowlists event names, and rewrite the test to assert a
-non-allowlisted status is rejected. I did not apply this — which statuses belong
-in the set is a product decision on the provider contract, and step 3 of my
-dispatch was to report, not to change semantics on a security boundary.
+**Resolution (`8442699`):** a module-private
+`datadogMonitorTransitionStatuses` allowlist now admits only the discrete monitor
+states `OK`, `Alert`, `Warn`, `No Data`; anything else returns `undefined`,
+matching how the function already rejects malformed payloads rather than
+throwing. The public API is unchanged. The test now asserts each allowlisted
+status round-trips and that non-allowlisted values — including case and substring
+near-misses (`alert`, `ALERT`, `Alert `, `Alerting`, `No  Data`), the empty
+string, a script payload, and a 4096-character string — are rejected. Verified by
+mutation: with the allowlist line removed the test fails, admitting
+`status: "Triggered"` into the evidence record.
 
 ### 2. LOW — `establishProviderMapping` conflict check can miss a cross-workspace conflict
 
@@ -107,7 +112,7 @@ places. `supportedEventMatrix` got `as const satisfies`; the manifest got no
 equivalent runtime protection. Freezing the array and each record would make the
 fail-closed default tamper-evident.
 
-### 5. LOW — the fail-closed gate's discriminating cases are untested
+### 5. LOW — the fail-closed gate's discriminating cases are untested — MOSTLY FIXED in `8442699`
 
 `demand-sources.ts` reports 92.95% lines / **75% branches**. It passes only
 because `packages/core/vitest.config.ts` thresholds (90 lines / 85 branches) are
@@ -127,6 +132,20 @@ matter for this module's stated purpose:
 The three fail-closed claims STATUS.md makes for this module are asserted by
 prose and by test _names_, not verified by assertions.
 
+**Resolution (`8442699`):** `providerGateOpen`'s open path and each
+partial-evidence case are now covered — a fully-recorded manifest opens the gate,
+and dropping any single piece of evidence (`status`, `gateEvidence`, a missing or
+empty `approvalReference`) closes it, as does a record for a different provider
+and an empty manifest. The `tags`-absent fallback is covered incidentally by the
+new status tests. File coverage moved from 92.95% lines / 75% branches to
+**97.26% / 92%**.
+
+Still open: `establishProviderMapping`'s success path (`demand-sources.ts:73-74`,
+the sole remaining uncovered line) has no test asserting a properly attested,
+owner-confirmed, non-conflicting mapping is admitted, nor that re-mapping within
+the same workspace is allowed. Left deliberately — it belongs with finding #2,
+which rewrites that function's conflict check.
+
 ## Quality gate
 
 `pnpm install` then `pnpm quality` at repo root: **passes, exit 0** — format:check,
@@ -140,9 +159,17 @@ thresholds met as configured; none altered.
 module; it cannot change any existing runtime behavior, and the merge conflict was
 additive and resolved without dropping anything. Quality is green.
 
-Findings 1-5 should be tracked as follow-up on issue #10 rather than treated as
-merge blockers, since none is reachable while the module has no callers. Finding 1
-must be closed **before** any Datadog ingress is wired to
-`normalizeDatadogMonitorTransition`, and finding 5 should be closed alongside it —
-a fail-closed gate whose open path has never been executed is not yet
-demonstrated to be fail-closed.
+Findings 1 and 5 are now fixed in `8442699` (see each finding for detail).
+Findings 2, 3, and 4 remain tracked as follow-up on issue #10 rather than merge
+blockers, since none is reachable while the module has no callers. They should be
+closed before any provider ingress is wired to this module.
+
+**Known flake, unrelated to this branch:** `packages/mcp-server/test/http.test.ts`
+
+> "starts the local control plane when launched as the standalone HTTP package"
+> intermittently fails with `ECONNREFUSED` on an ephemeral port — the spawned
+> control plane is not always listening before the test fetches it. Observed once
+> during this work, then 3/3 passes in isolation and a clean full-gate run. It
+> cannot be caused by this branch (nothing consumes `demand-sources`), and it is not
+> fixed here; it is a pre-existing startup race worth its own issue, since it will
+> surface as random CI red.
