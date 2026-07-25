@@ -7,6 +7,7 @@ export * from "./events.js";
 export * from "./forge.js";
 export * from "./issue-review.js";
 export * from "./memory.js";
+export * from "./outcomes.js";
 export * from "./platform.js";
 export * from "./policy-packs.js";
 export * from "./replay-audit.js";
