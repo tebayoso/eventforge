@@ -1,5 +1,5 @@
 {
-  "name": "EventBridge",
+  "name": "EventForge",
   "version": "0.1.0",
   "description": "The operational control plane for every hook, from receipt to verified outcome.",
   "supportedInterfaces": [
@@ -15,7 +15,7 @@
   "skills": [
     {
       "id": "eventforge-operations",
-      "name": "EventBridge operations",
+      "name": "EventForge operations",
       "description": "Inspect verified webhook events and operate incidents within policy."
     }
   ]

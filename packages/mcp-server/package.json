@@ -57,6 +57,7 @@
     "@types/express": "^5.0.6",
     "esbuild": "^0.28.1",
     "tsx": "^4.20.3",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "@eventforge/core": "workspace:*"
   }
 }
