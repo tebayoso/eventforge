@@ -168,6 +168,21 @@ describe("governed SDK installation", () => {
     );
   });
 
+  it("fails closed when a publisher review carries an unparseable validity window", () => {
+    for (const expiresAt of ["not-a-date", "", "2027-13-45T00:00:00.000Z"]) {
+      expectDenied(
+        { ...validInstall, review: { ...review, expiresAt } },
+        "publisher-review-expired",
+      );
+    }
+    for (const reviewedAt of ["not-a-date", "", "2026-13-45T00:00:00.000Z"]) {
+      expectDenied(
+        { ...validInstall, review: { ...review, reviewedAt } },
+        "publisher-review-not-yet-valid",
+      );
+    }
+  });
+
   it("requires recent Owner MFA and approval of the exact digest", () => {
     expectDenied({ ...validInstall, ownerRecentMfa: false }, "owner-recent-mfa-required");
     expectDenied({ ...validInstall, exactDigestApproved: false }, "exact-digest-approval-required");
