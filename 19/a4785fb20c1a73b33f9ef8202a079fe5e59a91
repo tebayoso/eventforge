@@ -1,0 +1,19 @@
+workfiles/REVIEW_PR34_DEMAND_SOURCES.md
+  s_6347469d79325f::t_0e52e16fe2eac1 1-148
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "19a4785fb20c1a73b33f9ef8202a079fe5e59a91",
+  "prompts": {},
+  "sessions": {
+    "s_6347469d79325f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "606ea3ce-1d91-44f4-8b15-0320cf36def3",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
