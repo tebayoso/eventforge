@@ -27,13 +27,18 @@ export type EnterpriseServerScope = z.infer<typeof EnterpriseServerScopeSchema>;
 
 // Payloads deliberately cannot supply tenant, role, or MFA claims. Those arrive only
 // through the authenticated server context above.
-export const EnterpriseRequestSchema = z.object({ workspaceId: z.string().min(1).optional() }).strict();
+export const EnterpriseRequestSchema = z
+  .object({ workspaceId: z.string().min(1).optional() })
+  .strict();
 export function authorizeEnterpriseScope(serverScope: EnterpriseServerScope, payload: unknown) {
+  // The server context is a trust boundary too: an unvalidated or role-less actor context
+  // must fail closed rather than yield an authorized scope.
+  const scope = EnterpriseServerScopeSchema.parse(serverScope);
   const request = EnterpriseRequestSchema.parse(payload);
-  if (request.workspaceId && request.workspaceId !== serverScope.workspaceId) {
+  if (request.workspaceId && request.workspaceId !== scope.workspaceId) {
     throw new Error("workspace is not authorized for this enterprise context");
   }
-  return { enterpriseOrgId: serverScope.enterpriseOrgId, workspaceId: serverScope.workspaceId };
+  return { enterpriseOrgId: scope.enterpriseOrgId, workspaceId: scope.workspaceId };
 }
 
 export const FederationConfigSchema = EnterpriseScope.extend({
@@ -62,8 +67,10 @@ export const BreakGlassGrantSchema = EnterpriseScope.extend({
   expiresAt: Timestamp,
   createdAt: Timestamp,
 }).superRefine((value, ctx) => {
-  if (value.custodianIds[0] === value.custodianIds[1]) ctx.addIssue({ code: "custom", message: "two distinct custodians required" });
-  if (Date.parse(value.expiresAt) - Date.parse(value.createdAt) > 60 * 60 * 1000) ctx.addIssue({ code: "custom", message: "break-glass grants last at most 60 minutes" });
+  if (value.custodianIds[0] === value.custodianIds[1])
+    ctx.addIssue({ code: "custom", message: "two distinct custodians required" });
+  if (Date.parse(value.expiresAt) - Date.parse(value.createdAt) > 60 * 60 * 1000)
+    ctx.addIssue({ code: "custom", message: "break-glass grants last at most 60 minutes" });
 });
 export const LegalHoldSchema = EnterpriseScope.extend({
   id: Id,
@@ -85,6 +92,9 @@ export const CustomerKeyReferenceSchema = EnterpriseScope.extend({
 });
 export const AuditStreamEventSchema = EnterpriseScope.extend({
   id: Id,
+  // Audit rows are ordered per workspace and stored NOT NULL (004_enterprise_governance.sql),
+  // so an event without a workspace is unstorable and must be rejected here.
+  workspaceId: z.string().min(1),
   sequence: z.number().int().positive(),
   eventType: z.string().min(1),
   actorId: z.string().min(1),
