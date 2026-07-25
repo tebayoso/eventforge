@@ -19,6 +19,37 @@ demo runner, and listen only on loopback. Production or hosted operation must
 provide authentication, TLS, workspace scoping, and a separately managed
 provider secret boundary.
 
+## Hosted GitHub App boundary
+
+Hosted GitHub App ingress is disabled by default. Enabling the bounded hosted
+path requires all of the following:
+
+- `EVENTFORGE_GITHUB_APP_ENABLED=true`
+- `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`, and `GITHUB_WEBHOOK_SECRET`
+- a server-side installation registry injected into the control plane
+
+The boundary accepts only signed GitHub Cloud `check_run`, `issues`, and
+`pull_request` deliveries with a delivery identifier. Installation and
+repository claims are checked against the attested server-side mapping before
+tenant data is created.
+
+Installations require:
+
+- an Owner/Admin MFA session and ten-minute single-use state nonce
+- explicit confirmation after every installation or reinstallation
+- exact read-only Checks, Issues, and Pull requests permissions
+- a workspace retention-policy link that remains after uninstall
+
+Suspended, removed, unconfirmed, out-of-scope, and archived repositories cannot
+create an investigation. GitHub text and logs remain untrusted evidence, and the
+hosted path cannot create a GitHub write proposal. Local GitHub relay operation
+remains credential-free and unchanged.
+
+This switch is a fail-closed foundation gate, not a production-readiness claim.
+Keep it disabled until the durable installation store, GitHub API attestor,
+callback/confirmation routes, lifecycle reconciliation, credential cleanup,
+support runbook, and security release gates are complete.
+
 ## Zero-checkout stdio (recommended)
 
 Requirements: Node.js 20.11 or newer and a Codex CLI with MCP support.
@@ -147,7 +178,12 @@ disable this check to expose a local process to the internet.
 ## Remote Streamable HTTP
 
 For a hosted or private deployment, the MCP URL must be HTTPS and terminate at
-an OAuth-aware proxy or EventForge's OAuth 2.1 authorization layer:
+EventForge's OAuth 2.1 authorization layer. P0 supports only provisioned
+first-party Codex clients using Authorization Code + S256 PKCE. The only OAuth
+scopes are `eventforge:read` (events and workflow state) and
+`eventforge:review` (investigation/proposal details); neither permits actions,
+approvals, installation, or connector changes. OAuth establishes visibility and
+never replaces policy or approval checks.
 
 ```bash
 codex mcp add eventforge-remote --url https://mcp.example.com/mcp
@@ -165,17 +201,16 @@ tool_timeout_sec = 60
 default_tools_approval_mode = "writes"
 ```
 
-If the host administrator gives you a short-lived bearer token instead:
-
-```toml
-[mcp_servers.eventforge_remote]
-url = "https://mcp.example.com/mcp"
-bearer_token_env_var = "EVENTFORGE_MCP_TOKEN"
-default_tools_approval_mode = "writes"
-```
-
 The public `eventforge.dev` console and API are not interchangeable with an
 MCP endpoint. The URL must point to a server exposing the MCP `/mcp` route.
+
+Remote production remains disabled until a durable grant repository, the live
+session/token authority, security testing, and deployment configuration are
+complete. Refresh-token compromise response: revoke the affected client grant
+family for that workspace, remove/role-reduce the member if appropriate, and
+review the tenant-scoped `refresh_reuse` security event. DPoP is deferred, so
+bearer-token replay remains a documented residual risk. An external penetration
+test is a release gate before enabling remote MCP.
 
 ## Environment variable reference
 
@@ -225,9 +260,10 @@ limit. Emails are stored in the production `eventforge-control` D1 database;
 payloads are never accepted by this route.
 
 Production is configured through the public runtime file
-`apps/console/public/analytics-config.json` (these are not secret credentials).
-For a different project or preview environment, override the values at build
-time:
+`apps/console/public/analytics-config.json`, with the GA4 fallback tracked in
+`apps/console/.env.production` so every production build remains tagged. These
+are public project identifiers, not secret credentials. For a different project
+or preview environment, override the values before building the console:
 
 ```bash
 export VITE_POSTHOG_KEY="phc_..."
@@ -236,11 +272,12 @@ export VITE_GA_MEASUREMENT_ID="G-XXXXXXXXXX"
 pnpm --filter @eventforge/console deploy:cloudflare
 ```
 
-EventBridge emits anonymous `page_view`, `waitlist_submit_started`,
+EventForge emits anonymous `page_view`, `waitlist_submit_started`,
 `waitlist_submitted`, and `waitlist_submit_failed` events. Email addresses and
 form payloads are never sent to PostHog or Google Analytics. Create the
 PostHog project and GA4 web stream in their respective accounts, then update
-the public runtime IDs; do not put private credentials in the bundle.
+the public runtime IDs or provide replacement build-time IDs. Keep all private
+credentials outside source control and the browser bundle.
 
 The API worker's D1 migration and rate-limit secret are provisioned with:
 
