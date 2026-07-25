@@ -54,9 +54,9 @@ export default function WaitlistPage() {
     <main className="ef-waitlist-page">
       <div className="ef-grain" aria-hidden="true" />
       <header className="ef-waitlist-header">
-        <a className="ef-brand" href="/" aria-label="Return to EventBridge home">
-          <img className="ef-mark" src="/eventbridge-mark.svg" alt="" aria-hidden="true" />
-          <span>EventBridge</span>
+        <a className="ef-brand" href="/" aria-label="Return to EventForge home">
+          <img className="ef-mark" src="/eventforge-mark.svg" alt="" aria-hidden="true" />
+          <span>EventForge</span>
         </a>
         <a className="ef-waitlist-back" href="/">
           <ArrowLeft size={15} /> Back home
@@ -72,7 +72,7 @@ export default function WaitlistPage() {
           <em>under one roof.</em>
         </h1>
         <p>
-          Join the quiet list for early access to EventBridge: verified ingress, outcome-aware
+          Join the quiet list for early access to EventForge: verified ingress, outcome-aware
           monitoring, replay, and carefully bounded reactions.
         </p>
         <form className="ef-waitlist-form" onSubmit={submit} noValidate>
