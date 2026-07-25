@@ -82,7 +82,9 @@ const hex = (bytes: Uint8Array) =>
   [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 export async function timelineIntegrityHash(value: unknown): Promise<string> {
   return hex(
-    new Uint8Array(await crypto.subtle.digest("SHA-256", encoder.encode(canonicalRfc8785Json(value)))),
+    new Uint8Array(
+      await crypto.subtle.digest("SHA-256", encoder.encode(canonicalRfc8785Json(value))),
+    ),
   );
 }
 

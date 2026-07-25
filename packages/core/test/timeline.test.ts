@@ -53,7 +53,9 @@ describe("timeline foundation", () => {
 
   it("orders keys by UTF-16 code unit as RFC 8785 requires, not by collation", () => {
     // Locale collation orders these as _, a, A, b, Z; RFC 8785 mandates code-unit order.
-    expect(canonicalRfc8785Json({ b: 1, A: 2, _: 3, Z: 4, a: 5 })).toBe('{"A":2,"Z":4,"_":3,"a":5,"b":1}');
+    expect(canonicalRfc8785Json({ b: 1, A: 2, _: 3, Z: 4, a: 5 })).toBe(
+      '{"A":2,"Z":4,"_":3,"a":5,"b":1}',
+    );
   });
 
   it("produces insertion-order-independent bytes for collation-equal keys", () => {
@@ -64,7 +66,9 @@ describe("timeline foundation", () => {
     const nfd = "e" + String.fromCharCode(0x0301);
     expect(nfc).not.toBe(nfd);
     expect(nfc.localeCompare(nfd)).toBe(0);
-    expect(canonicalRfc8785Json({ [nfc]: 1, [nfd]: 2 })).toBe(canonicalRfc8785Json({ [nfd]: 2, [nfc]: 1 }));
+    expect(canonicalRfc8785Json({ [nfc]: 1, [nfd]: 2 })).toBe(
+      canonicalRfc8785Json({ [nfd]: 2, [nfc]: 1 }),
+    );
     // Code-unit order puts the decomposed form first because 0x65 < 0xe9.
     expect(canonicalRfc8785Json({ [nfc]: 1, [nfd]: 2 })).toBe(
       `{${JSON.stringify(nfd)}:2,${JSON.stringify(nfc)}:1}`,
