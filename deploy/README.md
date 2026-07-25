@@ -118,3 +118,40 @@ Add the other provider and storage values from the table to the runtime secret b
 3. Open `https://eventforge.dev`, verify the browser uses `https://api.eventforge.dev`, and check that an origin other than `https://eventforge.dev` receives no CORS allow header.
 4. Configure each provider webhook at `https://hooks.eventforge.dev/webhooks/<provider>` with its matching signing secret. Send a signed test delivery and verify EventForge returns `202`, stores a `verified` event, and creates no automatic write.
 5. Verify `https://www.eventforge.dev/...` returns a single permanent redirect to the apex, then re-run the console/API checks.
+
+## Pre-production: beta.eventforge.dev
+
+The release-candidate console is deployed as a **separate Worker**
+(`eventforge-console-beta`) so it can never take traffic from the apex domain.
+
+```bash
+pnpm --filter @eventforge/console deploy:beta   # build --mode beta + wrangler deploy --env beta
+```
+
+Analytics are disabled on beta. `apps/console/.env.beta` blanks
+`VITE_GA_MEASUREMENT_ID` and `VITE_POSTHOG_KEY`, and both providers are gated on a
+non-empty key in `src/analytics.ts`, so beta sessions stay out of the production
+GA4 property and PostHog project. Verified after deploy: the production
+measurement ID appears 0 times in the beta bundle and once in the production one.
+
+Note `/console` returns 503 ("sign-in required") on beta **and** production. That
+is the intended fail-closed state while hosted auth is unwired, not a beta defect.
+
+### What a beta console deploy does and does not cover
+
+The console is a static SPA that does not import `@eventforge/core`, so deploying it
+exercises the site build only. To exercise the shared runtime code, deploy the
+Worker, which bundles `@eventforge/core`:
+
+```bash
+cd apps/cloudflare && wrangler deploy      # -> eventforge-cloud-preview
+curl -s https://eventforge-cloud-preview.jorge-b9f.workers.dev/health
+```
+
+A healthy `{"ok":true,...}` there is the signal that the core barrel imports
+cleanly under workerd — the failure mode where a module throws at load and takes
+every importer down with it.
+
+The Node control-plane is not a Cloudflare target; it deploys via Docker/Helm and
+needs `pnpm --filter @eventforge/control-plane migrate` run against its Postgres
+first (see `workfiles/MIGRATIONS.md`, and note the pgvector prerequisite).
