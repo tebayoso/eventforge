@@ -50,7 +50,7 @@ export const ReactionEnvelopeSchema = z.object({
 });
 export type ReactionEnvelope = z.infer<typeof ReactionEnvelopeSchema>;
 
-export type Approval = Pick<
+export type ReactionApproval = Pick<
   ReactionEnvelope,
   "approvalId" | "approvalVersion" | "approverId" | "expiresAt" | "hash"
 > & {
@@ -114,7 +114,7 @@ export function createReactionEnvelope(input: Omit<ReactionEnvelope, "hash">): R
 /** A transaction adapter must make reservation and budget/concurrency consumption atomic. */
 export function reserveReaction(input: {
   envelope: ReactionEnvelope;
-  approval: Approval | undefined;
+  approval: ReactionApproval | undefined;
   authority: ReactionAuthority | undefined;
   now: Date;
 }): Reservation {

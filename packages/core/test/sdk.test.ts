@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  ConnectorManifestSchema,
+  ConnectorPackageManifestSchema,
   PublisherApplicationSchema,
   canInstall,
   canRunDuringMarketplaceOutage,
@@ -15,7 +15,7 @@ import {
 const NOW = new Date("2026-07-22T12:00:00.000Z");
 const digest = (character: string) => `sha256:${character.repeat(64)}`;
 
-const manifest = ConnectorManifestSchema.parse({
+const manifest = ConnectorPackageManifestSchema.parse({
   sdkSchemaVersion: "1",
   packageId: "acme.github",
   version: "1.0.0",
@@ -256,7 +256,7 @@ describe("governed SDK installation", () => {
 
 describe("manifest validation and consent", () => {
   it("treats reordered set-like scope and capability arrays as equivalent", () => {
-    const previous = ConnectorManifestSchema.parse({
+    const previous = ConnectorPackageManifestSchema.parse({
       ...manifest,
       capabilities: ["source.ingest.v1", "context.read.v1"],
       capabilityVersions: {
@@ -270,7 +270,7 @@ describe("manifest validation and consent", () => {
         secrets: ["github-app", "github-webhook"],
       },
     });
-    const reordered = ConnectorManifestSchema.parse({
+    const reordered = ConnectorPackageManifestSchema.parse({
       ...previous,
       capabilities: ["context.read.v1", "source.ingest.v1"],
       scope: {
@@ -312,7 +312,7 @@ describe("manifest validation and consent", () => {
     ["unbounded sentinel", "ALL"],
   ])("rejects %s scope entries without assuming a provider resource grammar", (_, entry) => {
     expect(
-      ConnectorManifestSchema.safeParse({
+      ConnectorPackageManifestSchema.safeParse({
         ...manifest,
         scope: { ...manifest.scope, resources: [entry] },
       }).success,
@@ -322,7 +322,7 @@ describe("manifest validation and consent", () => {
   it("accepts bounded retention endpoints and rejects malformed or excessive retention", () => {
     for (const retention of ["0d", "3650d"]) {
       expect(
-        ConnectorManifestSchema.safeParse({
+        ConnectorPackageManifestSchema.safeParse({
           ...manifest,
           dataHandling: { ...manifest.dataHandling, retention },
         }).success,
@@ -330,7 +330,7 @@ describe("manifest validation and consent", () => {
     }
     for (const retention of ["-1d", "01d", "3651d", "forever"]) {
       expect(
-        ConnectorManifestSchema.safeParse({
+        ConnectorPackageManifestSchema.safeParse({
           ...manifest,
           dataHandling: { ...manifest.dataHandling, retention },
         }).success,
@@ -340,13 +340,13 @@ describe("manifest validation and consent", () => {
 
   it("requires capabilityVersions to exactly match declared capabilities", () => {
     expect(
-      ConnectorManifestSchema.safeParse({
+      ConnectorPackageManifestSchema.safeParse({
         ...manifest,
         capabilityVersions: {},
       }).success,
     ).toBe(false);
     expect(
-      ConnectorManifestSchema.safeParse({
+      ConnectorPackageManifestSchema.safeParse({
         ...manifest,
         capabilityVersions: {
           "source.ingest.v1": "1",
@@ -358,13 +358,13 @@ describe("manifest validation and consent", () => {
 
   it("rejects a minimum core version above the maximum", () => {
     expect(
-      ConnectorManifestSchema.safeParse({
+      ConnectorPackageManifestSchema.safeParse({
         ...manifest,
         eventforge: { min: "2.0.0", max: "1.10.0" },
       }).success,
     ).toBe(false);
     expect(
-      ConnectorManifestSchema.safeParse({
+      ConnectorPackageManifestSchema.safeParse({
         ...manifest,
         eventforge: { min: "1.10.0", max: "2.0.0" },
       }).success,
