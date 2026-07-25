@@ -10,7 +10,10 @@ it("renders the public product story and working console entrypoint", () => {
   const root = createRoot(container);
   act(() => root.render(<LandingPage />));
   expect(container.querySelector<HTMLAnchorElement>('a[href="/console"]')).not.toBeNull();
-  expect(container.textContent).toContain("EventBridge");
+  expect(container.textContent).toContain("EventForge");
+  expect(
+    container.querySelector<HTMLImageElement>('img[src="/eventforge-mark.svg"]'),
+  ).not.toBeNull();
   expect(container.textContent).toContain("Agents start with context");
   expect(container.textContent).toContain("Verified ingress");
   expect(container.textContent).toContain("Free to prove.");
