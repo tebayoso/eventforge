@@ -44,7 +44,7 @@ const RECENT_MFA_WINDOW_MS = 15 * 60 * 1000;
 
 type IntegrationBinding = {
   provider: Exclude<Provider, "custom">;
-  installationKey?: string;
+  installationKey: string;
   repository?: string;
   workspaceId: string;
   projectId: string;
@@ -671,7 +671,7 @@ export async function createApp(options: AppOptions = {}): Promise<FastifyInstan
         : options.integrations?.find(
             (item) =>
               item.provider === provider.data &&
-              (!item.installationKey || item.installationKey === verification.installationKey),
+              item.installationKey === verification.installationKey,
           );
     const githubRepository = githubRepositoryName(payload);
     let githubInstallation: GitHubInstallation | undefined;
