@@ -276,6 +276,14 @@ export function isGitHubIssueOpened(event: EventEnvelope): boolean {
   );
 }
 
+export function isGitHubIssueEvent(event: EventEnvelope): boolean {
+  return (
+    event.provider === "github" &&
+    ["issues", "issue_comment"].includes(event.topic) &&
+    typeof event.payload.issue === "object"
+  );
+}
+
 const GITHUB_PULL_REQUEST_REVIEW_ACTIONS = new Set(["opened", "reopened", "synchronize"]);
 
 export function isGitHubPullRequestReviewEvent(event: EventEnvelope): boolean {
