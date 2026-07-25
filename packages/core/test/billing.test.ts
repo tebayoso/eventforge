@@ -6,6 +6,7 @@ import {
   hostedBillingStatus,
   selectCurrentEntitlement,
   stableBillingIdentity,
+  STRIPE_WEBHOOK_TOLERANCE_SECONDS,
   verifyStripeWebhook,
 } from "../src/index.js";
 
@@ -95,12 +96,16 @@ describe("billing and entitlements", () => {
       .update(`${timestamp}.`)
       .update(raw)
       .digest("hex");
-    expect(verifyStripeWebhook(raw, `t=${timestamp},v1=${signature}`, "whsec_test")).toBe(true);
+    const fresh = { nowSeconds: Number(timestamp) };
+    expect(verifyStripeWebhook(raw, `t=${timestamp},v1=${signature}`, "whsec_test", fresh)).toBe(
+      true,
+    );
     expect(
       verifyStripeWebhook(
         Buffer.from('{"id":"evt_2"}'),
         `t=${timestamp},v1=${signature}`,
         "whsec_test",
+        fresh,
       ),
     ).toBe(false);
   });
@@ -190,16 +195,105 @@ describe("billing and entitlements", () => {
   });
   it("rejects absent, malformed, and wrong-length Stripe signature headers", () => {
     const raw = Buffer.from('{"id":"evt_1"}');
-    expect(verifyStripeWebhook(raw, undefined, "whsec_test")).toBe(false);
-    expect(verifyStripeWebhook(raw, "", "whsec_test")).toBe(false);
-    expect(verifyStripeWebhook(raw, "t=1721600000", "whsec_test")).toBe(false);
-    expect(verifyStripeWebhook(raw, "v1=deadbeef", "whsec_test")).toBe(false);
-    expect(verifyStripeWebhook(raw, "t=1721600000,v1=ab", "whsec_test")).toBe(false);
     const timestamp = "1721600000";
+    const fresh = { nowSeconds: Number(timestamp) };
+    expect(verifyStripeWebhook(raw, undefined, "whsec_test", fresh)).toBe(false);
+    expect(verifyStripeWebhook(raw, "", "whsec_test", fresh)).toBe(false);
+    expect(verifyStripeWebhook(raw, `t=${timestamp}`, "whsec_test", fresh)).toBe(false);
+    expect(verifyStripeWebhook(raw, "v1=deadbeef", "whsec_test", fresh)).toBe(false);
+    expect(verifyStripeWebhook(raw, `t=${timestamp},v1=ab`, "whsec_test", fresh)).toBe(false);
+    expect(verifyStripeWebhook(raw, `t=not-a-number,v1=deadbeef`, "whsec_test", fresh)).toBe(false);
     const otherSecret = createHmac("sha256", "whsec_other")
       .update(`${timestamp}.`)
       .update(raw)
       .digest("hex");
-    expect(verifyStripeWebhook(raw, `t=${timestamp},v1=${otherSecret}`, "whsec_test")).toBe(false);
+    expect(verifyStripeWebhook(raw, `t=${timestamp},v1=${otherSecret}`, "whsec_test", fresh)).toBe(
+      false,
+    );
+  });
+  it("denies reactions and expansion during a provider outage even on an active entitlement", () => {
+    for (const state of ["active", "trialing", "grace"] as const) {
+      for (const action of ["reaction", "expand", "investigate", "change_billing"] as const) {
+        expect(
+          billingDecision({ state, outageHours: 400, action, withinPriorQuota: true }),
+        ).toMatchObject({
+          allowed: false,
+          reason:
+            "Provider outage permits only previously verified read access for up to 24 hours.",
+        });
+      }
+      expect(billingDecision({ state, outageHours: 4, action: "read" }).allowed).toBe(true);
+      expect(billingDecision({ state, outageHours: 25, action: "read" }).allowed).toBe(false);
+    }
+  });
+  it("ignores entitlement versions the provider schema cannot validate", () => {
+    const base = {
+      workspaceId: "w",
+      catalogVersion: "v",
+      observedAt: "2026-07-01T00:00:00.000Z",
+      effectiveFrom: "2026-07-01T00:00:00.000Z",
+      stripeCustomerHash: "c",
+    };
+    const cancelled = {
+      ...base,
+      state: "cancelled" as const,
+      providerEventId: "evt_cancelled",
+      providerCreatedAt: "2026-07-09T00:00:00.000Z",
+    };
+    expect(
+      selectCurrentEntitlement([
+        cancelled,
+        {
+          ...base,
+          state: "active",
+          providerEventId: "evt_garbage",
+          providerCreatedAt: "not-a-date",
+        },
+      ])?.providerEventId,
+    ).toBe("evt_cancelled");
+    expect(
+      selectCurrentEntitlement([
+        cancelled,
+        {
+          ...base,
+          state: "totally_paid" as unknown as "active",
+          providerEventId: "evt_bad_state",
+          providerCreatedAt: "2026-07-20T00:00:00.000Z",
+        },
+      ])?.providerEventId,
+    ).toBe("evt_cancelled");
+    expect(
+      selectCurrentEntitlement([
+        { ...base, state: "active", providerEventId: "evt_only", providerCreatedAt: "not-a-date" },
+      ]),
+    ).toBeUndefined();
+  });
+  it("rejects a correctly signed webhook whose timestamp is outside the replay tolerance", () => {
+    const raw = Buffer.from('{"id":"evt_1"}');
+    const timestamp = "1721600000";
+    const signature = createHmac("sha256", "whsec_test")
+      .update(`${timestamp}.`)
+      .update(raw)
+      .digest("hex");
+    const header = `t=${timestamp},v1=${signature}`;
+    const issuedAt = Number(timestamp);
+    expect(STRIPE_WEBHOOK_TOLERANCE_SECONDS).toBe(300);
+    expect(verifyStripeWebhook(raw, header, "whsec_test", { nowSeconds: issuedAt })).toBe(true);
+    expect(
+      verifyStripeWebhook(raw, header, "whsec_test", {
+        nowSeconds: issuedAt + STRIPE_WEBHOOK_TOLERANCE_SECONDS,
+      }),
+    ).toBe(true);
+    expect(
+      verifyStripeWebhook(raw, header, "whsec_test", {
+        nowSeconds: issuedAt + STRIPE_WEBHOOK_TOLERANCE_SECONDS + 1,
+      }),
+    ).toBe(false);
+    expect(
+      verifyStripeWebhook(raw, header, "whsec_test", {
+        nowSeconds: issuedAt - STRIPE_WEBHOOK_TOLERANCE_SECONDS - 1,
+      }),
+    ).toBe(false);
+    expect(verifyStripeWebhook(raw, header, "whsec_test")).toBe(false);
   });
 });

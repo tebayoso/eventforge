@@ -65,19 +65,21 @@ export function hostedBillingStatus(config: BillingConfig): { enabled: boolean; 
   return { enabled: true };
 }
 
-export type EntitlementVersion = {
-  workspaceId: string;
-  catalogVersion: string;
-  state: BillingState;
-  plan?: BillingPlan;
-  providerEventId: string;
-  providerCreatedAt: string;
-  observedAt: string;
-  effectiveFrom: string;
-  effectiveUntil?: string;
-  stripeCustomerHash: string;
-  stripeSubscriptionHash?: string;
-};
+const Timestamp = z.string().datetime();
+export const EntitlementVersionSchema = z.object({
+  workspaceId: z.string().min(1),
+  catalogVersion: z.string().min(1),
+  state: BillingStateSchema,
+  plan: BillingPlanSchema.optional(),
+  providerEventId: z.string().min(1),
+  providerCreatedAt: Timestamp,
+  observedAt: Timestamp,
+  effectiveFrom: Timestamp,
+  effectiveUntil: Timestamp.optional(),
+  stripeCustomerHash: z.string().min(1),
+  stripeSubscriptionHash: z.string().min(1).optional(),
+});
+export type EntitlementVersion = z.infer<typeof EntitlementVersionSchema>;
 
 const precedence: Record<BillingState, number> = {
   none: 0,
@@ -93,12 +95,14 @@ const precedence: Record<BillingState, number> = {
 export function selectCurrentEntitlement(
   versions: EntitlementVersion[],
 ): EntitlementVersion | undefined {
-  return [...versions].sort(
-    (a, b) =>
-      Date.parse(b.providerCreatedAt) - Date.parse(a.providerCreatedAt) ||
-      precedence[b.state] - precedence[a.state] ||
-      b.providerEventId.localeCompare(a.providerEventId),
-  )[0];
+  return versions
+    .filter((version) => EntitlementVersionSchema.safeParse(version).success)
+    .sort(
+      (a, b) =>
+        Date.parse(b.providerCreatedAt) - Date.parse(a.providerCreatedAt) ||
+        precedence[b.state] - precedence[a.state] ||
+        b.providerEventId.localeCompare(a.providerEventId),
+    )[0];
 }
 
 export function billingDecision(input: {
@@ -107,6 +111,11 @@ export function billingDecision(input: {
   action: "read" | "investigate" | "reaction" | "change_billing" | "expand";
   withinPriorQuota?: boolean;
 }): { allowed: boolean; reason: string } {
+  if (input.outageHours !== undefined)
+    return {
+      allowed: input.outageHours <= 24 && input.action === "read",
+      reason: "Provider outage permits only previously verified read access for up to 24 hours.",
+    };
   if (input.state === "active" || input.state === "trialing")
     return {
       allowed: input.action !== "reaction" || input.state === "active",
@@ -123,21 +132,19 @@ export function billingDecision(input: {
       reason:
         "Grace preserves reads and prior-quota investigations only; reactions, expansion, and billing changes are denied.",
     };
-  if (input.outageHours !== undefined)
-    return {
-      allowed: input.outageHours <= 24 && input.action === "read",
-      reason: "Provider outage permits only previously verified read access for up to 24 hours.",
-    };
   return {
     allowed: input.action === "read",
     reason: "Hosted work is suspended; evidence access is preserved.",
   };
 }
 
+export const STRIPE_WEBHOOK_TOLERANCE_SECONDS = 300;
+
 export function verifyStripeWebhook(
   rawBody: Buffer,
   signature: string | undefined,
   secret: string,
+  options?: { toleranceSeconds?: number; nowSeconds?: number },
 ): boolean {
   if (!signature) return false;
   const timestamp = signature
@@ -149,6 +156,11 @@ export function verifyStripeWebhook(
     .find((part) => part.startsWith("v1="))
     ?.slice(3);
   if (!timestamp || !value) return false;
+  const issuedAt = Number(timestamp);
+  const nowSeconds = options?.nowSeconds ?? Math.floor(Date.now() / 1000);
+  const toleranceSeconds = options?.toleranceSeconds ?? STRIPE_WEBHOOK_TOLERANCE_SECONDS;
+  if (!Number.isFinite(issuedAt) || Math.abs(nowSeconds - issuedAt) > toleranceSeconds)
+    return false;
   const expected = createHmac("sha256", secret)
     .update(`${timestamp}.`)
     .update(rawBody)
