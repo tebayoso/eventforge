@@ -55,7 +55,7 @@ export const TimelineExportSchema = Scope.extend({
 export type TimelineExport = z.infer<typeof TimelineExportSchema>;
 
 /** RFC 8785-compatible for the JSON values accepted by timeline manifests. */
-export function canonicalJson(value: unknown): string {
+export function canonicalRfc8785Json(value: unknown): string {
   if (value === null || typeof value === "boolean") return JSON.stringify(value);
   if (typeof value === "string") return JSON.stringify(value);
   if (typeof value === "number") {
@@ -63,7 +63,7 @@ export function canonicalJson(value: unknown): string {
       throw new TypeError("Canonical JSON does not allow non-finite numbers.");
     return JSON.stringify(value);
   }
-  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
+  if (Array.isArray(value)) return `[${value.map(canonicalRfc8785Json).join(",")}]`;
   if (typeof value === "object") {
     // RFC 8785 orders members by UTF-16 code unit, which is what `<` compares.
     // localeCompare must not be used here: it is ICU/locale dependent and reports
@@ -71,7 +71,7 @@ export function canonicalJson(value: unknown): string {
     // depend on key insertion order and break integrity verification.
     return `{${Object.entries(value as Record<string, unknown>)
       .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-      .map(([key, item]) => `${JSON.stringify(key)}:${canonicalJson(item)}`)
+      .map(([key, item]) => `${JSON.stringify(key)}:${canonicalRfc8785Json(item)}`)
       .join(",")}}`;
   }
   throw new TypeError("Canonical JSON only permits JSON values.");
@@ -82,7 +82,7 @@ const hex = (bytes: Uint8Array) =>
   [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 export async function timelineIntegrityHash(value: unknown): Promise<string> {
   return hex(
-    new Uint8Array(await crypto.subtle.digest("SHA-256", encoder.encode(canonicalJson(value)))),
+    new Uint8Array(await crypto.subtle.digest("SHA-256", encoder.encode(canonicalRfc8785Json(value)))),
   );
 }
 
