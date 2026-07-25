@@ -20,17 +20,20 @@ import {
   untrustedEventGuard,
   verifyBareHmac,
   verifyHmac,
+} from "../src/index.js";
+import { projectOutcomeMetrics, unknownAging } from "../src/outcomes.js";
+import {
   canonicalPolicyPackManifest,
   policyPackManifestDigest,
   simulatePolicy,
   verifyPackImport,
-  projectOutcomeMetrics,
-  unknownAging,
+} from "../src/policy-packs.js";
+import {
   deterministicSample,
   projectSafeSpan,
   validateOtlpHttpEndpoint,
   workspacePseudonym,
-} from "../src/index.js";
+} from "../src/telemetry.js";
 import { POLICY_EVALUATOR_VERSION } from "../src/workflows.js";
 import type { PolicyPackManifest, PolicyRequest } from "../src/contracts.js";
 

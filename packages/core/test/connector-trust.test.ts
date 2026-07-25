@@ -1,7 +1,6 @@
 import { generateKeyPairSync } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import {
-  type ConnectorSubjects,
   DenySandboxProvider,
   approvalEligible,
   canonicalJson,
@@ -10,9 +9,11 @@ import {
   manifestDigest,
   sha256,
   signManifest,
+  type ConnectorSubjects,
+  type Signer,
   validationGate,
   verifyEnvelope,
-} from "../src/index.js";
+} from "../src/connector-trust.js";
 
 const keys = generateKeyPairSync("ed25519");
 const subjects = Object.fromEntries(
@@ -34,7 +35,7 @@ const manifest = createManifest({
   expiresAt: "2030-01-01T00:00:00.000Z",
   signerKeyId: "key-1",
 });
-const signers = new Map([
+const signers = new Map<string, Signer>([
   [
     "key-1",
     {

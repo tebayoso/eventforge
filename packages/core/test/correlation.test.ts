@@ -3,7 +3,7 @@ import {
   CorrelationConfigSchema,
   CorrelationEventSchema,
   evaluateCorrelation,
-} from "../src/index.js";
+} from "../src/platform.js";
 
 const now = "2026-07-22T12:00:00.000Z";
 const config = CorrelationConfigSchema.parse({

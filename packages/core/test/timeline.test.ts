@@ -3,11 +3,11 @@ import {
   canonicalRfc8785Json,
   redactTimelineEntry,
   renderTimelineHtml,
-  type TimelineEntry,
   timelineIntegrityHash,
   timelineManifest,
+  type TimelineEntry,
   verifyTimelineArtifact,
-} from "../src/index.js";
+} from "../src/timeline.js";
 
 const entry = {
   id: "00000000-0000-4000-8000-000000000001",

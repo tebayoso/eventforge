@@ -6,7 +6,7 @@ import {
   safeNotificationText,
   type NotificationInput,
   type NotificationRoute,
-} from "../src/index.js";
+} from "../src/notifications.js";
 
 const input: NotificationInput = {
   eventId: "00000000-0000-4000-8000-000000000023",

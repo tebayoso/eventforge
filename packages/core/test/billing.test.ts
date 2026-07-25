@@ -2,13 +2,13 @@ import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import {
   BILLING_CATALOG,
+  STRIPE_WEBHOOK_TOLERANCE_SECONDS,
   billingDecision,
   hostedBillingStatus,
   selectCurrentEntitlement,
   stableBillingIdentity,
-  STRIPE_WEBHOOK_TOLERANCE_SECONDS,
   verifyStripeWebhook,
-} from "../src/index.js";
+} from "../src/billing.js";
 
 describe("billing and entitlements", () => {
   it("uses the fixed Team and Business outcome catalog", () => {
