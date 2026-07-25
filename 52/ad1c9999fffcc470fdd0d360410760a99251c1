@@ -1,0 +1,21 @@
+apps/control-plane/src/operational-readiness.ts
+  s_e3446811ef1f5f::t_bcbc154d7d7f09 181-183
+apps/control-plane/test/operational-readiness.test.ts
+  s_e3446811ef1f5f::t_d5834249435f5c 111,114
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "52ad1c9999fffcc470fdd0d360410760a99251c1",
+  "prompts": {},
+  "sessions": {
+    "s_e3446811ef1f5f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9d4bb017-c3ba-4234-88c6-31c18d1e461e",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
