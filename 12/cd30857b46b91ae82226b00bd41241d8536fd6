@@ -1,0 +1,42 @@
+.github/workflows/quality.yml
+  s_36f0af211e80cf::t_17d17cfb115a15 86-87
+  s_dfe24ee9777262::t_d26c806f9506ee 84
+package.json
+  s_5207ae3a5d7341::t_0a73b6a64ab284 29
+scripts/private-edge-preflight.mjs
+  s_36f0af211e80cf::t_345b97677201d4 5-24,29-41,46-48,51-53,58-62
+scripts/private-edge-preflight.test.mjs
+  s_36f0af211e80cf::t_ea0af1e1c579ba 3-5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "12cd30857b46b91ae82226b00bd41241d8536fd6",
+  "prompts": {},
+  "sessions": {
+    "s_36f0af211e80cf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "53dbc588-9d2a-412c-ba66-4c32c2a35939",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    },
+    "s_5207ae3a5d7341": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4b50b828-4b4a-4571-84e7-a003c33447fc",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    },
+    "s_dfe24ee9777262": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9c5e67eb-9ec1-4058-b4a0-5f2e23f174e4",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
