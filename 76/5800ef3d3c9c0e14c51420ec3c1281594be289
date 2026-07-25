@@ -1,0 +1,24 @@
+packages/core/test/correlation.test.ts
+  s_22e267881c58e7::t_786dca4c05c7af 2-6,9-29,33-40,54-63,70-73,79-85,131-136
+  s_22e267881c58e7::t_50ca2751a98034 93-128
+  s_22e267881c58e7::t_fe33dcfac254af 41-49,51,64-67,74-78,86-92
+packages/core/src/platform.ts
+  s_22e267881c58e7::t_ad1ed2b882a139 220-221,232-233
+  s_22e267881c58e7::t_786dca4c05c7af 111-120,122-126,175-185,187,196-219,222-223,226-229
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "765800ef3d3c9c0e14c51420ec3c1281594be289",
+  "prompts": {},
+  "sessions": {
+    "s_22e267881c58e7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ad901f16-13b9-4790-b066-d94aca4db45e",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
