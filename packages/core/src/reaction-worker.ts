@@ -119,7 +119,14 @@ export function reserveReaction(input: {
   now: Date;
 }): Reservation {
   const { envelope, approval, authority, now } = input;
-  const expected = reactionHash({ ...envelope, hash: undefined } as Omit<ReactionEnvelope, "hash">);
+  // Schema and normalization rejections must surface as denials: a throw here would be
+  // swallowed as a non-denial by any caller with a try/catch, and leaves this path untestable.
+  let expected: string;
+  try {
+    expected = reactionHash({ ...envelope, hash: undefined } as Omit<ReactionEnvelope, "hash">);
+  } catch {
+    return { allowed: false, reason: "envelope_invalid" };
+  }
   if (expected !== envelope.hash) return { allowed: false, reason: "envelope_hash_mismatch" };
   if (!approval || !authority) return { allowed: false, reason: "authority_unavailable" };
   if (
@@ -137,10 +144,14 @@ export function reserveReaction(input: {
     approval.expiresAt !== envelope.expiresAt
   )
     return { allowed: false, reason: "approval_expired" };
+  // Bound kill-cache freshness on BOTH sides and fail closed on unusable clocks. A future
+  // killEpochAt (clock skew or a forged timestamp) must not buy unbounded staleness tolerance.
+  const killAgeMs = now.getTime() - authority.killEpochAt.getTime();
   if (
     !authority.available ||
     authority.killed ||
-    now.getTime() - authority.killEpochAt.getTime() > 30_000
+    !Number.isFinite(killAgeMs) ||
+    Math.abs(killAgeMs) > 30_000
   )
     return { allowed: false, reason: "kill_state_unavailable" };
   if (
