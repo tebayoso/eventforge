@@ -316,8 +316,14 @@ export function evaluateInstall(input: InstallInput, now: Date): InstallDecision
     reasons.push("artifact-revoked");
   }
   if (input.review.state !== "reviewed") reasons.push("publisher-not-reviewed");
-  if (new Date(input.review.reviewedAt) > now) reasons.push("publisher-review-not-yet-valid");
-  if (new Date(input.review.expiresAt) <= now) reasons.push("publisher-review-expired");
+  const reviewedAt = new Date(input.review.reviewedAt);
+  const expiresAt = new Date(input.review.expiresAt);
+  if (!Number.isFinite(reviewedAt.getTime()) || reviewedAt > now) {
+    reasons.push("publisher-review-not-yet-valid");
+  }
+  if (!Number.isFinite(expiresAt.getTime()) || expiresAt <= now) {
+    reasons.push("publisher-review-expired");
+  }
   if (!input.ownerRecentMfa) reasons.push("owner-recent-mfa-required");
   if (!input.exactDigestApproved) reasons.push("exact-digest-approval-required");
   if (!isCompatible(input.manifest, input.runtime)) reasons.push("runtime-incompatible");
