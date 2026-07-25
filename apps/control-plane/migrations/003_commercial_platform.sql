@@ -37,3 +37,23 @@ create table if not exists eventforge_usage_records (
 
 create index if not exists eventforge_usage_records_daily_idx
   on eventforge_usage_records (workspace_id, meter, occurred_at);
+
+create table if not exists eventforge_github_installations (
+  installation_id text primary key,
+  workspace_id text not null,
+  retention_policy_id text not null,
+  account_login text not null,
+  account_type text not null check (account_type in ('Organization', 'User')),
+  state text not null check (state in ('pending-confirmation', 'connected', 'attention-required', 'suspended', 'removed')),
+  mapping_version bigint not null default 1 check (mapping_version > 0),
+  repositories jsonb not null,
+  permissions jsonb not null,
+  connected_at timestamptz,
+  updated_at timestamptz not null default now()
+);
+
+create unique index if not exists eventforge_github_installations_workspace_installation_idx
+  on eventforge_github_installations (workspace_id, installation_id);
+
+create index if not exists eventforge_github_installations_reconciliation_idx
+  on eventforge_github_installations (state, updated_at);

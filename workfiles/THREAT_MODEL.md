@@ -22,6 +22,7 @@ This table defines the complete production boundary. Items that are not yet enab
 | Forged or replayed webhook    | Raw-body HMAC, provider timestamp window, durable delivery dedupe                           |
 | Cross-workspace access        | Server-derived workspace context, role checks, scoped repository queries                    |
 | Prompt injection              | Untrusted-data delimiter, structured output, read-only sandbox, no inherited secrets        |
+| Issue-driven escalation       | Deterministic `review_only` contract, bounded/redacted assessment, no write/token/tool path |
 | Policy bypass                 | Central policy decision at proposal, approval, and execution                                |
 | Approval spoofing/race        | Server-derived identity, optimistic version, expiry, durable idempotency, append-only audit |
 | Unbounded agent cost          | Authenticated route, queue backpressure, per-workspace concurrency and cost quota           |
