@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-const result = spawnSync(process.execPath, ["scripts/private-edge-preflight.mjs", "--json"], { encoding: "utf8" });
+const result = spawnSync(process.execPath, ["scripts/private-edge-preflight.mjs", "--json"], {
+  encoding: "utf8",
+});
 assert.equal(result.status, 2, "unsupported private-edge must fail closed");
 const report = JSON.parse(result.stdout);
 assert.equal(report.status, "blocked_unsupported");
