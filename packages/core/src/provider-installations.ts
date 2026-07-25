@@ -20,24 +20,26 @@ export const ProviderResourceSelectionSchema = z.object({
   confirmedAt: z.string().datetime(),
 });
 
-export const ProviderInstallationSchema = z
-  .object({
-    id: z.string().uuid(),
-    provider: z.enum(["linear", "sentry"]),
-    workspaceId: z.string().min(1),
-    providerAccountId: z.string().min(1),
-    installationKey: z.string().min(1),
-    mode: ProviderInstallationModeSchema,
-    resources: ProviderResourceSelectionSchema,
-    state: ProviderInstallationStateSchema,
-    scopeVersion: z.number().int().positive(),
-    checkedAt: z.string().datetime().optional(),
-    lastVerifiedEventAt: z.string().datetime().optional(),
-  })
-  .superRefine((value, context) => {
+const ProviderInstallationObjectSchema = z.object({
+  id: z.string().uuid(),
+  provider: z.enum(["linear", "sentry"]),
+  workspaceId: z.string().min(1),
+  providerAccountId: z.string().min(1),
+  installationKey: z.string().min(1),
+  mode: ProviderInstallationModeSchema,
+  resources: ProviderResourceSelectionSchema,
+  state: ProviderInstallationStateSchema,
+  scopeVersion: z.number().int().positive(),
+  checkedAt: z.string().datetime().optional(),
+  lastVerifiedEventAt: z.string().datetime().optional(),
+});
+
+export const ProviderInstallationSchema = ProviderInstallationObjectSchema.superRefine(
+  (value, context) => {
     if (value.provider === "sentry" && value.mode === "reaction_enabled")
       context.addIssue({ code: z.ZodIssueCode.custom, message: "Sentry is read-only." });
-  });
+  },
+);
 export type ProviderInstallation = z.infer<typeof ProviderInstallationSchema>;
 
 const LinearReactionActionSchema = z.discriminatedUnion("kind", [
@@ -48,7 +50,7 @@ const LinearReactionActionSchema = z.discriminatedUnion("kind", [
 
 export const LinearReactionRequestSchema = z
   .object({
-    installation: ProviderInstallationSchema.extend({
+    installation: ProviderInstallationObjectSchema.extend({
       provider: z.literal("linear"),
       mode: z.literal("reaction_enabled"),
       state: z.literal("healthy"),
