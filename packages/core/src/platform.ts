@@ -108,10 +108,22 @@ export const IncidentSchema = Scope.extend({
 export type Incident = z.infer<typeof IncidentSchema>;
 
 const CorrelationWindowSchema = z.object({
-  repositoryRevisionMinutes: z.number().int().min(5).max(24 * 60),
-  deploymentMinutes: z.number().int().min(5).max(2 * 60),
+  repositoryRevisionMinutes: z
+    .number()
+    .int()
+    .min(5)
+    .max(24 * 60),
+  deploymentMinutes: z
+    .number()
+    .int()
+    .min(5)
+    .max(2 * 60),
   fingerprintMinutes: z.number().int().min(5).max(30),
-  providerLinkMinutes: z.number().int().min(5).max(24 * 60),
+  providerLinkMinutes: z
+    .number()
+    .int()
+    .min(5)
+    .max(24 * 60),
 });
 export const CorrelationConfigSchema = Scope.extend({
   version: z.number().int().positive(),
@@ -160,13 +172,19 @@ export const CorrelationMembershipSchema = Scope.extend({
 export type CorrelationMembership = z.infer<typeof CorrelationMembershipSchema>;
 
 export type CorrelationDecision =
-  | { outcome: "proposed"; candidateEventId: string; matchedSignals: string[]; windowMinutes: number; reason: string }
-  | { outcome: "ungrouped"; reason: "insufficient_signals" | "ambiguous_candidates" | "outside_window" };
+  | {
+      outcome: "proposed";
+      candidateEventId: string;
+      matchedSignals: string[];
+      windowMinutes: number;
+      reason: string;
+    }
+  | {
+      outcome: "ungrouped";
+      reason: "insufficient_signals" | "ambiguous_candidates" | "outside_window";
+    };
 type CorrelationSignal =
-  | "repository_revision"
-  | "deployment"
-  | "service_environment_fingerprint"
-  | "provider_link";
+  "repository_revision" | "deployment" | "service_environment_fingerprint" | "provider_link";
 
 /** Pure, versioned evaluation over immutable normalized snapshots. */
 export function evaluateCorrelation(
@@ -175,36 +193,44 @@ export function evaluateCorrelation(
   config: CorrelationConfig,
 ): CorrelationDecision {
   const scopedCandidates = candidates.filter(
-    (candidate) => candidate.workspaceId === event.workspaceId && candidate.projectId === event.projectId,
+    (candidate) =>
+      candidate.workspaceId === event.workspaceId && candidate.projectId === event.projectId,
   );
-  const matches = scopedCandidates
-    .flatMap((candidate) => {
-      const minutes = Math.abs(Date.parse(event.occurredAt) - Date.parse(candidate.occurredAt)) / 60_000;
-      const signal: readonly [CorrelationSignal, number] | undefined =
-        event.providerLink && event.providerLink === candidate.providerLink
-          ? ["provider_link", config.windows.providerLinkMinutes]
-          : event.deploymentId && event.deploymentId === candidate.deploymentId
-            ? ["deployment", config.windows.deploymentMinutes]
-            : event.repositoryId &&
-                event.repositoryId === candidate.repositoryId &&
-                event.revision &&
-                event.revision === candidate.revision
-              ? ["repository_revision", config.windows.repositoryRevisionMinutes]
-              : event.serviceId &&
-                  event.serviceId === candidate.serviceId &&
-                  event.environmentId &&
-                  event.environmentId === candidate.environmentId &&
-                  event.issueFingerprint &&
-                  event.issueFingerprint === candidate.issueFingerprint
-                ? ["service_environment_fingerprint", config.windows.fingerprintMinutes]
-                : undefined;
-      return signal && minutes <= signal[1] ? [{ candidate, signal: signal[0], window: signal[1] }] : [];
-    });
+  const signalled = scopedCandidates.flatMap((candidate) => {
+    const signal: readonly [CorrelationSignal, number] | undefined =
+      event.providerLink && event.providerLink === candidate.providerLink
+        ? ["provider_link", config.windows.providerLinkMinutes]
+        : event.deploymentId && event.deploymentId === candidate.deploymentId
+          ? ["deployment", config.windows.deploymentMinutes]
+          : event.repositoryId &&
+              event.repositoryId === candidate.repositoryId &&
+              event.revision &&
+              event.revision === candidate.revision
+            ? ["repository_revision", config.windows.repositoryRevisionMinutes]
+            : event.serviceId &&
+                event.serviceId === candidate.serviceId &&
+                event.environmentId &&
+                event.environmentId === candidate.environmentId &&
+                event.issueFingerprint &&
+                event.issueFingerprint === candidate.issueFingerprint
+              ? ["service_environment_fingerprint", config.windows.fingerprintMinutes]
+              : undefined;
+    return signal ? [{ candidate, signal: signal[0], window: signal[1] }] : [];
+  });
+  const matches = signalled.filter(
+    (match) =>
+      Math.abs(Date.parse(event.occurredAt) - Date.parse(match.candidate.occurredAt)) / 60_000 <=
+      match.window,
+  );
   if (!matches.length)
-    return { outcome: "ungrouped", reason: scopedCandidates.length ? "outside_window" : "insufficient_signals" };
+    return {
+      outcome: "ungrouped",
+      reason: signalled.length ? "outside_window" : "insufficient_signals",
+    };
   const unique = new Set(matches.map((match) => match.candidate.id));
   if (unique.size !== 1) return { outcome: "ungrouped", reason: "ambiguous_candidates" };
-  const match = matches.sort((a, b) => a.candidate.id.localeCompare(b.candidate.id))[0];
+  const [match] = matches.sort((a, b) => a.candidate.id.localeCompare(b.candidate.id));
+  if (!match) return { outcome: "ungrouped", reason: "insufficient_signals" };
   return {
     outcome: "proposed",
     candidateEventId: match.candidate.id,
