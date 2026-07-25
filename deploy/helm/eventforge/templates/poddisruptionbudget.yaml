@@ -1,0 +1,12 @@
+{{- if gt (int .Values.replicaCount) 1 }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "eventforge.fullname" . }}
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "eventforge.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
