@@ -1,4 +1,5 @@
 export * from "./autonomy.js";
+export * from "./billing.js";
 export * from "./contracts.js";
 export * from "./connector-trust.js";
 export * from "./demand-sources.js";

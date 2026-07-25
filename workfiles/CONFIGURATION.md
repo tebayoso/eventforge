@@ -217,6 +217,15 @@ test is a release gate before enabling remote MCP.
 ## Operational readiness (foundation)
 
 `apps/control-plane/src/operational-readiness.ts` contains fail-closed contracts and defaults, while `operational-readiness-postgres.ts` provides the durable PostgreSQL adapter. Neither file enables a hosted monitor. Runtime wiring must supply a trusted server-side operator authorization resolver; callers pass an opaque authenticated session reference, never roles or approval booleans. Probes are specified every five minutes against non-sensitive synthetic tenants. Customer-impacting failures target ten-minute routing; authentication, tenancy, unsigned ingress, kill-switch bypass, and data-integrity failures target immediate routing. Poison work routes no later than five minutes after retry exhaustion and alert-provider outage requires an independent fallback signal. See `workfiles/OPERATIONAL_READINESS.md` for runbooks and the explicit evidence boundary.
+## Hosted billing (not enabled by this repository)
+
+Hosted billing remains fail-closed until a separately authenticated remote host
+supplies a least-privilege Stripe restricted key, webhook signing secret, and
+externally configured recurring USD Price ids for the separate Team and Business
+Products. Never put these values in repository configuration, browser variables,
+or local demo files. Tax is disabled until active registrations and a canonical
+tax code/configuration have been confirmed; a missing tax configuration is a
+visible deployment blocker, not a zero-tax fallback.
 
 ### MCP client and launcher
 
