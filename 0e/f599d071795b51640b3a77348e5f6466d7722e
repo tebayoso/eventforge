@@ -1,0 +1,19 @@
+workfiles/PR38_INTEGRATION_REVIEW.md
+  s_36f64419cde1fe::t_a2a04b231b809d 1-143
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "0ef599d071795b51640b3a77348e5f6466d7722e",
+  "prompts": {},
+  "sessions": {
+    "s_36f64419cde1fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d8ca7e7e-249f-43ff-addc-d15c89ab0699",
+        "model": "unknown"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
