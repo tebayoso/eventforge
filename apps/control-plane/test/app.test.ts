@@ -50,7 +50,7 @@ async function withRemoteApp(
   auth: AuthContext | null = remoteOwner,
   integrations?: Array<{
     provider: "github" | "linear" | "sentry";
-    installationKey?: string;
+    installationKey: string;
     repository?: string;
     workspaceId: string;
     projectId: string;
@@ -486,6 +486,94 @@ describe("control plane", () => {
         if (previous[key] === undefined) delete process.env[key];
         else process.env[key] = previous[key];
       }
+    }
+  });
+
+  // A binding whose installationKey is blank used to satisfy the lookup for every
+  // authenticated delivery, so one misconfigured row silently became a catch-all
+  // that routed other tenants' Linear events into its workspace. A blank key must
+  // match nothing rather than everything.
+  it("never treats a blank installation key as a wildcard binding", async () => {
+    const previousSecret = process.env.LINEAR_WEBHOOK_SECRET;
+    process.env.LINEAR_WEBHOOK_SECRET = "linear-wildcard-secret";
+    const payload = JSON.stringify({
+      type: "Issue",
+      webhookTimestamp: Date.now(),
+      organizationId: "org-a",
+    });
+    try {
+      await withRemoteApp(
+        new EventForgeStore(),
+        async (app) => {
+          const response = await app.inject({
+            method: "POST",
+            url: "/webhooks/linear",
+            payload,
+            headers: {
+              "content-type": "application/json",
+              "linear-delivery": "delivery-wildcard",
+              "linear-signature": createHmac("sha256", "linear-wildcard-secret")
+                .update(payload)
+                .digest("hex"),
+            },
+          });
+          expect(response.statusCode).toBe(403);
+        },
+        remoteOwner,
+        [
+          {
+            provider: "linear",
+            installationKey: "",
+            workspaceId: "workspace-catch-all",
+            projectId: "project-catch-all",
+          },
+        ],
+      );
+    } finally {
+      if (previousSecret === undefined) delete process.env.LINEAR_WEBHOOK_SECRET;
+      else process.env.LINEAR_WEBHOOK_SECRET = previousSecret;
+    }
+  });
+
+  it("rejects a verified remote Linear delivery without its exact installation mapping", async () => {
+    const previousSecret = process.env.LINEAR_WEBHOOK_SECRET;
+    process.env.LINEAR_WEBHOOK_SECRET = "linear-mapping-secret";
+    const payload = JSON.stringify({
+      type: "Issue",
+      webhookTimestamp: Date.now(),
+      organizationId: "org-a",
+    });
+    try {
+      await withRemoteApp(
+        new EventForgeStore(),
+        async (app) => {
+          const response = await app.inject({
+            method: "POST",
+            url: "/webhooks/linear",
+            payload,
+            headers: {
+              "content-type": "application/json",
+              "linear-delivery": "delivery-a",
+              "linear-signature": createHmac("sha256", "linear-mapping-secret")
+                .update(payload)
+                .digest("hex"),
+            },
+          });
+          expect(response.statusCode).toBe(403);
+        },
+        remoteOwner,
+        [
+          {
+            provider: "linear",
+            installationKey: "org-b",
+            workspaceId: "workspace-b",
+            projectId: "project-b",
+          },
+        ],
+      );
+    } finally {
+      if (previousSecret === undefined) delete process.env.LINEAR_WEBHOOK_SECRET;
+      else process.env.LINEAR_WEBHOOK_SECRET = previousSecret;
     }
   });
 
