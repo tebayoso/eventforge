@@ -2,19 +2,40 @@
 
 Updated: 2026-07-20
 
+## Issue #17 replay/audit foundation
+
+Core now contains an adapter-backed EvidenceStore/AuditLedger split: expired content is replaced
+with a blanked record and becomes unavailable while tenant-scoped proof retains only hashes,
+attribution, redaction/policy/decision references, ancestry hash, and outcome. Replay uses a trusted
+clock and authoritative attempt/policy lookups, requires recent MFA/authorization, evidence
+availability, reason and request-consistent idempotency, and creates a fresh pending-approval linked
+attempt. Async repository transactions atomically couple replay/approval compare-and-set state with
+their audit entries and require commit-time revalidation of authorization, parent status, MFA and
+evidence deadlines, current policy, and the full evidence provenance fingerprint.
+Retention is bounded from a trusted storage clock; corrupt expiry data becomes unavailable and
+eligible for deletion. Policy or evidence changes block stale approval. Export helpers produce
+matching canonical JSON and escaped HTML covered by keyed integrity verification.
+
+The bundled in-memory adapters are explicitly ephemeral test/demo implementations. Replay fails
+closed unless authorization, audit, and durable repositories are operational; tests must opt into
+the ephemeral escape explicitly. Hosted key custody, adapter transactions, audited evidence access,
+deletion/export workflows, and privacy/security drills remain required before this can be exposed as
+a hosted API.
+
 ## Supported now
 
-| Area                                 | Status                                                                                                                                                                    |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Local demo control plane and console | Supported; deterministic GitHub, Linear, and Sentry fixtures                                                                                                              |
-| Provider verification                | GitHub, Linear, and Sentry adapters with signatures, delivery IDs, replay checks where available, redaction, and injected mapping hooks                                   |
-| Policy and approvals                 | Resource-aware evaluator foundation; versioned approval/rejection/expiry; default approval required; execution worker not implemented                                     |
-| Codex runner                         | Read-only investigation, structured result, process-lifetime thread ID retention, and `resumeThread` support                                                              |
-| MCP package                          | Self-starting compiled stdio and loopback Streamable HTTP server; GitHub package install, npm pack, and discovery smoke tests                                             |
-| Local relay                          | On-demand MCP startup; Quick/manual named fallbacks; managed per-user tunnel client and hosted provisioner foundation                                                     |
-| Codex plugin                         | Manifest, skills, MCP registration, and health-only opt-in lifecycle hook                                                                                                 |
-| Electron                             | Compiled main/preload, constrained IPC, separate private user-data SQLite daemon, navigation controls, and package configuration                                          |
-| Quality                              | Format, lint, typecheck, tests with coverage, builds, package smoke, deployment validation, recognized global rate limiting, dependency audit, secret scan, and CodeQL CI |
+| Area                                 | Status                                                                                                                                                                     |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Local demo control plane and console | Supported; deterministic GitHub, Linear, and Sentry fixtures                                                                                                               |
+| Provider verification                | GitHub, Linear, and Sentry adapters with signatures, delivery IDs, replay checks where available, redaction, and injected mapping hooks                                    |
+| Policy and approvals                 | Resource-aware evaluator foundation; versioned approval/rejection/expiry; default approval required; execution worker not implemented                                      |
+| Codex runner                         | Read-only investigation, structured result, process-lifetime thread ID retention, and `resumeThread` support                                                               |
+| GitHub issue review                  | Review-only deterministic assessment; issue events cannot invoke the agent or create a write proposal. Manual authenticated implementation is not activated by issue text. |
+| MCP package                          | Self-starting compiled stdio and loopback Streamable HTTP server; GitHub package install, npm pack, and discovery smoke tests                                              |
+| Local relay                          | On-demand MCP startup; Quick/manual named fallbacks; managed per-user tunnel client and hosted provisioner foundation                                                      |
+| Codex plugin                         | Manifest, skills, MCP registration, and health-only opt-in lifecycle hook                                                                                                  |
+| Electron                             | Compiled main/preload, constrained IPC, separate private user-data SQLite daemon, navigation controls, and package configuration                                           |
+| Quality                              | Format, lint, typecheck, tests with coverage, builds, package smoke, deployment validation, recognized global rate limiting, dependency audit, secret scan, and CodeQL CI  |
 
 ## Commercial platform roadmap implementation
 
@@ -37,7 +58,11 @@ The Cloudflare-native hosted path now has isolated preview and production D1 con
 `packages/core/src/autonomy.ts` now defines the fail-closed, immutable grant and shadow-evidence eligibility contract for the launch-only GitHub informational-label class. It is not a provider execution worker: approval-required remains the default and remote autonomy remains disabled. A future worker must still provide transactional aggregate budgets, signed kill-switch epochs, fresh independent provider verification, and independently verified rollback before it can consume an eligible grant.
 
 - Better Auth account lifecycle, mandatory passkey/TOTP MFA, invitations, recovery, revocation, CSRF, and enterprise SSO.
-- MCP OAuth 2.1 Authorization Code with PKCE, resource metadata, scoped short-lived tokens, rotating refresh tokens, and audience checks.
+- MCP OAuth 2.1 Authorization Code + S256 PKCE domain foundations: static first-party
+  clients, protected-resource metadata, opaque 15-minute access tokens, seven-day
+  rotating refresh families, audience/workspace/scope checks, and per-request identity
+  authority port. This remains non-production until durable grants, live authority,
+  security testing, configuration, and the external penetration-test gate are complete.
 - Complete D1 tenant repositories, durable Queue/DLQ delivery state, Workflow orchestration, retention, backup, and usage reconciliation.
 - S3-compatible immutable Forge artifacts, disposable sandbox validation, dependency/source scanning, and out-of-process connector installation.
 - pgvector embedding/index/query integration. Local vector search is reported as disabled until an acceptance test passes.
