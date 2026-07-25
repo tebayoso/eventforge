@@ -295,9 +295,9 @@ export function requiresFreshConsent(
   previous: ConnectorPackageManifest,
   next: ConnectorPackageManifest,
 ): boolean {
-  const scopeChanged = (Object.keys(previous.scope) as (keyof ConnectorPackageManifest["scope"])[]).some(
-    (key) => !sameSet(previous.scope[key], next.scope[key]),
-  );
+  const scopeChanged = (
+    Object.keys(previous.scope) as (keyof ConnectorPackageManifest["scope"])[]
+  ).some((key) => !sameSet(previous.scope[key], next.scope[key]));
   const capabilityExpanded = next.capabilities.some(
     (capability) => !previous.capabilities.includes(capability),
   );
