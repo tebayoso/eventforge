@@ -57,3 +57,21 @@ create unique index if not exists eventforge_github_installations_workspace_inst
 
 create index if not exists eventforge_github_installations_reconciliation_idx
   on eventforge_github_installations (state, updated_at);
+
+create table if not exists eventforge_timeline_entries (
+  id uuid primary key,
+  workspace_id text not null,
+  project_id text not null,
+  canonical_event_id uuid,
+  causal_parent_id uuid,
+  authoritative_for_id uuid,
+  kind text not null check (kind in ('source_fact','derived_finding','proposal','policy_result','human_decision','attempt','outcome')),
+  received_at timestamptz not null,
+  integrity_hash text not null,
+  data jsonb not null,
+  created_at timestamptz not null default now(),
+  unique (workspace_id, id)
+);
+
+create index if not exists eventforge_timeline_entries_scope_idx
+  on eventforge_timeline_entries (workspace_id, project_id, received_at, id);
