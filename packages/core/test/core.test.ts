@@ -28,9 +28,23 @@ import {
 
 describe("OTel privacy boundary", () => {
   it("projects only the versioned allowlist and never leaks malicious input", () => {
-    const span = projectSafeSpan({ stage: "event.receive", status: "ok", traceId: "internal-trace", sourceCategory: "github", durationMs: 12 }, "workspace-secret", "destination-a");
-    expect(Object.keys(span.attributes)).toEqual(expect.arrayContaining(["schema_version", "workspace_pseudonym"]));
-    expect(Object.keys(span.attributes)).not.toEqual(expect.arrayContaining(["payload", "error", "prompt", "workspaceId"]));
+    const span = projectSafeSpan(
+      {
+        stage: "event.receive",
+        status: "ok",
+        traceId: "internal-trace",
+        sourceCategory: "github",
+        durationMs: 12,
+      },
+      "workspace-secret",
+      "destination-a",
+    );
+    expect(Object.keys(span.attributes)).toEqual(
+      expect.arrayContaining(["schema_version", "workspace_pseudonym"]),
+    );
+    expect(Object.keys(span.attributes)).not.toEqual(
+      expect.arrayContaining(["payload", "error", "prompt", "workspaceId"]),
+    );
     expect(span.attributes.workspace_pseudonym).not.toContain("workspace-secret");
   });
 
@@ -43,9 +57,26 @@ describe("OTel privacy boundary", () => {
   });
 
   it("fails closed for non-HTTPS, credentialed, private hosted endpoints, and unapproved ports", () => {
-    for (const endpoint of ["http://collector.example", "https://user:token@collector.example", "https://localhost:4318", "https://collector.example:444"]) expect(() => validateOtlpHttpEndpoint(endpoint)).toThrow();
+    for (const endpoint of [
+      "http://collector.example",
+      "https://user:token@collector.example",
+      "https://localhost:4318",
+      "https://collector.example:444",
+    ])
+      expect(() => validateOtlpHttpEndpoint(endpoint)).toThrow();
     expect(validateOtlpHttpEndpoint("https://collector.example:4318").pathname).toBe("/");
     expect(validateOtlpHttpEndpoint("https://127.0.0.1:4318", true).hostname).toBe("127.0.0.1");
+  });
+
+  it("rejects every IPv6 loopback spelling because URL brackets the hostname", () => {
+    // Regression: comparing endpoint.hostname to "::1" is dead code — URL reports "[::1]".
+    for (const endpoint of [
+      "https://[::1]:4318",
+      "https://[0:0:0:0:0:0:0:1]:4318",
+      "https://[::1]:443",
+    ])
+      expect(() => validateOtlpHttpEndpoint(endpoint)).toThrow("OTLP endpoint is not permitted");
+    expect(validateOtlpHttpEndpoint("https://[::1]:4318", true).hostname).toBe("[::1]");
   });
 });
 
