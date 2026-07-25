@@ -1,0 +1,25 @@
+workfiles/OPERATIONAL_READINESS.md
+  s_717f8c81e65bfb::t_1ec196bcd38140 3,21-23,27-29
+workfiles/STATUS.md
+  s_717f8c81e65bfb::t_68c5934b8599d6 42
+workfiles/CONFIGURATION.md
+  s_717f8c81e65bfb::t_68c5934b8599d6 219
+workfiles/ARCHITECTURE.md
+  s_717f8c81e65bfb::t_68c5934b8599d6 139
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "9dc6621425f0216fdf8ec45e789a761f650ae82f",
+  "prompts": {},
+  "sessions": {
+    "s_717f8c81e65bfb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8b1f-96ff-7571-ba96-89256223a480",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
