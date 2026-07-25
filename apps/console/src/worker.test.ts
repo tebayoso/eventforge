@@ -16,7 +16,7 @@ describe("hosted console route boundary", () => {
       { ASSETS: assets },
     );
     expect(markdown.headers.get("content-type")).toContain("text/markdown");
-    expect(await markdown.text()).toContain("# EventBridge");
+    expect(await markdown.text()).toContain("# EventForge");
 
     const homepage = await worker.fetch(new Request("https://eventforge.dev/"), { ASSETS: assets });
     expect(homepage.headers.get("link")).toContain('rel="sitemap"');
