@@ -83,6 +83,13 @@ export function acceptsProviderEvent(
   );
 }
 
+/**
+ * The discrete monitor states admitted as durable evidence. Anything outside this
+ * set is rejected rather than recorded: `status` originates in an untrusted webhook
+ * body, so an open-ended string would let arbitrary caller content reach evidence.
+ */
+const datadogMonitorTransitionStatuses: readonly string[] = ["OK", "Alert", "Warn", "No Data"];
+
 /** Datadog durable evidence deliberately excludes continuous payloads and bodies. */
 export function normalizeDatadogMonitorTransition(
   payload: Record<string, unknown>,
@@ -98,6 +105,7 @@ export function normalizeDatadogMonitorTransition(
     typeof transition.at !== "string"
   )
     return undefined;
+  if (!datadogMonitorTransitionStatuses.includes(transition.status)) return undefined;
   const tags = Array.isArray(payload.tags)
     ? payload.tags.filter(
         (tag): tag is string => typeof tag === "string" && /^(service|env|team):/.test(tag),
