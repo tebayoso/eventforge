@@ -8,6 +8,7 @@ export * from "./forge.js";
 export * from "./issue-review.js";
 export * from "./memory.js";
 export * from "./outcomes.js";
+export * from "./notifications.js";
 export * from "./platform.js";
 export * from "./policy-packs.js";
 export * from "./reaction-worker.js";
