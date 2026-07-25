@@ -1,6 +1,7 @@
 # PR #32 — issue-23 notification sinks: integration + review
 
-Branch `codex/issue-23-notification-sinks` @ `c4a8723`. All 7 checks green, PR `MERGEABLE / CLEAN`.
+Branch `codex/issue-23-notification-sinks`. Code fix is `c4a8723`; all 7 checks were green on that
+commit with the PR at `MERGEABLE / CLEAN`.
 
 ## Merge
 
@@ -61,10 +62,15 @@ with a host.
 
 ### 4. `no-useless-escape` lint error — LOW — was blocking CI invisibly
 
-`/[\\`*_~>|{}\[\]]/` failed `eslint --max-warnings 0`. This was masked in CI because `pnpm quality`
-chains with `&&` and `format:check` short-circuited first — the branch had **two** independent
-Quality failures, not one. Fixed the escape; also dropped the now-dead `>` from the class, since
-`stripBracketedMarkup` guarantees no `>` reaches it.
+The character class in the sanitizer's final replace failed `eslint --max-warnings 0`:
+
+```
+.replace(/[\\`*_~>|{}\[\]]/g, "")   // \[ is an unnecessary escape inside a class
+```
+
+This was masked in CI because `pnpm quality` chains with `&&` and `format:check` short-circuited
+first — the branch had **two** independent Quality failures, not one. Fixed the escape; also dropped
+the now-dead `>` from the class, since `stripBracketedMarkup` guarantees no `>` reaches it.
 
 `workfiles/NOTIFICATION_SINKS.md` was updated so the documented contract matches the enforced one.
 
@@ -76,15 +82,15 @@ the only other repo hit for "notification" is an unrelated MCP `notifications/in
 is therefore latent until a delivery worker is written — but items 1–3 above were fixed anyway because
 they sit in exported API that a worker will call on its first line.
 
-| # | Severity | Finding |
-|---|---|---|
-| L1 | Medium | **`renderNotification` never parses its inputs.** It trusts the TS types, which do not exist at runtime. A caller that skips `NotificationInputSchema`/`NotificationRouteSchema` bypasses every bound: `active: "false"` is truthy and passes the gate, `correlationId` can exceed 160 chars. The gate itself is correctly fail-closed for well-typed input — `provider` is a 2-value enum with both branches covered, and `botIsMember: undefined` blocks Slack. Not fixed: adding a parse would change the function's error contract. A delivery worker MUST parse before rendering. |
-| L2 | Low | **Deep-link host is unconstrained.** After the scheme fix, `https://evil.example/x` still renders as "Open in EventForge", which is a phishing primitive in an operator-facing message. Not fixed: there is no configured EventForge base URL anywhere in the repo to validate against. Needs a config value first. |
-| L3 | Low | **Rendered text is not bounded end-to-end.** Every sanitized field is capped at 200 chars, but `eventforgeUrl` has no `.max()`, so the "bounded" claim in the doc holds only per-field. |
-| L4 | Low | **`logicalNotificationId` omits `route.id` and `workspaceId`.** Two distinct routes pointing at the same `destinationId` with the same version collapse to one logical id, so one silently dedupes away. Arguably intended; undocumented either way. No collision risk from the `join(":")` — `destinationId` is the only free-form field and it is last. |
-| L5 | Cosmetic | **The sanitizer eats its own replacement tokens.** `[link]` and `[reference]` are inserted before the character-strip pass removes `[` and `]`, so output reads `link` / `reference`. Pre-existing on 1.0-rc for title/summary. |
-| L6 | Cosmetic | **Fully-bracketed metadata renders as an empty label.** `sourceCategory: "<...>"` now yields `Source: ; verification: ...`. Correct (dropping markup beats emitting it) but reads oddly. |
-| L7 | Cosmetic | Sanitizing `lifecycleState` strips `_`, so `pending_approval` renders as `pendingapproval`, while the unsanitized `eventType` enum keeps its underscore. Consequence of reusing the author's own sanitizer rather than inventing a second one. |
+| #   | Severity | Finding                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| --- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| L1  | Medium   | **`renderNotification` never parses its inputs.** It trusts the TS types, which do not exist at runtime. A caller that skips `NotificationInputSchema`/`NotificationRouteSchema` bypasses every bound: `active: "false"` is truthy and passes the gate, `correlationId` can exceed 160 chars. The gate itself is correctly fail-closed for well-typed input — `provider` is a 2-value enum with both branches covered, and `botIsMember: undefined` blocks Slack. Not fixed: adding a parse would change the function's error contract. A delivery worker MUST parse before rendering. |
+| L2  | Low      | **Deep-link host is unconstrained.** After the scheme fix, `https://evil.example/x` still renders as "Open in EventForge", which is a phishing primitive in an operator-facing message. Not fixed: there is no configured EventForge base URL anywhere in the repo to validate against. Needs a config value first.                                                                                                                                                                                                                                                                    |
+| L3  | Low      | **Rendered text is not bounded end-to-end.** Every sanitized field is capped at 200 chars, but `eventforgeUrl` has no `.max()`, so the "bounded" claim in the doc holds only per-field.                                                                                                                                                                                                                                                                                                                                                                                                |
+| L4  | Low      | **`logicalNotificationId` omits `route.id` and `workspaceId`.** Two distinct routes pointing at the same `destinationId` with the same version collapse to one logical id, so one silently dedupes away. Arguably intended; undocumented either way. No collision risk from the `join(":")` — `destinationId` is the only free-form field and it is last.                                                                                                                                                                                                                              |
+| L5  | Cosmetic | **The sanitizer eats its own replacement tokens.** `[link]` and `[reference]` are inserted before the character-strip pass removes `[` and `]`, so output reads `link` / `reference`. Pre-existing on 1.0-rc for title/summary.                                                                                                                                                                                                                                                                                                                                                        |
+| L6  | Cosmetic | **Fully-bracketed metadata renders as an empty label.** `sourceCategory: "<...>"` now yields `Source: ; verification: ...`. Correct (dropping markup beats emitting it) but reads oddly.                                                                                                                                                                                                                                                                                                                                                                                               |
+| L7  | Cosmetic | Sanitizing `lifecycleState` strips `_`, so `pending_approval` renders as `pendingapproval`, while the unsanitized `eventType` enum keeps its underscore. Consequence of reusing the author's own sanitizer rather than inventing a second one.                                                                                                                                                                                                                                                                                                                                         |
 
 ## Repo-level finding, deliberately NOT folded into this PR
 
