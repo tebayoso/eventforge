@@ -17,7 +17,7 @@ export function canonicalPolicyPackManifest(manifest: PolicyPackManifest): strin
   return JSON.stringify(sort(manifest));
 }
 
-export function manifestDigest(manifest: PolicyPackManifest): string {
+export function policyPackManifestDigest(manifest: PolicyPackManifest): string {
   return createHash("sha256").update(canonicalPolicyPackManifest(manifest)).digest("hex");
 }
 
@@ -29,7 +29,7 @@ export function verifyPackImport(input: {
   trust: TrustedSigner[];
   now?: Date;
 }): { ok: boolean; reason?: string; digest: string } {
-  const digest = manifestDigest(input.manifest);
+  const digest = policyPackManifestDigest(input.manifest);
   const signer = input.trust.find((key) => key.keyId === input.keyId);
   if (!signer || signer.revoked) return { ok: false, reason: "untrusted_signer", digest };
   if (input.manifest.evaluatorVersion !== POLICY_EVALUATOR_VERSION)
