@@ -104,4 +104,102 @@ describe("billing and entitlements", () => {
       ),
     ).toBe(false);
   });
+  it("never enables hosted billing in local mode or without a configured key", () => {
+    const complete = {
+      stripeRestrictedKey: "rk_least_privilege",
+      stripeWebhookSecret: "whsec_x",
+      teamPriceId: "price_team",
+      businessPriceId: "price_business",
+      taxConfigured: true,
+    };
+    expect(hostedBillingStatus({ ...complete, mode: "local" })).toMatchObject({
+      enabled: false,
+      reason: "Hosted billing is unavailable in local mode.",
+    });
+    expect(
+      hostedBillingStatus({
+        ...complete,
+        mode: "remote",
+        stripeRestrictedKey: undefined,
+      }).enabled,
+    ).toBe(false);
+  });
+  it("treats each missing webhook secret or Price id as an independent hosted billing blocker", () => {
+    const complete = {
+      mode: "remote" as const,
+      stripeRestrictedKey: "rk_least_privilege",
+      stripeWebhookSecret: "whsec_x",
+      teamPriceId: "price_team",
+      businessPriceId: "price_business",
+      taxConfigured: true,
+    };
+    for (const missing of ["stripeWebhookSecret", "teamPriceId", "businessPriceId"] as const) {
+      expect(hostedBillingStatus({ ...complete, [missing]: undefined })).toMatchObject({
+        enabled: false,
+        reason: "Stripe webhook and both externally configured recurring Price ids are required.",
+      });
+    }
+    expect(hostedBillingStatus(complete)).toEqual({ enabled: true });
+  });
+  it("breaks entitlement ties toward the state that withholds hosted work", () => {
+    const base = {
+      workspaceId: "w",
+      catalogVersion: "v",
+      providerCreatedAt: "2026-07-02T00:00:00.000Z",
+      observedAt: "2026-07-02T00:00:00.000Z",
+      effectiveFrom: "2026-07-02T00:00:00.000Z",
+      stripeCustomerHash: "c",
+    };
+    expect(
+      selectCurrentEntitlement([
+        { ...base, state: "active", providerEventId: "evt_a" },
+        { ...base, state: "disputed", providerEventId: "evt_b" },
+      ])?.state,
+    ).toBe("disputed");
+    expect(
+      selectCurrentEntitlement([
+        { ...base, state: "active", providerEventId: "evt_a" },
+        { ...base, state: "active", providerEventId: "evt_b" },
+      ])?.providerEventId,
+    ).toBe("evt_b");
+    expect(selectCurrentEntitlement([])).toBeUndefined();
+  });
+  it("only lets a paid active entitlement authorize reactions and expansion", () => {
+    expect(billingDecision({ state: "active", action: "reaction" }).allowed).toBe(true);
+    expect(billingDecision({ state: "active", action: "expand" }).allowed).toBe(true);
+    expect(billingDecision({ state: "trialing", action: "investigate" }).allowed).toBe(true);
+    expect(billingDecision({ state: "trialing", action: "reaction" })).toMatchObject({
+      allowed: false,
+      reason: "Trial reactions require provider, identity, and MFA gates.",
+    });
+    expect(billingDecision({ state: "grace", action: "read" }).allowed).toBe(true);
+    expect(
+      billingDecision({ state: "grace", action: "investigate", withinPriorQuota: false }).allowed,
+    ).toBe(false);
+  });
+  it("suspends hosted work but preserves evidence reads once entitlement lapses", () => {
+    for (const state of ["cancelled", "past_due", "none", "pending_reconciliation"] as const) {
+      expect(billingDecision({ state, action: "read" }).allowed).toBe(true);
+      for (const action of ["investigate", "reaction", "expand", "change_billing"] as const) {
+        expect(billingDecision({ state, action }).allowed).toBe(false);
+      }
+    }
+    expect(billingDecision({ state: "past_due", outageHours: 12, action: "read" }).allowed).toBe(
+      true,
+    );
+  });
+  it("rejects absent, malformed, and wrong-length Stripe signature headers", () => {
+    const raw = Buffer.from('{"id":"evt_1"}');
+    expect(verifyStripeWebhook(raw, undefined, "whsec_test")).toBe(false);
+    expect(verifyStripeWebhook(raw, "", "whsec_test")).toBe(false);
+    expect(verifyStripeWebhook(raw, "t=1721600000", "whsec_test")).toBe(false);
+    expect(verifyStripeWebhook(raw, "v1=deadbeef", "whsec_test")).toBe(false);
+    expect(verifyStripeWebhook(raw, "t=1721600000,v1=ab", "whsec_test")).toBe(false);
+    const timestamp = "1721600000";
+    const otherSecret = createHmac("sha256", "whsec_other")
+      .update(`${timestamp}.`)
+      .update(raw)
+      .digest("hex");
+    expect(verifyStripeWebhook(raw, `t=${timestamp},v1=${otherSecret}`, "whsec_test")).toBe(false);
+  });
 });
