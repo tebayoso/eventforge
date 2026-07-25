@@ -136,7 +136,7 @@ recovery drill. Passing deterministic tests is not production proof.
 
 ## Operational readiness boundary
 
-The control plane evaluates six independently closed surfaces: console/API, signed ingress, investigations, evidence, remote MCP, and GitHub App. Evidence is append-only and evaluated as `unknown`, `failed`, `stale`, `skipped`, or `passed`; only fresh passing evidence plus applicable upstream Definition of Done opens its dependent surface. GA additionally requires all applicable surfaces, no security/tenancy/authentication veto, no critical finding, and zero reconciliation variance. Public status is a deliberately sanitized projection; diagnostics and kill-switch history stay operator-gated.
+The control plane evaluates six independently closed surfaces: console/API, signed ingress, investigations, evidence, remote MCP, and GitHub App. Evidence is append-only and evaluated as `unknown`, `failed`, `stale`, `skipped`, or `passed`; only fresh passing evidence plus applicable upstream Definition of Done opens its dependent surface. GA additionally requires all applicable surfaces, no security/tenancy/authentication veto, no critical finding, and an authenticated durable reconciliation evidence ID with zero variance. A supplied snapshot is diagnostic and never production proof. Public status is a deliberately sanitized projection; diagnostics and kill-switch history stay operator-gated.
 
 - Provider bodies are untrusted until provider-specific raw-body signature, delivery identifier, and replay checks where supported succeed. Remote installation scope is resolved separately through configured mappings.
 - Workspace and project scope comes from configured integration mappings in remote mode, never webhook-supplied workspace fields.
