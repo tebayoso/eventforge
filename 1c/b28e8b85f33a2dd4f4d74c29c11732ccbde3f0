@@ -1,0 +1,21 @@
+plugins/eventforge/server/eventforge-mcp-http.cjs
+  s_969d3d1d8a30cf::t_e3d56ff9fba27b 2,6,13,18,21,32,42,52,56,59-61,63,81,83-84,97,386-387,392,408-409,417,421,427,443,448,472,481,483,490-491,518,533,540,545,549,551,555,558-560
+plugins/eventforge/server/eventforge-standalone.cjs
+  s_969d3d1d8a30cf::t_70a77d6d8e1a54 6,9,16,21-23,25,43,45-46,59,348-349,354,370-371,379,383,389,405,410,434,443,445,452-453,480,486,493,498,502,504,508,511-513
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "1cb28e8b85f33a2dd4f4d74c29c11732ccbde3f0",
+  "prompts": {},
+  "sessions": {
+    "s_969d3d1d8a30cf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b429597b-58e8-470f-bc53-5f02965f674c",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
