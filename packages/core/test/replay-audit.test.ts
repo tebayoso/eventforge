@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import {
+  type ReplayAuthorization,
   AuditLedger,
   EvidenceStore,
   HmacExportIntegrity,
@@ -34,7 +35,7 @@ function createHarness(
 ) {
   const evidenceRepository = new InMemoryEvidenceRepository();
   const evidence = new EvidenceStore(evidenceRepository, clock);
-  const authorization = {
+  const authorization: ReplayAuthorization = {
     canReplay: async () => true,
     canApprove: async () => true,
   };
@@ -381,7 +382,7 @@ describe("durable replay audit", () => {
       expiresAt: new Date(now.getTime() + 60_000).toISOString(),
     });
     const ephemeralOriginal = originalAttempt(ephemeralItem.id);
-    ephemeralService.repository.seed(ephemeralOriginal);
+    ephemeralRepository.seed(ephemeralOriginal);
     await expect(
       ephemeralService.replay({
         ...request,
@@ -497,7 +498,7 @@ describe("evidence exports", () => {
     expect(verifyExport(manifest, exported, { "report.txt": "changed" }, integrity)).toBe(false);
     expect(() =>
       createEvidenceExport(
-        { ...manifest, artifacts: [manifest.artifacts[0], manifest.artifacts[0]] },
+        { ...manifest, artifacts: [manifest.artifacts[0]!, manifest.artifacts[0]!] },
         integrity,
       ),
     ).toThrow("manifest is invalid");
