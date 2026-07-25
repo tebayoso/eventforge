@@ -1,0 +1,29 @@
+packages/core/test/provider-installations.test.ts
+  s_b8f363d60c5254::t_798cbb24fc5dde 59-98,100
+  s_b8f363d60c5254::t_5a8dc0dad57243 99
+  s_b8f363d60c5254::t_59cf0f695e3c91 2-7
+plugins/eventforge/server/eventforge-standalone.cjs
+  s_b8f363d60c5254::t_5a8dc0dad57243 2-3,6,9-13,16,21-23,25,28-29,33,35,41,43,45-46,59,72-73,99,101,157,159,162,179,272,318,324,330,342,346,348-349,352-355,370-371,379,383,389,393,405,410,420,426,432,434,438,443,445,452-453,455,478,480-482,486,493,498-500,502,504,508,511-513
+plugins/eventforge/server/eventforge-mcp-http.cjs
+  s_b8f363d60c5254::t_5a8dc0dad57243 2,4-10,13,18-19,21,32,42,52-53,56,59-61,63,66-67,71,73,79,81,83-84,97,110-111,137,139,195,197,200,217,310,356,362,368,380,384,386-387,390-393,408-409,417,421,427,431,443,448,458,464,470,472,476,481,483,490-491,493,516,518,529,533,540,545-547,549,551,555,558-560
+packages/core/src/provider-installations.ts
+  s_b8f363d60c5254::t_4e4f6aada14dac 25-38,41-42
+  s_b8f363d60c5254::t_a7250a17f7baad 23-24
+  s_b8f363d60c5254::t_71adba74fccfac 53
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "9c331e11d17573f30494eb57d864193e0643b9f1",
+  "prompts": {},
+  "sessions": {
+    "s_b8f363d60c5254": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d0bbcb80-2c05-4713-9305-313855936c2b",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
