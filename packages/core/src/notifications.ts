@@ -56,13 +56,28 @@ export const NotificationInputSchema = z.object({
 });
 export type NotificationInput = z.infer<typeof NotificationInputSchema>;
 
+/**
+ * Drops every angle-bracket span and every stray bracket in one linear pass. A regex tag filter cannot
+ * do this: removing `<x>` from `<x><script` leaves `<script` behind, and `<[^>]*>` backtracks
+ * quadratically on bracket-heavy input.
+ */
+function stripBracketedMarkup(value: string): string {
+  let out = "";
+  let depth = 0;
+  for (const char of value) {
+    if (char === "<") depth += 1;
+    else if (char === ">") depth = Math.max(0, depth - 1);
+    else if (depth === 0) out += char;
+  }
+  return out;
+}
+
 /** Notification text is deliberately plain, bounded, and cannot mention people or render provider markup. */
 export function safeNotificationText(value: string): string {
-  return value
-    .replace(/<[^>]*>/g, "")
+  return stripBracketedMarkup(value)
     .replace(/https?:\/\/\S+/gi, "[link]")
     .replace(/[@#][A-Za-z0-9_-]+/g, "[reference]")
-    .replace(/[\\`*_~>|{}\[\]]/g, "")
+    .replace(/[\\`*_~|{}[\]]/g, "")
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 200);
@@ -70,11 +85,22 @@ export function safeNotificationText(value: string): string {
 
 export function logicalNotificationId(input: NotificationInput, route: NotificationRoute): string {
   return createHash("sha256")
-    .update([input.eventId, input.eventVersion, route.version, input.templateVersion, route.destinationId].join(":"))
+    .update(
+      [
+        input.eventId,
+        input.eventVersion,
+        route.version,
+        input.templateVersion,
+        route.destinationId,
+      ].join(":"),
+    )
     .digest("hex");
 }
 
-export function validateNotificationRoute(input: NotificationInput, route: NotificationRoute): string | undefined {
+export function validateNotificationRoute(
+  input: NotificationInput,
+  route: NotificationRoute,
+): string | undefined {
   if (!route.active || !route.healthy) return "route is inactive or unhealthy";
   if (route.workspaceId !== input.workspaceId || route.attestedWorkspaceId !== input.workspaceId)
     return "workspace attestation mismatch";
@@ -85,10 +111,15 @@ export function validateNotificationRoute(input: NotificationInput, route: Notif
   }
   if (route.provider === "pagerduty" && route.destinationType !== "pagerduty_change_integration")
     return "PagerDuty destination is not a Change Events integration";
+  if (!/^https?:\/\/[^\s/]/i.test(input.eventforgeUrl))
+    return "deep link is not an ordinary http(s) URL";
   return undefined;
 }
 
-export function renderNotification(input: NotificationInput, route: NotificationRoute): { text: string; logicalId: string } {
+export function renderNotification(
+  input: NotificationInput,
+  route: NotificationRoute,
+): { text: string; logicalId: string } {
   const blocked = validateNotificationRoute(input, route);
   if (blocked) throw new Error(`Notification suppressed: ${blocked}`);
   const title = safeNotificationText(input.title);
@@ -97,8 +128,8 @@ export function renderNotification(input: NotificationInput, route: Notification
     `[EventForge] ${input.eventType} (${input.severity})`,
     title,
     summary,
-    `Source: ${input.sourceCategory}; verification: ${input.verification}; state: ${input.lifecycleState}`,
-    `Correlation: ${input.correlationId}`,
+    `Source: ${safeNotificationText(input.sourceCategory)}; verification: ${input.verification}; state: ${safeNotificationText(input.lifecycleState)}`,
+    `Correlation: ${safeNotificationText(input.correlationId)}`,
     `Open in EventForge: ${input.eventforgeUrl}`,
   ]
     .filter(Boolean)
