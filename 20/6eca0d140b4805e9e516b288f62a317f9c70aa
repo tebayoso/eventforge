@@ -1,0 +1,154 @@
+workfiles/CONFIGURATION.md
+  s_e1456d33f0da52::t_24cf8f537712be 22-52,181-186,207-214,263-266,275,279-280
+apps/cloudflare/test/session-authority.test.ts
+  s_e1456d33f0da52::t_24cf8f537712be 1-84
+apps/console/public/eventforge-mark.svg
+  s_e1456d33f0da52::t_24cf8f537712be 1-7
+apps/console/src/csp.test.ts
+  s_e1456d33f0da52::t_24cf8f537712be 1-28
+apps/console/src/worker.ts
+  s_e1456d33f0da52::t_24cf8f537712be 23,25,39,143
+packages/mcp-server/src/index.ts
+  s_e1456d33f0da52::t_24cf8f537712be 27-37
+packages/mcp-server/package.json
+  s_e1456d33f0da52::t_24cf8f537712be 60-61
+apps/cloudflare/worker-configuration.d.ts
+  s_e1456d33f0da52::t_24cf8f537712be 2,5-19,22-43,47,50-64
+workfiles/ARCHITECTURE.md
+  s_e1456d33f0da52::t_24cf8f537712be 31-134
+apps/console/.env.production
+  s_e1456d33f0da52::t_24cf8f537712be 1-2
+apps/cloudflare/test/cloudflare-workers.ts
+  s_e1456d33f0da52::t_24cf8f537712be 1-9
+apps/console/src/analytics.test.ts
+  s_e1456d33f0da52::t_24cf8f537712be 1-47
+apps/control-plane/test/app.test.ts
+  s_e1456d33f0da52::t_24cf8f537712be 2,23,37,58-61,105-133,135-207,286-296,377-389,391-403,405-406,408,415-451,453-460,466-468,470,482,485-488,531,551-552,564,585-591,602,607,609-613,756-785
+  s_e1456d33f0da52::t_ab8d17df0a299e 786
+apps/control-plane/migrations/003_commercial_platform.sql
+  s_e1456d33f0da52::t_24cf8f537712be 40-59
+apps/console/public/.well-known/agent-card.json
+  s_e1456d33f0da52::t_24cf8f537712be 2,18
+apps/control-plane/src/app.ts
+  s_e1456d33f0da52::t_24cf8f537712be 14,16,38,43,60,93-100,129-131,136,138-139,184-198,201-202,224,274,293,330-349,374,390-407,647-648,661-713,721-722,725-727
+packages/core/src/contracts.ts
+  s_e1456d33f0da52::t_24cf8f537712be 9,28-29,74-91,256-263
+pnpm-workspace.yaml
+  s_e1456d33f0da52::t_24cf8f537712be 12-17
+apps/cloudflare/vitest.config.ts
+  s_e1456d33f0da52::t_24cf8f537712be 1-9
+packages/core/src/replay-audit.ts
+  s_e1456d33f0da52::t_24cf8f537712be 1-786
+workfiles/DURABLE_DELIVERY_RUNBOOK.md
+  s_e1456d33f0da52::t_24cf8f537712be 1-11
+workfiles/SECURITY.md
+  s_e1456d33f0da52::t_24cf8f537712be 22-63
+packages/core/src/issue-review.ts
+  s_e1456d33f0da52::t_24cf8f537712be 1-84
+.gitleaks.toml
+  s_e1456d33f0da52::t_24cf8f537712be 1-27
+workfiles/STATUS.md
+  s_e1456d33f0da52::t_24cf8f537712be 5-24,27-38,57-61
+apps/console/public/.well-known/agent-skills/index.json
+  s_e1456d33f0da52::t_24cf8f537712be 7
+apps/control-plane/src/runtime.ts
+  s_e1456d33f0da52::t_24cf8f537712be 8,35-38,40-43,59
+apps/console/src/WaitlistPage.tsx
+  s_e1456d33f0da52::t_24cf8f537712be 57-59,75
+apps/console/public/.well-known/agent-skills/eventforge-operations/SKILL.md
+  s_e1456d33f0da52::t_24cf8f537712be 3,6,8
+apps/console/public/.well-known/mcp/server-card.json
+  s_e1456d33f0da52::t_24cf8f537712be 3,5
+apps/console/src/LandingPage.test.tsx
+  s_e1456d33f0da52::t_24cf8f537712be 13-16
+plugins/eventforge/server/eventforge-mcp-http.cjs
+  s_e1456d33f0da52::t_24cf8f537712be 2,4-10,13,18-19,21,32,42,52-53,56,59-63,65-67,69,71-73,75-79,81,83-84,97,110-111,137,139,148,152,161,164,166,171-172,174,181-182,185-186,189,191-192,195,197,200-201,210,217-218,231,234-237,242,251,254,258,262,270,274-275,277-278,280-282,287,289,291,294,298,300,302,310,341,356,362,364,367-368,370,372,374,376,378,380,384,386-387,390-393,408-409,411,413,417,421,424,427,431,443,448,458,464,470,472,476,481,483,490-491,493-494,501,507,510,512-513,515-516,518,529,533,540,545-547,549,551,555,557-560
+apps/cloudflare/test/identity.test.ts
+  s_e1456d33f0da52::t_24cf8f537712be 1-84
+plugins/eventforge/server/eventforge-standalone.cjs
+  s_e1456d33f0da52::t_24cf8f537712be 2-3,6,9-13,16,21-23,25,27-31,33-37,39-41,43,45-46,59,72-73,99,101,126,157,159,162,165,169,173,177,179,196,198,240,244,272,304,318,324,330,336,342,346,348-349,352-355,370-371,379,383,389,393,405,410,420,426,432,434,438,443,445,452-453,455-459,463,465,469-470,472,474-475,478,480-482,486,493,498-500,502,504,508,511-513
+apps/cloudflare/src/identity.ts
+  s_e1456d33f0da52::t_24cf8f537712be 1-278
+apps/console/src/main.tsx
+  s_e1456d33f0da52::t_24cf8f537712be 26,44
+.github/workflows/quality.yml
+  s_e1456d33f0da52::t_24cf8f537712be 39-48
+apps/cloudflare/src/session-authority.ts
+  s_e1456d33f0da52::t_24cf8f537712be 1-265
+packages/core/src/durable-delivery.ts
+  s_e1456d33f0da52::t_24cf8f537712be 1-82
+packages/core/test/replay-audit.test.ts
+  s_e1456d33f0da52::t_24cf8f537712be 1-517
+apps/cloudflare/src/index.ts
+  s_e1456d33f0da52::t_24cf8f537712be 2-8,10-16,232-240,246-433,443,449-457,461,463,466-469,477,483-489,493,496-497,502,510,520-521,523,531-533,582-583,585-655,657,659-667,669-690,693-724,733-735
+apps/console/src/LandingPage.tsx
+  s_e1456d33f0da52::t_24cf8f537712be 230,235,276,278,317,319,348,375,404,408,496,558,586,627,648,665
+packages/core/src/events.ts
+  s_e1456d33f0da52::t_24cf8f537712be 279-286
+packages/mcp-server/src/oauth.ts
+  s_e1456d33f0da52::t_24cf8f537712be 1-336
+packages/core/src/index.ts
+  s_e1456d33f0da52::t_24cf8f537712be 3,6,9
+apps/cloudflare/migrations/control/0003_hosted_identity.sql
+  s_e1456d33f0da52::t_24cf8f537712be 1-72
+workfiles/agent-browser/README.md
+  s_e1456d33f0da52::t_24cf8f537712be 269-301
+  s_e1456d33f0da52::t_8f1935b86c7063 302-303
+  s_e1456d33f0da52::t_e1233acbe2c1b5 268
+apps/console/index.html
+  s_e1456d33f0da52::t_24cf8f537712be 8,11-12,17,27,33
+packages/core/test/durable-delivery.test.ts
+  s_e1456d33f0da52::t_24cf8f537712be 1-63
+apps/console/src/worker.test.ts
+  s_e1456d33f0da52::t_24cf8f537712be 19
+apps/control-plane/src/github-app.test.ts
+  s_e1456d33f0da52::t_24cf8f537712be 1-279
+apps/cloudflare/test/durable-delivery.test.ts
+  s_e1456d33f0da52::t_24cf8f537712be 1-132
+apps/cloudflare/migrations/events/0002_durable_deliveries.sql
+  s_e1456d33f0da52::t_24cf8f537712be 1-76
+apps/console/src/analytics.ts
+  s_e1456d33f0da52::t_24cf8f537712be 28,38,42-46,52,56,70,86-88
+apps/control-plane/src/github-app.ts
+  s_e1456d33f0da52::t_24cf8f537712be 1-197
+plugins/eventforge/server/eventforge-mcp.mjs
+  s_e1456d33f0da52::t_24cf8f537712be 2-3,6,9,11,34,36-38,42
+apps/console/public/.well-known/agent-client.json
+  s_e1456d33f0da52::t_24cf8f537712be 2,5
+apps/cloudflare/migrations/control/0003_delivery_installations.sql
+  s_e1456d33f0da52::t_24cf8f537712be 1-15
+apps/console/src/api.ts
+  s_e1456d33f0da52::t_24cf8f537712be 87
+apps/console/src/App.tsx
+  s_e1456d33f0da52::t_24cf8f537712be 135,138,301
+apps/cloudflare/wrangler.jsonc
+  s_e1456d33f0da52::t_24cf8f537712be 15-16,39-42,66-67,90-92
+apps/console/public/_headers
+  s_e1456d33f0da52::t_24cf8f537712be 6
+packages/core/test/core.test.ts
+  s_e1456d33f0da52::t_24cf8f537712be 6,26-102
+packages/mcp-server/test/oauth.test.ts
+  s_e1456d33f0da52::t_24cf8f537712be 1-280
+workfiles/THREAT_MODEL.md
+  s_e1456d33f0da52::t_24cf8f537712be 25
+apps/console/public/auth.md
+  s_e1456d33f0da52::t_24cf8f537712be 1,3
+pnpm-lock.yaml
+  s_e1456d33f0da52::t_98805508c3310d 7-12,68,111,157,191-193,680-682,686-688,692-695,697-698,702-703,707-708,713-714,719-720,725-726,731-732,737-738,743-744,749-750,755-757,762-764,769-771,776-778,783-785,790-792,797-799,804-806,811-813,815-817,820-822,826-828,832-834,1721-1723,2256-2257,2259-2260,2298-2299,3619-3626,4655,4686,4691-4693,4714,4716,4719,4721,4724-4726,4729,4732,4735,4738,4741,4744,4747,4750,4753,4756,4759,4761,4764,4766,4769,4771,4774,4776,4779,4781,4784,4786,4789,4791,4794,4796,4799,4804,4806,4809,4812,4815,4878,4883,4893,5533,5756,6490,6500,6502,6523,6559,7297,7300,7306,7312,7978,7984-8009,8586,8592,8600
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "206eca0d140b4805e9e516b288f62a317f9c70aa",
+  "prompts": {},
+  "sessions": {
+    "s_e1456d33f0da52": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8ecf217b-9dbc-48b9-91e2-1a273d704e69",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Jorge de los Santos <tebayoso@gmail.com>"
+    }
+  }
+}
