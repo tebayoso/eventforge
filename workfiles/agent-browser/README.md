@@ -335,3 +335,21 @@ Reusable pattern: after a dual-env console deploy, curl `/analytics-config.json`
 on beta before trusting the UI, then walk `/`, `/features`, `/console`, and
 `/waitlist` on both hosts at 1280 and 390 widths. Production `/console` must
 stay 503 while beta `/console` must serve the sign-in SPA.
+
+## 2026-08-28 — production sign-in, waitlist, beta retired
+
+- Deployed console `1127337d` and API `6c29a9ac` from `36a3cd6`.
+- `https://eventforge.dev/console` is the hosted sign-in SPA with Turnstile
+  (`captchaRequired: true`). Footer links to `/waitlist`. No 503 gate.
+- Landing `#waitlist` has the work-email form; pricing CTAs say Join the waitlist.
+- `/waitlist` standalone form works; POST `/v1/waitlist` from
+  `Origin: https://eventforge.dev` returns `202 accepted`.
+- `beta.eventforge.dev` 301s to `https://eventforge.dev` with path preserved.
+  `eventforge-console-beta` Worker deleted.
+- Screenshots: `release-prod-landing-waitlist.png`,
+  `release-prod-console-signin.png`, `release-prod-waitlist-page.png`.
+
+Reusable pattern: after enabling production auth, curl
+`/api/auth/config` on the console origin (not the API host) so you are testing
+the same-origin proxy and the cookie domain together. Confirm `captchaRequired`
+is true before calling the login form done.
