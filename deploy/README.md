@@ -1,5 +1,15 @@
 # Deployment
 
+## Private edge status (issue #9)
+
+Private edge is **blocked, not available**. The versioned Helm reference (`0.2.0`) deliberately refuses `privateEdge.enabled=true`; it is a security reference and preflight surface, not an installable claim. The only declared reference shape is Kubernetes v1.33, one `nginx` ingress class, cert-manager TLS, namespace-scoped service account, restricted pods, default-deny NetworkPolicy, and externally managed Postgres/object store/queue/OIDC/KMS. NetworkPolicy enforcement is mandatory; manifests alone do not enforce it. The policy is opt-in until preflight can safely validate required DNS/dependency egress. Kubernetes documents the [restricted pod profile](https://kubernetes.io/docs/concepts/security/pod-security-standards/) and requires a network plugin that enforces [NetworkPolicy](https://kubernetes.io/docs/concepts/services-networking/network-policies/). No managed vendor/version, capacity envelope, or private-edge drill is claimed as exercised.
+
+Run `pnpm private-edge:preflight`; it exits non-zero and emits human and JSON results without secrets. `--cluster` additionally reports the kubectl server version, but cannot convert fixture or endpoint checks into readiness. Mandatory blockers are Worker D1, R2, Queues, cron, and hosted identity/OIDC workspace-MFA parity. No Durable Object or KV binding is used by application code (generated Worker types are not a runtime dependency).
+
+Keys must be customer-owned external KMS or Secrets Store CSI references only; the chart contains no key material. Missing/revoked keys must fail dependent operations closed. Before availability, bootstrap, rotation with safe dual-read only, revocation, lost-key terminal behavior, break-glass ownership, and isolated restore/promotion must be exercised. Backups must cover configuration/mapping, durable events/attempts, evidence and metadata, pseudonymous audit, and policy/approval; RPO 15 minutes and RTO 4 hours remain inherited targets, not proven outcomes. Rollback is compatible code/config only: never database rewind or evidence deletion, and blocked across incompatible schema.
+
+Private-edge diagnostics are unimplemented. A future export must require role plus recent MFA, exact preview, allowlisted bounded fields, encryption, audit, and exclusion of secrets, environment, tokens, payloads, evidence, raw logs, key paths, and tenant identifiers. Customer owns cluster/network/storage/KMS/identity/backup destination; EventForge owns chart/app/migrations/preflight/compatibility; incident diagnosis is joint. No airgap, hosted fallback, telemetry requirement, bespoke topology, or unmanaged fork is supported.
+
 ## Production architecture
 
 EventForge is the product name; `eventforge.dev` is its canonical public domain. This deployment deliberately does not rename packages, containers, Helm releases, or runtime variables.
@@ -108,3 +118,54 @@ Add the other provider and storage values from the table to the runtime secret b
 3. Open `https://eventforge.dev`, verify the browser uses `https://api.eventforge.dev`, and check that an origin other than `https://eventforge.dev` receives no CORS allow header.
 4. Configure each provider webhook at `https://hooks.eventforge.dev/webhooks/<provider>` with its matching signing secret. Send a signed test delivery and verify EventForge returns `202`, stores a `verified` event, and creates no automatic write.
 5. Verify `https://www.eventforge.dev/...` returns a single permanent redirect to the apex, then re-run the console/API checks.
+
+## Pre-production: beta.eventforge.dev
+
+The release-candidate console is deployed as a **separate Worker**
+(`eventforge-console-beta`) so it can never take traffic from the apex domain.
+
+```bash
+pnpm --filter @eventforge/console deploy:beta   # build --mode beta + wrangler deploy --env beta
+```
+
+Analytics are disabled on beta, and this takes TWO mechanisms, not one:
+
+1. `apps/console/.env.beta` blanks the build-time `VITE_GA_MEASUREMENT_ID` and
+   `VITE_POSTHOG_KEY` fallbacks.
+2. `scripts/write-beta-analytics-config.mjs` overwrites `dist/analytics-config.json`
+   after the build.
+
+Step 2 is not optional. `public/analytics-config.json` is copied verbatim into
+`dist/` and fetched at RUNTIME by `src/analytics.ts`, where it **overrides** the
+build-time values. A beta deploy with only step 1 still shipped the production
+PostHog key and GA4 measurement id and reported into the production project — that
+happened once and was caught by curling the deployed
+`/analytics-config.json`. The script fails the build if any field is non-blank.
+
+Verify a beta deploy by checking the served asset, not just the JS bundle:
+
+```bash
+curl -s https://beta.eventforge.dev/analytics-config.json   # all fields must be ""
+```
+
+Note `/console` returns 503 ("sign-in required") on beta **and** production. That
+is the intended fail-closed state while hosted auth is unwired, not a beta defect.
+
+### What a beta console deploy does and does not cover
+
+The console is a static SPA that does not import `@eventforge/core`, so deploying it
+exercises the site build only. To exercise the shared runtime code, deploy the
+Worker, which bundles `@eventforge/core`:
+
+```bash
+cd apps/cloudflare && wrangler deploy      # -> eventforge-cloud-preview
+curl -s https://eventforge-cloud-preview.jorge-b9f.workers.dev/health
+```
+
+A healthy `{"ok":true,...}` there is the signal that the core barrel imports
+cleanly under workerd — the failure mode where a module throws at load and takes
+every importer down with it.
+
+The Node control-plane is not a Cloudflare target; it deploys via Docker/Helm and
+needs `pnpm --filter @eventforge/control-plane migrate` run against its Postgres
+first (see `workfiles/MIGRATIONS.md`, and note the pgvector prerequisite).

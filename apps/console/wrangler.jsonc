@@ -1,6 +1,7 @@
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "eventforge-console",
+  "account_id": "b9f5ebc6c05975fab56f056782461b77",
   "main": "src/worker.ts",
   "compatibility_date": "2026-07-20",
   "workers_dev": false,
@@ -16,4 +17,31 @@
       "custom_domain": true,
     },
   ],
+  "env": {
+    // Pre-production target for release-candidate verification. Deployed as a
+    // separate Worker so it can never take traffic from the apex domain, and
+    // built with `--mode beta`, which blanks the analytics keys so beta sessions
+    // stay out of the production GA4 property and PostHog project.
+    "beta": {
+      "name": "eventforge-console-beta",
+      "workers_dev": false,
+      "assets": {
+        "directory": "./dist",
+        "binding": "ASSETS",
+        "not_found_handling": "single-page-application",
+        "run_worker_first": ["/*"],
+      },
+      "routes": [
+        {
+          "pattern": "beta.eventforge.dev",
+          "custom_domain": true,
+        },
+      ],
+      // /api/* is proxied to the pre-production API worker so the browser sees a
+      // same-origin request and the session cookie stays SameSite=Strict.
+      "vars": {
+        "API_ORIGIN": "https://eventforge-cloud-preview.jorge-b9f.workers.dev",
+      },
+    },
+  },
 }

@@ -28,7 +28,115 @@ for the supported launch modes and environment contract.
 
 Remote mode is intentionally fail-closed. Startup requires PostgreSQL, an encryption key, explicit browser origins, and an injected MFA-authenticated identity provider. The repository contains durable PostgreSQL schema and queue primitives, but the normal entry point does not enable remote mode until authentication and complete repository hydration are wired.
 
+## Hosted identity boundary
+
+Issue #7 introduces a separate hosted identity service at the same browser origin,
+`https://eventforge.dev/api/auth`. D1 is the relational source of truth for users,
+verified email challenges, workspaces, memberships, invitations, factors, and
+governance audit records. It does not authorize a request by itself. Every hosted
+request must first validate its opaque session identifier against a per-user,
+SQLite-backed Durable Object. That object is the strongly consistent authority
+for active sessions and revocation epochs; an unavailable authority denies access.
+There is exactly one object per canonical user identifier, selected with a
+deterministic object name. It contains every session for that user and is never
+split by workspace, device, or region, so a single epoch change invalidates all
+affected sessions without cross-shard propagation.
+The Fastify control plane receives only the resulting current identity,
+workspace membership, role, scopes, session identifier, and MFA time through its
+existing injected authenticator boundary.
+
+The hosted implementation uses Better Auth's D1-compatible database support,
+email verification, organization access control, TOTP, and WebAuthn passkey
+support. EventForge owns the stricter policy layer: public registration is off,
+roles map to EventForge permissions, privileged operations require an absolute
+15-minute MFA window, and recovery codes use one-way salted hashes rather than a
+later-viewable encrypted backup-code store.
+
+WebAuthn uses RP ID `eventforge.dev` and production origin
+`https://eventforge.dev`. Enrollment requires a verified session, user
+verification, and resident credentials for Owner and Admin factors. Lower roles
+may use a resident-preferred credential for sign-in. The server validates the
+challenge, origin, RP ID, credential/account binding, and signature counter, and
+records credential properties, backup state, and AAGUID. Unsupported required
+capabilities fail explicitly.
+
+Email verification proves control of one normalized address through a
+single-use one-hour challenge; it does not prove employment or domain ownership.
+Invitations use opaque random identifiers, expire after seven days, and can be
+accepted only by a verified session for the exact invited address. Ownership
+changes and account closure are serialized with optimistic versions and storage
+transactions. The last owner cannot leave, be removed, be downgraded, or close
+their account. There is no support impersonation or factor bypass.
+
+Membership removal and downgrade use a revoke-first transition. The user object
+first blocks new sessions and increments its revocation epoch, D1 then commits the
+membership version, and only then may the object allow sessions with the new
+version. Failure after the first step leaves the user blocked rather than
+over-authorized. Success is not returned until both stores commit.
+
+Revocation is defined at that authority commit boundary: every new request after
+the commit is denied; already-running requests are not retroactively cancelled.
+The end-to-end SLO from accepting an authorized revocation request to that commit
+remains 60 seconds. A breach alerts operations and is not hidden by a cache or
+eventually consistent token. Because all hosted requests consult the authority,
+an authority outage fails closed for reads as well as writes.
+
+P0 deliberately has no artificial keepalive. Normal traffic keeps active user
+objects warm; cold starts are accepted and measured rather than multiplying cost
+and load with scheduled pings. The release gate measures warm and cold p95/p99
+session-validation latency. Added validation latency must remain at or below 100
+ms warm p95, 200 ms warm p99, 250 ms cold p95, and 500 ms cold p99 in the launch
+regions. A per-user object accepts at most 100 validations per second with a
+bounded burst of 200; excess traffic fails explicitly instead of growing an
+unbounded queue.
+
+The authority stores only sessions, request tokens, revocation epochs, and
+transition state in SQLite-backed Durable Object storage. Identity factors and
+workspace membership remain in D1, so authority recovery cannot manufacture an
+identity or grant access. Storage invariants and schema versions are checked on
+every object start. An invariant or storage failure quarantines the object and
+denies every session.
+
+SQLite point-in-time recovery is retained for 30 days as the operational backup
+mechanism. Restore is performed with ingress disabled for the affected authority.
+Before ingress resumes, the recovery procedure atomically increments the
+revocation epoch, deletes all restored sessions and request tokens, clears any
+partial transition, and records the incident in D1. All users then authenticate
+again with their independently stored verified factor or recovery code. Active
+session material is never exported to a second backup. If storage cannot be
+restored, the same fail-closed reset creates an empty authority; it cannot restore
+or bypass a lost identity factor.
+
+### Issue #7 implementation and launch gate
+
+`apps/cloudflare/src/identity.ts` is the hosted lifecycle policy implementation.
+It has deterministic test ports for email delivery and factor verification; the
+production adapter must provide D1 transactions, an email sender, WebAuthn
+verification, and TOTP verification before any hosted route is enabled.
+`SessionAuthority` is the one-per-canonical-user SQLite Durable Object and is
+bound as `IDENTITY_AUTHORITY`; its only session material is opaque IDs, request
+tokens, membership versions, and revocation state. D1 migration `0003` contains
+identities, email challenges, memberships, invitations, factors, recovery-code
+hashes, and attributable governance events.
+Every authority start validates both table shapes and required metadata before
+serving a request; partial storage, an unknown schema version, or invalid
+revocation metadata quarantines the object. Request adapters must resolve the
+binding through `sessionAuthorityFor`, which uses one stable `getByName`
+selection for the exact canonical user identifier.
+
+There is deliberately no live email/provider binding in this repository. The
+Worker therefore continues to return `AUTH_GATED` for `/api/auth/*` and `/v1/*`
+in every deployed environment. Enabling it requires a reviewed adapter,
+production WebAuthn verification for `eventforge.dev`/`https://eventforge.dev`,
+an invitation-only enrollment path, D1 transaction wiring for revoke-first
+membership transitions, authority latency/SLO instrumentation, and a successful
+recovery drill. Passing deterministic tests is not production proof.
+
 ## Trust boundaries
+
+## Operational readiness boundary
+
+The control plane evaluates six independently closed surfaces: console/API, signed ingress, investigations, evidence, remote MCP, and GitHub App. Evidence is append-only and evaluated as `unknown`, `failed`, `stale`, `skipped`, or `passed`; only fresh passing evidence plus applicable upstream Definition of Done opens its dependent surface. GA additionally requires all applicable surfaces, no security/tenancy/authentication veto, no critical finding, and an authenticated durable reconciliation evidence ID with zero variance. A supplied snapshot is diagnostic and never production proof. Public status is a deliberately sanitized projection; diagnostics and kill-switch history stay operator-gated.
 
 - Provider bodies are untrusted until provider-specific raw-body signature, delivery identifier, and replay checks where supported succeed. Remote installation scope is resolved separately through configured mappings.
 - Workspace and project scope comes from configured integration mappings in remote mode, never webhook-supplied workspace fields.
@@ -40,3 +148,39 @@ Remote mode is intentionally fail-closed. Startup requires PostgreSQL, an encryp
 ## Stable contracts
 
 The runtime contracts live in `packages/core/src/contracts.ts`: `RuntimeMode`, `AuthContext`, `ProviderAdapter`, `PolicyDecision`, `EventEnvelope`, `WorkflowDefinition`, `ActionProposal`, `ForgeJob`, repository interfaces, and MCP scopes.
+
+## SDK and marketplace foundation (issue #14)
+
+`@eventforge/core/sdk` is the public v1 connector boundary. It accepts only
+`source.ingest.v1`, `context.read.v1`, and `notification.send.v1`; it does not
+grant raw host, environment, filesystem, shell, arbitrary HTTP, admin, deploy,
+or self-modifying access. Implementations receive tenant-bound contexts with a
+deadline, idempotency key, abort signal, and capability logger, and return
+typed outcomes rather than secrets or host errors.
+
+Installation is fail-closed until issue #8 artifact trust is available. A
+reviewed, unexpired publisher review, exact-digest Owner recent-MFA approval,
+valid signature, non-revoked artifact, and compatible core/capability set are
+all required. `evaluateInstall` exposes deterministic denial reason codes; its
+caller supplies the evaluation time so expiry decisions are reproducible. New
+installs require live marketplace revocation evidence. Scope entries are
+bounded, unique identifiers without wildcards, control characters, or generic
+unbounded sentinels; retention is an integer from `0d` through `3650d`, and
+publisher signing keys are bounded public `did:key` or PEM values.
+
+Marketplace listings are not authority. During an outage only an existing exact
+installation with a valid artifact signature and a separately signed,
+non-revoked revocation snapshot aged 0 through 15 minutes may run. Live or
+unavailable revocation state is not treated as outage snapshot evidence. Full
+production certification remains closed pending the real signer/revocation
+services and recovery drills.
+
+## Timeline foundation (#19)
+
+`packages/core/src/timeline.ts` defines tenant-scoped, append-only timeline entry and export contracts. It separates facts, findings, proposals, policy results, decisions, attempts, and outcomes; corrections are new entries linked through causal/version references. The canonical manifest is deterministic JSON with SHA-256 integrity hashing, an explicit machine-to-human field map, and a standalone verifier. Redacted, expired, and deleted entries remain typed omissions. This is an internal deterministic foundation only: hosted viewing/export stays fail-closed until #7, #13, and #17 provide authenticated repositories, revocation, and recent-MFA signing-key access.
+
+## OpenTelemetry export (not yet enabled)
+
+`packages/core/src/telemetry.ts` publishes schema `1.0.0`: nine fixed lifecycle names and a deny-by-default attribute dictionary. Each destination gets an HMAC-SHA256 `vN:` workspace pseudonym truncated to 128 bits; raw workspace, provider, event, user, resource, payload, prompts, errors, URLs, credentials, and derived hashes are excluded. Trace and span IDs are random internal identifiers.
+
+The future exporter is opt-in OTLP/HTTP JSON only, asynchronous from a lifecycle projection, and must retain per-destination queues, DNS/rebinding checks, immutable MFA-authorized configuration versions, credential encryption, synthetic-only health/tests, and bounded retries. Remote mode remains fail-closed until those persistence and worker controls exist; local mode does not export.

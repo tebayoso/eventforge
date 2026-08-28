@@ -132,10 +132,10 @@ export default function App() {
       <header className="mx-auto flex max-w-[1540px] items-center justify-between px-6 py-5 lg:px-10">
         <div className="flex items-center gap-3">
           <div className="brand-mark grid h-10 w-10 place-items-center rounded-xl">
-            <Activity size={21} />
+            <img className="h-7 w-7" src="/eventforge-mark.svg" alt="" aria-hidden="true" />
           </div>
           <div>
-            <h1 className="font-semibold tracking-tight">EventBridge</h1>
+            <h1 className="font-semibold tracking-tight">EventForge</h1>
             <p className="brand-subtitle text-xs">Autonomous engineering operations</p>
           </div>
         </div>
@@ -298,7 +298,7 @@ export default function App() {
           >
             <ResourceBoundary
               resource={resources.actions}
-              empty="No pending writes. EventBridge will never auto-approve a new workflow."
+              empty="No pending writes. EventForge will never auto-approve a new workflow."
             >
               <div className="space-y-3">
                 {pending.map((action) => (

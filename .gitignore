@@ -1,17 +1,64 @@
-node_modules
-dist
+# Dependencies
+node_modules/
+package-lock.json
+pnpm-lock.yaml
+
+# Build outputs
+dist/
+.next/
+.out/
+*.tgz
+
+# Wrangler / Cloudflare state
+.wrangler/
+
+# Environment files (never commit secrets)
 .env
-.env.local
-coverage
+.env.*
+!.env.example
+!.env.production.template
+
+# Coverage
+coverage/
+.nyc_output/
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Databases (local/dev only)
 *.db
 *.db-*
-artifacts
-data
-.eventforge
-release
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
 
-# Keep the repository's required browser QA playbooks despite the user's global workfiles ignore rule.
+# Work artifacts
+artifacts/
+data/
+
+# EventForge local state
+.eventforge/
+
+# Release artifacts
+release/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+.c3/
+.turbo/
+
+# Logs
+logs/
+*.log
+
+# Keep the repository's required browser QA playbooks despite the global workfiles ignore rule.
 !workfiles/
 !workfiles/agent-browser/
 !workfiles/agent-browser/README.md

@@ -3,8 +3,15 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ include "eventforge.fullname" . }}
+  {{- if .Values.ingress.clusterIssuer }}
+  annotations:
+    cert-manager.io/cluster-issuer: {{ .Values.ingress.clusterIssuer | quote }}
+  {{- end }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
+  tls:
+    - hosts: [{{ .Values.ingress.host | quote }}]
+      secretName: {{ .Values.ingress.tlsSecretName }}
   rules:
     - host: {{ .Values.ingress.host }}
       http:
