@@ -336,7 +336,9 @@ export default function SignInPage({ onSignedIn }: { onSignedIn: (session: Sessi
         )}
 
         <p className="ef-signin-foot">
-          Pre-production environment. <a href="/">Return to eventforge.dev</a>
+          Need access? <a href="/waitlist">Join the waitlist</a>
+          {" · "}
+          <a href="/">Return home</a>
         </p>
       </div>
     </main>

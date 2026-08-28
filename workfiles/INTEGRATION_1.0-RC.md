@@ -411,8 +411,44 @@ adding more modules — this will recur otherwise.
   `/health` returns `{"ok":true,"service":"eventforge-cloud","environment":"preview","ingress":"gated"}`,
   which is the real signal that the namespaced barrel imports cleanly under workerd.
 
-`/console` returns 503 on beta _and_ production — the intended fail-closed
-"sign-in required" state while hosted auth is unwired, not a beta defect.
+`/console` returns 503 on production — the intended fail-closed
+"sign-in required" state while hosted auth remains gated there. On beta,
+`/console` now serves the hosted sign-in SPA (password + email-link).
+
+## Released: 2026-08-28 — v1.0.0-rc.1
+
+PR [#52](https://github.com/tebayoso/eventforge/pull/52) was already merged to
+`master` at `30865aa`; release tag `v1.0.0-rc.1` points at `06c5de6`
+(toolchain bump after the merge). `origin/1.0-rc` was fast-forwarded to the
+same commit.
+
+GitHub: https://github.com/tebayoso/eventforge/releases/tag/v1.0.0-rc.1
+
+| Surface | Result |
+| --- | --- |
+| Preview API `/health` | `ok`, `environment=preview`, `ingress=gated` |
+| Production API `/health` | `ok`, `environment=production`, `ingress=gated` |
+| `hooks.eventforge.dev` | custom domain live; unsigned routes 404 |
+| `beta.eventforge.dev` | live; analytics-config blanked; `/console` sign-in SPA |
+| `eventforge.dev` | live; `/console` 503; waitlist and features pages render |
+
+D1 applied: preview events `0002_durable_deliveries`; production control
+`0003_delivery_installations`, `0003_hosted_identity`, `0004_identity_passwords`;
+production events `0002_durable_deliveries`.
+
+Not shipped: npm of `@eventforge/mcp-server`; private-edge Helm install;
+production hosted sign-in / public ingress.
+
+Quality on `master` is red at `pnpm audit --prod` (high: `fast-uri` needs
+`>=3.1.5`, plus `ip-address`, `nanoid`, `tar`). `pnpm quality` itself completed.
+Follow-up: bump workspace overrides.
+
+## 2026-08-28 — production sign-in, no beta, waitlist
+
+Beta console env removed. Apex `/console` serves hosted sign-in. `/api/auth/*`
+is live on `api.eventforge.dev`. Email-link requests no longer create identities.
+Landing `#waitlist` and `/waitlist` are the enrollment form. `/v1/*` other than
+waitlist stays `AUTH_GATED`.
 
 ## Still open
 

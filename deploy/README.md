@@ -119,43 +119,31 @@ Add the other provider and storage values from the table to the runtime secret b
 4. Configure each provider webhook at `https://hooks.eventforge.dev/webhooks/<provider>` with its matching signing secret. Send a signed test delivery and verify EventForge returns `202`, stores a `verified` event, and creates no automatic write.
 5. Verify `https://www.eventforge.dev/...` returns a single permanent redirect to the apex, then re-run the console/API checks.
 
-## Pre-production: beta.eventforge.dev
+## Production console and hosted sign-in
 
-The release-candidate console is deployed as a **separate Worker**
-(`eventforge-console-beta`) so it can never take traffic from the apex domain.
-
-```bash
-pnpm --filter @eventforge/console deploy:beta   # build --mode beta + wrangler deploy --env beta
-```
-
-Analytics are disabled on beta, and this takes TWO mechanisms, not one:
-
-1. `apps/console/.env.beta` blanks the build-time `VITE_GA_MEASUREMENT_ID` and
-   `VITE_POSTHOG_KEY` fallbacks.
-2. `scripts/write-beta-analytics-config.mjs` overwrites `dist/analytics-config.json`
-   after the build.
-
-Step 2 is not optional. `public/analytics-config.json` is copied verbatim into
-`dist/` and fetched at RUNTIME by `src/analytics.ts`, where it **overrides** the
-build-time values. A beta deploy with only step 1 still shipped the production
-PostHog key and GA4 measurement id and reported into the production project — that
-happened once and was caught by curling the deployed
-`/analytics-config.json`. The script fails the build if any field is non-blank.
-
-Verify a beta deploy by checking the served asset, not just the JS bundle:
+The apex console (`eventforge-console` on `eventforge.dev`) proxies `/api/*` to
+`https://api.eventforge.dev` so the session cookie can stay SameSite=Strict.
+`/console` serves the sign-in SPA. New accounts are not created from that form;
+unknown addresses get the same 202 as known ones, and enrollment is waitlist plus
+an invitation. The waitlist form lives on the landing page (`/#waitlist`) and at
+`/waitlist`.
 
 ```bash
-curl -s https://beta.eventforge.dev/analytics-config.json   # all fields must be ""
+pnpm --filter @eventforge/console deploy:cloudflare
+cd apps/cloudflare && pnpm exec wrangler deploy --env production
 ```
 
-Note `/console` returns 503 ("sign-in required") on beta **and** production. That
-is the intended fail-closed state while hosted auth is unwired, not a beta defect.
+Production sign-in requires `TURNSTILE_SECRET` and the `EMAIL` sending binding.
+`AUTH_CAPTCHA_DISABLED` is ignored on `ENVIRONMENT=production`.
 
-### What a beta console deploy does and does not cover
+Non-production hostnames still serve a blank `/analytics-config.json` so preview
+traffic cannot write to the production PostHog project or GA4 property.
+
+### Preview Worker (API-only)
 
 The console is a static SPA that does not import `@eventforge/core`, so deploying it
 exercises the site build only. To exercise the shared runtime code, deploy the
-Worker, which bundles `@eventforge/core`:
+preview Worker, which bundles `@eventforge/core`:
 
 ```bash
 cd apps/cloudflare && wrangler deploy      # -> eventforge-cloud-preview

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import worker, { isConsolePath, isPreProductionHost } from "./worker.js";
 
 describe("hosted console route boundary", () => {
@@ -24,19 +24,16 @@ describe("hosted console route boundary", () => {
 });
 
 it("serves a blanked analytics config on any non-production host", async () => {
-  // Structural backstop: the static asset in dist/ carries the production keys,
-  // and both a production-mode build and a manual `wrangler deploy --env beta`
-  // have already shipped it to beta once each. The hostname check means no build
-  // or deploy path can leak it again.
-  expect(isPreProductionHost("beta.eventforge.dev")).toBe(true);
-  expect(isPreProductionHost("eventforge-console-beta.workers.dev")).toBe(true);
+  // Structural backstop: the static asset in dist/ carries the production keys.
+  // The hostname check means no build or deploy path can leak it to a
+  // non-production host.
   expect(isPreProductionHost("localhost")).toBe(true);
-  // Production must keep its real config.
+  expect(isPreProductionHost("eventforge-console.workers.dev")).toBe(true);
   expect(isPreProductionHost("eventforge.dev")).toBe(false);
   expect(isPreProductionHost("www.eventforge.dev")).toBe(false);
 
   const response = await worker.fetch(
-    new Request("https://beta.eventforge.dev/analytics-config.json"),
+    new Request("https://localhost/analytics-config.json"),
     {} as never,
   );
   expect(response.status).toBe(200);
@@ -45,4 +42,37 @@ it("serves a blanked analytics config on any non-production host", async () => {
     posthogHost: "",
     gaMeasurementId: "",
   });
+});
+
+it("serves the console SPA on production instead of a sign-in gate", async () => {
+  const assets = { fetch: async () => new Response("<html>console</html>") };
+  const response = await worker.fetch(new Request("https://eventforge.dev/console"), {
+    ASSETS: assets,
+    API_ORIGIN: "https://api.eventforge.dev",
+  });
+  expect(response.status).toBe(200);
+  expect(await response.text()).toContain("console");
+});
+
+it("proxies /api on production so the session cookie can stay SameSite=Strict", async () => {
+  const originalFetch = globalThis.fetch;
+  const fetchMock = vi.fn(
+    async () =>
+      new Response(JSON.stringify({ captchaRequired: true }), {
+        headers: { "content-type": "application/json" },
+      }),
+  );
+  globalThis.fetch = fetchMock as typeof fetch;
+  try {
+    const response = await worker.fetch(new Request("https://eventforge.dev/api/auth/config"), {
+      ASSETS: { fetch: async () => new Response("assets") },
+      API_ORIGIN: "https://api.eventforge.dev",
+    });
+    expect(fetchMock).toHaveBeenCalledOnce();
+    const upstream = fetchMock.mock.calls[0]![0] as Request;
+    expect(new URL(upstream.url).href).toBe("https://api.eventforge.dev/api/auth/config");
+    expect(await response.json()).toEqual({ captchaRequired: true });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });

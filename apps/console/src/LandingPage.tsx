@@ -19,6 +19,7 @@ import {
   GitPullRequest,
   Globe2,
   LockKeyhole,
+  Mail,
   Play,
   RotateCcw,
   ShieldCheck,
@@ -28,6 +29,7 @@ import {
   Waves,
   Workflow,
 } from "lucide-react";
+import { WaitlistForm } from "./WaitlistPage";
 
 const GITHUB_REPOSITORY = "https://github.com/tebayoso/eventforge";
 const CONFIGURATION_GUIDE = `${GITHUB_REPOSITORY}/blob/main/workfiles/CONFIGURATION.md`;
@@ -319,6 +321,7 @@ export default function LandingPage() {
           <a href="#product">Product</a>
           <a href="/features">Features</a>
           <a href="#pricing">Pricing</a>
+          <a href="#waitlist">Waitlist</a>
           <a href={CONFIGURATION_GUIDE} target="_blank" rel="noreferrer">
             Docs
           </a>
@@ -554,14 +557,14 @@ export default function LandingPage() {
                 ))}
               </ul>
               <a
-                href="#install"
+                href={name === "Free" ? "#install" : "#waitlist"}
                 className={featured ? "ef-price-cta ef-price-cta--active" : "ef-price-cta"}
               >
                 {name === "Enterprise"
                   ? "Talk to EventForge"
                   : name === "Free"
                     ? "Start free"
-                    : "Join the beta"}
+                    : "Join the waitlist"}
                 <ArrowUpRight size={15} />
               </a>
             </article>
@@ -572,6 +575,26 @@ export default function LandingPage() {
           event-destination pair. Retries, filters, alerts, and failed internal processing are free.
           Team overage starts at $0.50 / 100k; Pro at $0.30 / 100k. Preview packaging; final prices
           are validated with design partners before public billing.
+        </div>
+      </section>
+
+      <section className="ef-landing-waitlist" id="waitlist">
+        <div className="ef-landing-waitlist-copy">
+          <span className="ef-eyebrow">
+            <Mail size={14} /> Hosted access
+          </span>
+          <h2>
+            Sign-in is live.
+            <br />
+            <em>Signups are not.</em>
+          </h2>
+          <p>
+            Invited workspaces can sign in today. New accounts stay closed. Leave a work email and
+            we will tell you when there is a seat — not a drip campaign.
+          </p>
+        </div>
+        <div className="ef-landing-waitlist-card">
+          <WaitlistForm idPrefix="landing-waitlist" source="landing" />
         </div>
       </section>
 
@@ -669,6 +692,7 @@ export default function LandingPage() {
         </a>
         <span>Policy-first operations for event-driven teams.</span>
         <div className="ef-footer-links">
+          <a href="#waitlist">Waitlist</a>
           <a href={CONFIGURATION_GUIDE} target="_blank" rel="noreferrer">
             Docs
           </a>

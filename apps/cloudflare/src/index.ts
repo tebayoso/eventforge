@@ -557,16 +557,10 @@ export default {
         url.pathname === "/webhooks/canary"
       )
         return ingestCanary(request, env);
-      // Hosted sign-in is enabled on pre-production surfaces only. Production
-      // stays deliberately closed until it passes its own release gates, so the
-      // first real callers of these paths are beta operators, not customers.
-      if (surface === "preview" && url.pathname.startsWith("/api/auth/"))
+      if ((surface === "api" || surface === "preview") && url.pathname.startsWith("/api/auth/"))
         return handleAuth(request, env, url);
 
-      if (
-        (surface === "api" || surface === "preview") &&
-        (url.pathname.startsWith("/v1/") || url.pathname.startsWith("/api/auth/"))
-      )
+      if ((surface === "api" || surface === "preview") && url.pathname.startsWith("/v1/"))
         return problem(
           503,
           "AUTH_GATED",

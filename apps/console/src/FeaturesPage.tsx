@@ -290,6 +290,7 @@ export default function FeaturesPage() {
         <nav aria-label="Primary navigation">
           <a href="/#problem">Why</a>
           <a href="/#pricing">Pricing</a>
+          <a href="/#waitlist">Waitlist</a>
           <a href="/#install">Install</a>
           <a href={GITHUB_REPOSITORY} rel="noreferrer noopener" target="_blank">
             GitHub

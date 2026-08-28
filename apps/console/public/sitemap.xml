@@ -4,4 +4,12 @@
     <loc>https://eventforge.dev/</loc>
     <changefreq>weekly</changefreq>
   </url>
+  <url>
+    <loc>https://eventforge.dev/features</loc>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://eventforge.dev/waitlist</loc>
+    <changefreq>weekly</changefreq>
+  </url>
 </urlset>

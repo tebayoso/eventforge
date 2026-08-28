@@ -7,9 +7,10 @@ type SubmissionState = "idle" | "submitting" | "success" | "error";
 const WAITLIST_API_URL =
   import.meta.env.VITE_WAITLIST_API_URL?.trim() || "https://api.eventforge.dev/v1/waitlist";
 
-export default function WaitlistPage() {
+export function WaitlistForm({ source, idPrefix }: { source: string; idPrefix: string }) {
   const [state, setState] = useState<SubmissionState>("idle");
   const [message, setMessage] = useState("");
+  const emailId = `${idPrefix}-email`;
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -17,14 +18,14 @@ export default function WaitlistPage() {
     const email = String(form.get("email") ?? "").trim();
     const consent = form.get("consent") === "on";
     const website = String(form.get("website") ?? "");
-    captureEvent("waitlist_submit_started", { source: "direct" });
+    captureEvent("waitlist_submit_started", { source });
     setState("submitting");
     setMessage("");
     try {
       const response = await fetch(WAITLIST_API_URL, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email, consent, website, source: "direct" }),
+        body: JSON.stringify({ email, consent, website, source }),
       });
       const body = (await response.json().catch(() => ({}))) as {
         accepted?: boolean;
@@ -51,6 +52,39 @@ export default function WaitlistPage() {
   };
 
   return (
+    <form className="ef-waitlist-form" onSubmit={submit} noValidate>
+      <label htmlFor={emailId}>Work email</label>
+      <input
+        id={emailId}
+        name="email"
+        type="email"
+        autoComplete="email"
+        placeholder="you@company.com"
+        required
+        maxLength={254}
+        disabled={state === "submitting"}
+      />
+      <label className="ef-waitlist-consent">
+        <input name="consent" type="checkbox" required disabled={state === "submitting"} />
+        <span>I want launch updates when hosted access opens for new teams.</span>
+      </label>
+      <label className="ef-honeypot" aria-hidden="true">
+        Website
+        <input name="website" tabIndex={-1} autoComplete="off" />
+      </label>
+      <button type="submit" disabled={state === "submitting"}>
+        {state === "submitting" ? "Joining…" : "Join the waitlist"}
+        <ArrowUpRight size={16} />
+      </button>
+      <p className={`ef-waitlist-message ef-waitlist-message--${state}`} role="status">
+        {message}
+      </p>
+    </form>
+  );
+}
+
+export default function WaitlistPage() {
+  return (
     <main className="ef-waitlist-page">
       <div className="ef-grain" aria-hidden="true" />
       <header className="ef-waitlist-header">
@@ -64,7 +98,7 @@ export default function WaitlistPage() {
       </header>
       <section className="ef-waitlist-card" aria-labelledby="waitlist-title">
         <div className="ef-eyebrow">
-          <Mail size={14} /> Private beta access
+          <Mail size={14} /> Waitlist
         </div>
         <h1 id="waitlist-title">
           Bring your event stream
@@ -72,37 +106,10 @@ export default function WaitlistPage() {
           <em>under one roof.</em>
         </h1>
         <p>
-          Join the quiet list for early access to EventForge: verified ingress, outcome-aware
-          monitoring, replay, and carefully bounded reactions.
+          Sign-in is live for invited workspaces. New accounts are closed. Leave a work email and we
+          will send the next useful update, not a noisy newsletter.
         </p>
-        <form className="ef-waitlist-form" onSubmit={submit} noValidate>
-          <label htmlFor="waitlist-email">Work email</label>
-          <input
-            id="waitlist-email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            placeholder="you@company.com"
-            required
-            maxLength={254}
-            disabled={state === "submitting"}
-          />
-          <label className="ef-waitlist-consent">
-            <input name="consent" type="checkbox" required disabled={state === "submitting"} />
-            <span>I want launch updates and early access.</span>
-          </label>
-          <label className="ef-honeypot" aria-hidden="true">
-            Website
-            <input name="website" tabIndex={-1} autoComplete="off" />
-          </label>
-          <button type="submit" disabled={state === "submitting"}>
-            {state === "submitting" ? "Joining…" : "Join the waitlist"}
-            <ArrowUpRight size={16} />
-          </button>
-          <p className={`ef-waitlist-message ef-waitlist-message--${state}`} role="status">
-            {message}
-          </p>
-        </form>
+        <WaitlistForm idPrefix="waitlist" source="direct" />
         <div className="ef-waitlist-trust">
           <ShieldCheck size={17} /> No passwords. No payloads. Unsubscribe any time.
         </div>

@@ -18,6 +18,10 @@ it("renders the public product story and working console entrypoint", () => {
   expect(container.textContent).toContain("Verified ingress");
   expect(container.textContent).toContain("Free to prove.");
   expect(container.textContent).toContain("Install with Codex");
+  expect(container.textContent).toContain("Join the waitlist");
+  expect(container.textContent).toContain("Sign-in is live.");
+  expect(container.querySelector("#waitlist")).not.toBeNull();
+  expect(container.querySelector<HTMLFormElement>("#waitlist form")).not.toBeNull();
   expect(
     container.querySelector<HTMLAnchorElement>('a[href="https://github.com/tebayoso/eventforge"]'),
   ).not.toBeNull();

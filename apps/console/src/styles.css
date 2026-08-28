@@ -1789,6 +1789,41 @@ body {
   flex: 0 0 auto;
   color: var(--signal);
 }
+.ef-landing-waitlist {
+  display: grid;
+  grid-template-columns: 1fr 0.92fr;
+  gap: clamp(42px, 8vw, 110px);
+  align-items: start;
+  padding: clamp(94px, 12vw, 155px) max(32px, calc((100vw - 1280px) / 2));
+  border-top: 1px solid var(--line);
+  background: var(--ink-soft);
+}
+.ef-landing-waitlist h2 {
+  margin: 18px 0 0;
+  font-size: clamp(46px, 6vw, 78px);
+  line-height: 0.98;
+  letter-spacing: -0.06em;
+}
+.ef-landing-waitlist h2 em {
+  color: var(--signal);
+  font-style: italic;
+}
+.ef-landing-waitlist-copy > p {
+  max-width: 520px;
+  margin-top: 26px;
+  color: var(--paper-muted);
+  font-size: 17px;
+  line-height: 1.65;
+}
+.ef-landing-waitlist-card {
+  padding: clamp(24px, 4vw, 40px);
+  border: 1px solid var(--line-strong, rgba(233, 229, 215, 0.32));
+  background: color-mix(in srgb, var(--ink) 72%, transparent);
+}
+.ef-landing-waitlist .ef-waitlist-form {
+  margin-top: 0;
+}
+
 .ef-install {
   display: grid;
   grid-template-columns: 1fr 0.9fr;
@@ -1912,6 +1947,7 @@ body {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .ef-roadmap,
+  .ef-landing-waitlist,
   .ef-install {
     grid-template-columns: 1fr;
   }
@@ -1935,6 +1971,7 @@ body {
   .ef-capabilities,
   .ef-roadmap,
   .ef-pricing,
+  .ef-landing-waitlist,
   .ef-install {
     padding-inline: 20px;
   }
@@ -2103,6 +2140,7 @@ body {
   .ef-capabilities,
   .ef-roadmap,
   .ef-pricing,
+  .ef-landing-waitlist,
   .ef-install {
     padding-inline: 32px;
   }
@@ -2158,6 +2196,7 @@ body {
   .ef-capabilities,
   .ef-roadmap,
   .ef-pricing,
+  .ef-landing-waitlist,
   .ef-install {
     padding-inline: 20px;
   }

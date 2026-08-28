@@ -304,3 +304,34 @@ Reusable pattern: verify a rebrand across visible UI, compact SVG rendering, HTM
 - URL: `https://github.com/tebayoso/eventforge/compare/1.0-rc...codex%2Fissue-8-forge-connectors?expand=1`
 - Outcome: the branch comparison resolved to commit `5190f02`, but the browser was logged out (`Sign in` shown). GitHub CLI also reported its active token invalid, so no draft PR or review comment was created.
 - Reusable pattern: confirm the exact base/head comparison URL before publishing; authenticated GitHub browser or CLI state is required for PR creation and comments.
+
+## 2026-08-28 — v1.0.0-rc.1 live-surface verification
+
+- Session: agent-browser 0.26.0 against production and beta after deploying
+  console Workers `61fd8efe` (apex) and `82a81c4f` (beta).
+- Desktop (default viewport) and mobile (`set viewport 390 844`) both checked.
+- `https://eventforge.dev/` — landing renders; hero, features, pricing, GitHub
+  nav. Screenshot: `release-prod-landing.png`, `release-prod-landing-mobile.png`.
+- `https://eventforge.dev/features` — 24-capability status page. Screenshot:
+  `release-prod-features.png`.
+- `https://eventforge.dev/console` — 503 "Sign-in is not enabled yet."
+  Screenshots: `release-prod-console-gated.png`,
+  `release-prod-console-gated-mobile.png`.
+- `https://eventforge.dev/waitlist` — work-email form + "Join the waitlist".
+  Screenshot: `release-prod-waitlist.png`.
+- `https://beta.eventforge.dev/` — same landing, analytics blanked at
+  `/analytics-config.json`. Screenshot: `release-beta-landing.png`.
+- `https://beta.eventforge.dev/console` — hosted sign-in SPA (email, password,
+  "Sign in by email"). Screenshots: `release-beta-console-signin.png`,
+  `release-beta-console-signin-mobile.png`. Switching to email-link shows
+  "Email me a link". Screenshot: `release-beta-email-link.png`.
+- `https://beta.eventforge.dev/features` — same capability page as production.
+  Screenshot: `release-beta-features.png`.
+- Note: JOIN THE BETA pricing CTAs hash to `/#install`, not `/waitlist`.
+  GitHub star/fork counts rendered as `0` in the nav; not a deploy regression
+  of this RC.
+
+Reusable pattern: after a dual-env console deploy, curl `/analytics-config.json`
+on beta before trusting the UI, then walk `/`, `/features`, `/console`, and
+`/waitlist` on both hosts at 1280 and 390 widths. Production `/console` must
+stay 503 while beta `/console` must serve the sign-in SPA.

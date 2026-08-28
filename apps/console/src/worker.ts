@@ -4,8 +4,8 @@ interface AssetsBinding {
 
 interface Env {
   ASSETS: AssetsBinding;
-  // Pre-production only. When set, /api/* is proxied here so the browser sees a
-  // same-origin request and the session cookie can stay SameSite=Strict.
+  // When set, /api/* is proxied here so the browser sees a same-origin request
+  // and the session cookie can stay SameSite=Strict.
   API_ORIGIN?: string;
 }
 
@@ -85,6 +85,10 @@ const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
     <loc>https://eventforge.dev/features</loc>
     <changefreq>weekly</changefreq>
   </url>
+  <url>
+    <loc>https://eventforge.dev/waitlist</loc>
+    <changefreq>weekly</changefreq>
+  </url>
 </urlset>
 `;
 
@@ -145,22 +149,9 @@ function markdownResponse(): Response {
   });
 }
 
-function gatedConsole(): Response {
-  return new Response(
-    '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EventForge sign-in required</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b0e13;color:#f4f5f7;font:16px/1.5 system-ui,sans-serif}main{max-width:38rem;padding:2rem}p{color:#aab2c0}a{color:#8ee5c2}</style><main><p>EventForge secure console</p><h1>Sign-in is not enabled yet.</h1><p>The hosted console is closed until account authentication and tenant isolation pass their release gates.</p><a href="/">Return to EventForge</a></main></html>',
-    {
-      status: 503,
-      headers: { ...securityHeaders, "content-type": "text/html; charset=utf-8" },
-    },
-  );
-}
-
-// Analytics config is a static asset, so a build that forgot to blank it — or a
-// manual `wrangler deploy --env beta` that skipped the beta build script — would
-// ship the production PostHog key and GA4 id to a pre-production host. That
-// happened twice, so the guarantee now lives here, where no build step can
-// bypass it: any non-production hostname gets a blanked config regardless of what
-// is sitting in dist/.
+// Analytics config is a static asset, so a build that forgot to blank it would
+// ship the production PostHog key and GA4 id to a non-production host. The
+// hostname check means no build step can bypass it.
 export function isPreProductionHost(hostname: string): boolean {
   return hostname !== "eventforge.dev" && hostname !== "www.eventforge.dev";
 }
@@ -178,17 +169,19 @@ export default {
     // Same-origin proxy for the auth/API surface. Keeping this on the console
     // origin is what lets the session cookie be SameSite=Strict instead of a
     // cross-site None cookie.
-    if (url.pathname.startsWith("/api/") && isPreProductionHost(url.hostname) && env.API_ORIGIN) {
+    if (url.pathname.startsWith("/api/") && env.API_ORIGIN) {
       const upstream = new URL(url.pathname + url.search, env.API_ORIGIN);
-      const proxied = new Request(upstream, request);
+      const proxied = new Request(upstream, {
+        method: request.method,
+        headers: request.headers,
+        body: request.body,
+        redirect: "manual",
+      });
       proxied.headers.set("x-forwarded-host", url.hostname);
       return fetch(proxied);
     }
 
-    // The hosted console is open on pre-production hosts only. Production stays
-    // closed until hosted auth passes its own release gates.
     if (isConsolePath(url.pathname)) {
-      if (!isPreProductionHost(url.hostname)) return gatedConsole();
       // Pass the original request: `not_found_handling: single-page-application`
       // serves index.html for /console. Fetching /index.html directly would be
       // redirected to / by the assets binding.
@@ -250,10 +243,6 @@ export default {
     }
 
     const headers = new Headers(response.headers);
-    if (url.pathname === "/waitlist") {
-      headers.set("x-robots-tag", "noindex, nofollow, noarchive");
-      headers.set("cache-control", "no-store");
-    }
     if (url.pathname === "/") headers.set("link", homepageLinks);
     if (url.pathname === "/.well-known/api-catalog") {
       headers.set("content-type", "application/linkset+json; charset=utf-8");

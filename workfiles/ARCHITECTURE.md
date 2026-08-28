@@ -124,13 +124,11 @@ revocation metadata quarantines the object. Request adapters must resolve the
 binding through `sessionAuthorityFor`, which uses one stable `getByName`
 selection for the exact canonical user identifier.
 
-There is deliberately no live email/provider binding in this repository. The
-Worker therefore continues to return `AUTH_GATED` for `/api/auth/*` and `/v1/*`
-in every deployed environment. Enabling it requires a reviewed adapter,
-production WebAuthn verification for `eventforge.dev`/`https://eventforge.dev`,
-an invitation-only enrollment path, D1 transaction wiring for revoke-first
-membership transitions, authority latency/SLO instrumentation, and a successful
-recovery drill. Passing deterministic tests is not production proof.
+Hosted `/api/auth/*` is live on the production API for sign-in only. Unknown
+addresses never create identities; enrollment is waitlist plus an out-of-band
+invitation that writes `identities` and `workspace_memberships`. `/v1/*` other
+than `/v1/waitlist` still returns `AUTH_GATED` until tenant repositories are
+wired. Enabling self-serve signup would be a separate, reviewed change.
 
 ## Trust boundaries
 

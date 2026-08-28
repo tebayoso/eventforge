@@ -12,8 +12,8 @@ import {
 } from "./auth.js";
 import { captchaRequired, verifyTurnstile } from "./passwords.js";
 
-// HTTP surface for hosted sign-in. Enabled on the pre-production surface only —
-// see the caller in index.ts.
+// HTTP surface for hosted sign-in. Sign-in is live; self-serve signup is not.
+// See requestSignIn: unknown addresses never create identities.
 //
 // The console reaches these through a same-origin proxy, so the session cookie is
 // SameSite=Strict and the request token travels in a header the browser will not
@@ -145,7 +145,11 @@ export async function handleAuth(request: Request, env: AuthEnv, url: URL): Prom
             : undefined,
         );
       if (result.reason === "no_membership")
-        return fault(403, "NO_MEMBERSHIP", "This account has no workspace membership.");
+        return fault(
+          403,
+          "NO_MEMBERSHIP",
+          "This account has no workspace membership. Join the waitlist to request access.",
+        );
       // Deliberately identical for unknown address, no password set, and wrong
       // password.
       return fault(401, "INVALID_CREDENTIALS", "Incorrect email or password.");
@@ -181,7 +185,11 @@ export async function handleAuth(request: Request, env: AuthEnv, url: URL): Prom
       // A verified address with no membership is a distinct, safe-to-report state:
       // the link worked, but nothing has granted this identity access.
       if (result.reason === "no_membership")
-        return fault(403, "NO_MEMBERSHIP", "This address has no workspace membership.");
+        return fault(
+          403,
+          "NO_MEMBERSHIP",
+          "This address has no workspace membership. Join the waitlist to request access.",
+        );
       return fault(400, "INVALID_TOKEN", "The sign-in link is invalid, used, or expired.");
     }
     return json(

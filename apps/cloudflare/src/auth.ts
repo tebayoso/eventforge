@@ -7,7 +7,12 @@ import {
 } from "./passwords.js";
 import { type AuthoritySession, sessionAuthorityFor } from "./session-authority.js";
 
-// Hosted passwordless sign-in for the pre-production surface.
+// Hosted passwordless sign-in.
+//
+// New accounts are not created here. An unknown address is accepted with the
+// same response as a known one so the endpoint cannot be used to test whether
+// someone has access. Enrollment is waitlist plus an invitation that writes
+// `identities` and `workspace_memberships` out of band.
 //
 // Design constraints that matter:
 //   - The challenge token is never stored. D1 holds only its SHA-256, so a
@@ -152,41 +157,32 @@ export function sessionCookie(cookieValue: string, maxAgeSeconds: number): strin
 
 export const clearedSessionCookie = `${SESSION_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0`;
 
-async function identityForEmail(
+const PRODUCTION_CONSOLE_ORIGIN = "https://eventforge.dev";
+const CONSOLE_ORIGIN_PATTERN =
+  /^https:\/\/eventforge\.dev$|^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+
+export function consoleOriginFor(env: AuthEnv): string {
+  const configured = env.AUTH_CONSOLE_ORIGIN?.trim();
+  return configured && CONSOLE_ORIGIN_PATTERN.test(configured)
+    ? configured
+    : PRODUCTION_CONSOLE_ORIGIN;
+}
+
+async function findOpenIdentity(
   db: D1Database,
   normalizedEmail: string,
-  now: Date,
-): Promise<Identity> {
+): Promise<Identity | undefined> {
   const existing = await db
     .prepare(
       "select id, normalized_email, verified_at from identities where normalized_email = ? and closed_at is null",
     )
     .bind(normalizedEmail)
     .first<{ id: string; normalized_email: string; verified_at: string | null }>();
-  if (existing)
-    return {
-      id: existing.id,
-      normalizedEmail: existing.normalized_email,
-      verifiedAt: existing.verified_at ?? undefined,
-    };
-
-  const id = crypto.randomUUID();
-  await db
-    .prepare(
-      "insert into identities (id, normalized_email, created_at) values (?, ?, ?) on conflict(normalized_email) do nothing",
-    )
-    .bind(id, normalizedEmail, now.toISOString())
-    .run();
-  // Re-read rather than trusting the insert: a concurrent request may have won.
-  const created = await db
-    .prepare("select id, normalized_email, verified_at from identities where normalized_email = ?")
-    .bind(normalizedEmail)
-    .first<{ id: string; normalized_email: string; verified_at: string | null }>();
-  if (!created) throw new Error("identity could not be created");
+  if (!existing) return undefined;
   return {
-    id: created.id,
-    normalizedEmail: created.normalized_email,
-    verifiedAt: created.verified_at ?? undefined,
+    id: existing.id,
+    normalizedEmail: existing.normalized_email,
+    verifiedAt: existing.verified_at ?? undefined,
   };
 }
 
@@ -231,7 +227,11 @@ export async function requestSignIn(
   const email = normalizeIdentityEmail(rawEmail);
   if (!email) return { accepted: true };
 
-  const identity = await identityForEmail(env.CONTROL_DB, email, now);
+  const identity = await findOpenIdentity(env.CONTROL_DB, email);
+  // Do not create an identity. Unknown addresses still return accepted so this
+  // cannot be used to learn whether an address has access.
+  if (!identity) return { accepted: true };
+
   const token = randomToken();
   const expiresAt = new Date(now.getTime() + CHALLENGE_TTL_MS);
   await env.CONTROL_DB.prepare(
@@ -246,7 +246,7 @@ export async function requestSignIn(
     )
     .run();
 
-  const origin = env.AUTH_CONSOLE_ORIGIN ?? "https://beta.eventforge.dev";
+  const origin = consoleOriginFor(env);
   const challengeUrl = `${origin}/console?token=${token}`;
   const body = verificationEmail(challengeUrl, expiresAt);
 
